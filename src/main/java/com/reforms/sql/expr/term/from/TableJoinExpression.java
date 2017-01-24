@@ -9,7 +9,7 @@ import static com.reforms.sql.expr.term.SqlWords.SW_ON;
 
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public class TableJoinExpression extends TableReferenceExpression {
 

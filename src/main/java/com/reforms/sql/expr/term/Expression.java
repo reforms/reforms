@@ -5,7 +5,7 @@ import com.reforms.sql.expr.viewer.ISqlViewer;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
 /**
- * @author palihov
+ * @author evgenie
  */
 public abstract class Expression implements ISqlViewer, IExpressionChanger {
 

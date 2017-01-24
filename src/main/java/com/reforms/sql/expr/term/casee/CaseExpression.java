@@ -13,7 +13,7 @@ import static com.reforms.sql.expr.term.SqlWords.*;
 
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public class CaseExpression extends SelectableExpression {
 

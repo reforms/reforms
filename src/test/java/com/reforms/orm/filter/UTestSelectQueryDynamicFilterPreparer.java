@@ -9,7 +9,7 @@ import java.util.Arrays;
 import org.junit.Test;
 
 import com.reforms.orm.filter.FilterMap;
-import com.reforms.orm.filter.SelectQueryFilterPreparer;
+import com.reforms.orm.filter.SelectQueryPreparer;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
 
@@ -239,8 +239,8 @@ public class UTestSelectQueryDynamicFilterPreparer {
     private void assertDynamicFilter(String query, String etalonQuery, FilterMap filters) {
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        SelectQueryFilterPreparer queryPreaprer = new SelectQueryFilterPreparer();
-        queryPreaprer.prepareFilters(selectQuery, filters);
+        SelectQueryPreparer queryPreaprer = new SelectQueryPreparer();
+        queryPreaprer.prepare(selectQuery, filters);
         assertEquals(etalonQuery, selectQuery.toString());
     }
 

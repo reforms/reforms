@@ -12,7 +12,7 @@ import com.reforms.sql.expr.viewer.SqlBuilder;
 
 /**
  * https://www.postgresql.org/docs/9.0/static/sql-select.html
- * @author palihov
+ * @author evgenie
  */
 public class SelectQuery extends SelectableExpression {
 

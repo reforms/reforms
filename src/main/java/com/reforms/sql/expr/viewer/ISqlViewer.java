@@ -2,7 +2,7 @@ package com.reforms.sql.expr.viewer;
 
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public interface ISqlViewer {
 

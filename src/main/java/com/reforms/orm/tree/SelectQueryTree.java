@@ -1,11 +1,11 @@
 package com.reforms.orm.tree;
 
-import java.util.IdentityHashMap;
-
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.value.StringExpression;
 import com.reforms.sql.expr.viewer.SqlBuilder;
+
+import java.util.IdentityHashMap;
 
 /**
  * Дерево выражений

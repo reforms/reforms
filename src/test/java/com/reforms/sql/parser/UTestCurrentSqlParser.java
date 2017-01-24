@@ -10,7 +10,7 @@ import com.reforms.sql.parser.SqlParser;
 
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public class UTestCurrentSqlParser {
 

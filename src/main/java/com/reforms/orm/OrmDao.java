@@ -41,8 +41,8 @@ public class OrmDao {
         SelectColumnExtractorAndAliasModifier selectedColumnExtractor = new SelectColumnExtractorAndAliasModifier();
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         ResultSetOrmReader rsReader = new ResultSetOrmReader(selectedColumns, Reflexor.createReflexor(ormClass), rCtx);
-        SelectQueryFilterPreparer filterPreparer = new SelectQueryFilterPreparer();
-        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepareFilters(selectQuery, filters);
+        SelectQueryPreparer filterPreparer = new SelectQueryPreparer();
+        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
             paramSetterEngine.setParamsTo(ps);
@@ -74,8 +74,8 @@ public class OrmDao {
         SelectColumnExtractorAndAliasModifier selectedColumnExtractor = new SelectColumnExtractorAndAliasModifier();
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         ResultSetOrmReader rsReader = new ResultSetOrmReader(selectedColumns, Reflexor.createReflexor(ormClass), rCtx);
-        SelectQueryFilterPreparer filterPreparer = new SelectQueryFilterPreparer();
-        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepareFilters(selectQuery, filters);
+        SelectQueryPreparer filterPreparer = new SelectQueryPreparer();
+        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
         List<OrmType> orms = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {

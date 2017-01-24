@@ -13,7 +13,7 @@ import com.reforms.sql.parser.SqlParser;
  * SELECT client_id, name_cln, addr_cln
 FROM ibank2.clients
 WHERE (client_id, name_cln, addr_cln) = (60, 'архивный юрик', 'moskow');
- * @author palihov
+ * @author evgenie
  */
 public class UTestSqlParserWrongQuery {
 

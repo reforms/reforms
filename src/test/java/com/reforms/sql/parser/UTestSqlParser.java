@@ -15,7 +15,7 @@ import com.reforms.sql.parser.SqlParser;
                 WHERE (client_id, name_cln, addr_cln) = (60, 'архивный юрик', 'moskow');
     2.
     assertWhereStatement("WHERE (1) MATCH (SELECT client_id FROM ibank2.clients)");
- * @author palihov
+ * @author evgenie
  */
 public class UTestSqlParser {
 

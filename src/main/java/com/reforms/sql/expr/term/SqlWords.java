@@ -6,7 +6,7 @@ import java.util.Map;
 
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public class SqlWords {
 

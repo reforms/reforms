@@ -9,7 +9,7 @@ import static com.reforms.sql.expr.term.SqlWords.*;
 
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public class BetweenPredicateExpression extends PredicateExpression {
 

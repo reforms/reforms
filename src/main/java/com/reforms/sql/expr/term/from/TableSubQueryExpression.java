@@ -9,7 +9,7 @@ import com.reforms.sql.expr.viewer.SqlBuilder;
 
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public class TableSubQueryExpression extends TableReferenceExpression {
 

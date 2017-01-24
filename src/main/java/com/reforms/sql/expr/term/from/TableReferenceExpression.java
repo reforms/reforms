@@ -4,7 +4,7 @@ import com.reforms.sql.expr.term.Expression;
 
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public abstract class TableReferenceExpression extends Expression {
 

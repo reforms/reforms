@@ -1,15 +1,16 @@
 package com.reforms.orm;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.reforms.orm.filter.param.ParamSetterFactory;
 import com.reforms.orm.reflex.ReflexorCache;
+import com.reforms.orm.scheme.SchemeManager;
 import com.reforms.orm.select.bobj.ColumnToFieldNameConverter;
 import com.reforms.orm.select.bobj.ResultSetValueAdapter;
 import com.reforms.orm.select.bobj.reader.ParamRsReaderFactory;
 import com.reforms.orm.select.report.ColumnToRecordNameConverter;
 import com.reforms.orm.select.report.converter.ColumnValueConverterFactory;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class OrmConfigurator {
 
@@ -33,6 +34,7 @@ public class OrmConfigurator {
         ormContext.setResultSetValueAdapter(new ResultSetValueAdapter());
         ormContext.setColumnToFieldNameConverter(new ColumnToFieldNameConverter());
         ormContext.setReflexorCache(new ReflexorCache());
+        ormContext.setSchemeManager(new SchemeManager());
         ormConf.configureReportEngine(ormContext);
         OrmConfigurator.setInstance(ormConf);
     }

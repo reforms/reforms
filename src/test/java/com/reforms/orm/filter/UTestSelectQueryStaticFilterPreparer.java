@@ -9,7 +9,7 @@ import java.util.Iterator;
 import org.junit.Test;
 
 import com.reforms.orm.filter.FilterMap;
-import com.reforms.orm.filter.SelectQueryFilterPreparer;
+import com.reforms.orm.filter.SelectQueryPreparer;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
 
@@ -89,8 +89,8 @@ public class UTestSelectQueryStaticFilterPreparer {
     private void assertStaticFilter(String query, String etalonQuery, FilterMap filters) {
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        SelectQueryFilterPreparer queryPreaprer = new SelectQueryFilterPreparer();
-        queryPreaprer.prepareFilters(selectQuery, filters);
+        SelectQueryPreparer queryPreaprer = new SelectQueryPreparer();
+        queryPreaprer.prepare(selectQuery, filters);
         assertEquals(etalonQuery, selectQuery.toString());
     }
 
@@ -105,9 +105,9 @@ public class UTestSelectQueryStaticFilterPreparer {
     private void assertFailStaticFilter(String query, FilterMap filters) {
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        SelectQueryFilterPreparer queryPreaprer = new SelectQueryFilterPreparer();
+        SelectQueryPreparer queryPreaprer = new SelectQueryPreparer();
         try {
-            queryPreaprer.prepareFilters(selectQuery, filters);
+            queryPreaprer.prepare(selectQuery, filters);
             fail("Ожидается, что выражение '" + query + "' имеет не валидный фильтр");
         } catch (IllegalStateException ise) {
             assertNotNull(ise.getMessage());

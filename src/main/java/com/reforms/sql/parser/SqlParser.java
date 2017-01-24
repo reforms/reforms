@@ -25,7 +25,7 @@ import com.reforms.sql.expr.term.value.*;
 /**
  * 1. ORACLE: SELECT selection_fields FROM (SELECT selection_fields,ROWNUM RN FROM (SELECT selection_fields FROM schemaName.tableName WHERE conditions ORDER BY orderFields)) WHERE RN > ? AND RN <= ?
  * 2. MSSQL: SELECT TOP 50 id, name FROM schemaName.tableName WHERE name LIKE ? AND __id__ NOT IN (SELECT TOP 100 __id__ FROM schemaName.tableName WHERE name LIKE ? ORDER BY id) ORDER BY id
- * @author palihov
+ * @author evgenie
  */
 public class SqlParser {
 
@@ -1014,7 +1014,7 @@ public class SqlParser {
         }
         // должны остаться на разделителе
         moveCursor(-1);
-        tableExpr.setSchemaName(schemaName);
+        tableExpr.setSchemeName(schemaName);
         tableExpr.setTableName(tableName);
         tableExpr.setAsClauseExpr(parseAsClauseExpression());
         return tableExpr;

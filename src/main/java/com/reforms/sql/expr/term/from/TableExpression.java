@@ -1,29 +1,33 @@
 package com.reforms.sql.expr.term.from;
 
-import static com.reforms.sql.expr.term.ExpressionType.ET_TABLE_EXPRESSION;
-
 import com.reforms.sql.expr.term.AsClauseExpression;
 import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
+import static com.reforms.sql.expr.term.ExpressionType.ET_TABLE_EXPRESSION;
+
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public class TableExpression extends TableReferenceExpression {
 
-    private String schemaName;
+    private String schemeName;
 
     private String tableName;
 
     private AsClauseExpression asClauseExpr;
 
-    public String getSchemaName() {
-        return schemaName;
+    public String getSchemeName() {
+        return schemeName;
     }
 
-    public void setSchemaName(String schemaName) {
-        this.schemaName = schemaName;
+    public boolean hasSchemeName() {
+        return schemeName != null;
+    }
+
+    public void setSchemeName(String schemeName) {
+        this.schemeName = schemeName;
     }
 
     public String getTableName() {
@@ -50,8 +54,8 @@ public class TableExpression extends TableReferenceExpression {
     @Override
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendSpace();
-        if (schemaName != null) {
-            sqlBuilder.append(schemaName).append(".");
+        if (schemeName != null) {
+            sqlBuilder.append(schemeName).append(".");
         }
         sqlBuilder.appendWord(tableName);
         sqlBuilder.appendExpression(asClauseExpr);

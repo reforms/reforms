@@ -1,28 +1,31 @@
 package com.reforms.orm.filter;
 
-import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
+import com.reforms.orm.OrmConfigurator;
+import com.reforms.orm.OrmContext;
+import com.reforms.orm.extractor.FilterExpressionExtractor;
+import com.reforms.orm.extractor.TableExpressionExtractor;
+import com.reforms.orm.filter.modifier.PredicateModifier;
+import com.reforms.orm.filter.param.ParamSetterFactory;
+import com.reforms.orm.scheme.ISchemeManager;
+import com.reforms.orm.select.ColumnAlias;
+import com.reforms.orm.tree.SelectQueryTree;
+import com.reforms.sql.expr.query.SelectQuery;
+import com.reforms.sql.expr.term.from.TableExpression;
+import com.reforms.sql.expr.term.value.FilterExpression;
+import com.reforms.sql.expr.term.value.ValueExpression;
+import com.reforms.sql.expr.term.value.ValueExpressionType;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.List;
 
-import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.OrmContext;
-import com.reforms.orm.extractor.FilterExpressionExtractor;
-import com.reforms.orm.filter.modifier.PredicateModifier;
-import com.reforms.orm.filter.param.ParamSetterFactory;
-import com.reforms.orm.select.ColumnAlias;
-import com.reforms.orm.tree.SelectQueryTree;
-import com.reforms.sql.expr.query.SelectQuery;
-import com.reforms.sql.expr.term.value.FilterExpression;
-import com.reforms.sql.expr.term.value.ValueExpression;
-import com.reforms.sql.expr.term.value.ValueExpressionType;
+import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
 
 /**
  * Подготовка SelectQuery к тому виду, в котором она будет отправлена в PrepareStatement
  * @author evgenie
  */
-public class SelectQueryFilterPreparer {
+public class SelectQueryPreparer {
 
     /**
      * TODO подумать.
@@ -35,7 +38,29 @@ public class SelectQueryFilterPreparer {
      * @param filters
      * @return
      */
-    public FilterPrepareStatementSetter prepareFilters(SelectQuery selectQuery, FilterValues filters) {
+    public FilterPrepareStatementSetter prepare(SelectQuery selectQuery, FilterValues filters) {
+        prepareScheme(selectQuery);
+        return prepareFilters(selectQuery, filters);
+    }
+
+    private void prepareScheme(SelectQuery selectQuery) {
+        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
+        TableExpressionExtractor tableExprExtractor = new TableExpressionExtractor();
+        ISchemeManager schemeManager = rCtx.getSchemeManager();
+        for (TableExpression tableExpr : tableExprExtractor.extractFilterExpressions(selectQuery)) {
+            if (tableExpr.hasSchemeName()) {
+                String schemeKey = tableExpr.getSchemeName();
+                String originScheme = schemeManager.getSchemeName(schemeKey);
+                if (originScheme != null) {
+                    tableExpr.setSchemeName(originScheme);
+                }
+            } else if (schemeManager.getDefaultSchemeName() != null) {
+                tableExpr.setSchemeName(schemeManager.getDefaultSchemeName());
+            }
+        }
+    }
+
+    private FilterPrepareStatementSetter prepareFilters(SelectQuery selectQuery, FilterValues filters) {
         OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
         ParamSetterFactory paramSetterFactory = rCtx.getParamSetterFactory();
         FilterPrepareStatementSetter fpss = new FilterPrepareStatementSetter(paramSetterFactory);
@@ -66,7 +91,7 @@ public class SelectQueryFilterPreparer {
                     if (filterValue == null && filterExpr.isStaticFilter() && filterExpr.isQuestionFlag()) {
                         predicateModifier.changeStaticFilter(filterExpr);
                     } else
-                        // Динамический фильтр
+                    // Динамический фильтр
                         if (isEmptyValue(filterValue) && filterExpr.isDynamicFilter()) {
                             predicateModifier.changeDynamicFilter(filterExpr);
                         } else {
@@ -89,7 +114,7 @@ public class SelectQueryFilterPreparer {
                     if (filterValue == null && filterExpr.isStaticFilter() && filterExpr.isQuestionFlag()) {
                         predicateModifier.changeStaticFilter(filterExpr);
                     } else
-                        // Динамический фильтр
+                    // Динамический фильтр
                         if (isEmptyValue(filterValue) && filterExpr.isDynamicFilter()) {
                             predicateModifier.changeDynamicFilter(filterExpr);
                         } else {
@@ -110,6 +135,7 @@ public class SelectQueryFilterPreparer {
             }
         }
         return fpss;
+
     }
 
     private boolean isEmptyValue(Object filterValue) {

@@ -7,7 +7,7 @@ import static com.reforms.sql.expr.term.SqlWords.SW_NOT;
 
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public class NotExpression extends Expression {
 

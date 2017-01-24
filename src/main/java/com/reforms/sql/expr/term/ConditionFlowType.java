@@ -5,7 +5,7 @@ import static com.reforms.sql.expr.term.SqlWords.SW_OR;
 
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public enum ConditionFlowType {
     CFT_OR(SW_OR),

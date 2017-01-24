@@ -6,7 +6,7 @@ import java.util.List;
 
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public class SqlBuilder {
 

@@ -4,7 +4,7 @@ import static com.reforms.sql.expr.term.SqlWords.*;
 
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public enum TableJoinTypes {
     TJT_INNER_JOIN,

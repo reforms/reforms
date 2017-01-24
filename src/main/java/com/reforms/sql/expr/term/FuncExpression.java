@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public class FuncExpression extends SelectableExpression {
 

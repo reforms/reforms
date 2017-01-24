@@ -17,7 +17,7 @@ import com.reforms.sql.expr.viewer.SqlBuilder;
  * ...
  * N - 1    - conditionFlowTypeExpr
  * N        - rightExpr
- * @author palihov
+ * @author evgenie
  */
 public class SearchGroupExpression extends Expression {
 

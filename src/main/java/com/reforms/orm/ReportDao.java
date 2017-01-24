@@ -57,8 +57,8 @@ public class ReportDao {
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         ResultSetRecordReader rsReader = new ResultSetRecordReader(selectedColumns, rCtx);
         Report report = new Report();
-        SelectQueryFilterPreparer filterPreparer = new SelectQueryFilterPreparer();
-        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepareFilters(selectQuery, filters);
+        SelectQueryPreparer filterPreparer = new SelectQueryPreparer();
+        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
             paramSetterEngine.setParamsTo(ps);
@@ -93,8 +93,8 @@ public class ReportDao {
         SelectColumnExtractorAndAliasModifier selectedColumnExtractor = new SelectColumnExtractorAndAliasModifier();
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         ResultSetRecordReader rsReader = new ResultSetRecordReader(selectedColumns, rCtx);
-        SelectQueryFilterPreparer filterPreparer = new SelectQueryFilterPreparer();
-        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepareFilters(selectQuery, filters);
+        SelectQueryPreparer filterPreparer = new SelectQueryPreparer();
+        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
             paramSetterEngine.setParamsTo(ps);
@@ -129,8 +129,8 @@ public class ReportDao {
         SelectColumnExtractorAndAliasModifier selectedColumnExtractor = new SelectColumnExtractorAndAliasModifier();
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         ResultSetRecordReader rsReader = new ResultSetRecordReader(selectedColumns, rCtx);
-        SelectQueryFilterPreparer filterPreparer = new SelectQueryFilterPreparer();
-        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepareFilters(selectQuery, filters);
+        SelectQueryPreparer filterPreparer = new SelectQueryPreparer();
+        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
         PreparedStatement ps = null;
         try {

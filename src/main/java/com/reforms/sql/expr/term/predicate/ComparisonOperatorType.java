@@ -2,7 +2,7 @@ package com.reforms.sql.expr.term.predicate;
 
 /**
  *
- * @author palihov
+ * @author evgenie
  */
 public enum ComparisonOperatorType {
     COT_EQUALS("="),
