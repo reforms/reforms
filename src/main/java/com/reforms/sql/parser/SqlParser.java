@@ -19,12 +19,18 @@ import com.reforms.sql.expr.term.*;
 import com.reforms.sql.expr.term.casee.CaseExpression;
 import com.reforms.sql.expr.term.casee.WhenThenExpression;
 import com.reforms.sql.expr.term.from.*;
+import com.reforms.sql.expr.term.page.LimitExpression;
+import com.reforms.sql.expr.term.page.OffsetExpression;
 import com.reforms.sql.expr.term.predicate.*;
 import com.reforms.sql.expr.term.value.*;
 
 /**
  * 1. ORACLE: SELECT selection_fields FROM (SELECT selection_fields,ROWNUM RN FROM (SELECT selection_fields FROM schemaName.tableName WHERE conditions ORDER BY orderFields)) WHERE RN > ? AND RN <= ?
  * 2. MSSQL: SELECT TOP 50 id, name FROM schemaName.tableName WHERE name LIKE ? AND __id__ NOT IN (SELECT TOP 100 __id__ FROM schemaName.tableName WHERE name LIKE ? ORDER BY id) ORDER BY id
+ * TODO развитие: Добавить поддержку операторов INSERT, UPDATE, DELETE,
+ *      развитие: Добавить поддержку хранимых процедур
+ *      рефакторинг: Добавить парсинг служебных слов КАК есть без поднятия их к верхнему регистру для этого придется пролопатить Expression
+ *
  * @author evgenie
  */
 public class SqlParser {
@@ -63,11 +69,11 @@ public class SqlParser {
             selectQuery.setGroupByStatement(parseGroupByStatement());
             selectQuery.setHavingStatement(parseHavingStatement());
         }
-        while (isLinkedWord()) {
+        while (checkIsLinkedWord()) {
             LinkingSelectQuery linkedSelectExpr = new LinkingSelectQuery();
             String linkedWord = parseStatementWord();
             linkedSelectExpr.setLinkedWord(linkedWord);
-            if (isAllWord()) {
+            if (checkIsAllWord()) {
                 String allWord = parseAllWord();
                 linkedSelectExpr.setAllWord(allWord);
             }
@@ -77,21 +83,23 @@ public class SqlParser {
         }
         OrderByStatement orderByStatement = parseOrderByStatement();
         selectQuery.setOrderByStatement(orderByStatement);
+        PageStatement pageStatement = parsePageStatement();
+        selectQuery.setPageStatement(pageStatement);
         return selectQuery;
     }
 
-    private boolean isLinkedWord() {
-        keep();
+    private boolean checkIsLinkedWord() {
+        keepMarker();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_UNION.equalsIgnoreCase(word) || SW_EXCEPT.equalsIgnoreCase(word)
                 || SW_INTERSECT.equalsIgnoreCase(word) || SW_MINUS.equalsIgnoreCase(word);
     }
 
-    private boolean isAllWord() {
-        keep();
+    private boolean checkIsAllWord() {
+        keepMarker();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_ALL.equalsIgnoreCase(word);
     }
 
@@ -120,13 +128,13 @@ public class SqlParser {
     }
 
     private String parseSelectModeWord() {
-        keep();
+        keepMarker();
         String modeWord = parseStatementWord();
         if (SW_ALL.equalsIgnoreCase(modeWord) || SW_DISTINCT.equalsIgnoreCase(modeWord)) {
-            popupKeep();
+            skipMarker();
             return modeWord;
         } else {
-            rollback();
+            rollbackMarker();
         }
         return null;
     }
@@ -303,10 +311,10 @@ public class SqlParser {
     }
 
     private boolean checkIsFuncExpr() {
-        keep();
+        keepMarker();
         WordInfo wordInfo = parseWordInfo();
         boolean funcFlag = wordInfo != null && !wordInfo.isSqlWord() && '(' == wordInfo.getStopSymbol();
-        rollback();
+        rollbackMarker();
         return funcFlag;
     }
 
@@ -359,7 +367,7 @@ public class SqlParser {
 
     private AsClauseExpression parseAsClauseExpression() {
         skipSpaces();
-        keep();
+        keepMarker();
         int from = cursor;
         AsClauseExpression asClauseExpr = new AsClauseExpression();
         String word = parseStatementWord(false);
@@ -376,15 +384,15 @@ public class SqlParser {
                     throw createException("После ключеого слова 'AS' ожидается алиас", from);
                 }
             }
-            popupKeep();
+            skipMarker();
             asClauseExpr.setAlias(word);
             return asClauseExpr;
         } else if (!isSqlWord(word) && !word.isEmpty()) {
-            popupKeep();
+            skipMarker();
             asClauseExpr.setAlias(word);
             return asClauseExpr;
         }
-        rollback();
+        rollbackMarker();
         return null;
     }
 
@@ -526,9 +534,9 @@ public class SqlParser {
     }
 
     private boolean checkIsConstExpr() {
-        keep();
+        keepMarker();
         WordInfo wordInfo = parseWordInfo();
-        rollback();
+        rollbackMarker();
         if (wordInfo == null) {
             return false;
         }
@@ -592,9 +600,9 @@ public class SqlParser {
     }
 
     private boolean checkIsCaseExpr() {
-        keep();
+        keepMarker();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_CASE.equalsIgnoreCase(word);
     }
 
@@ -647,9 +655,9 @@ public class SqlParser {
     }
 
     private boolean checkIsSearchCaseExpr() {
-        keep();
+        keepMarker();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_WHEN.equalsIgnoreCase(word);
     }
 
@@ -699,9 +707,9 @@ public class SqlParser {
     }
 
     private boolean checkIsElseExpr() {
-        keep();
+        keepMarker();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_ELSE.equalsIgnoreCase(word);
     }
 
@@ -723,9 +731,9 @@ public class SqlParser {
     }
 
     private boolean checkIsCastExpr() {
-        keep();
+        keepMarker();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_CAST.equalsIgnoreCase(word);
     }
 
@@ -774,7 +782,7 @@ public class SqlParser {
     private boolean checkIsSubSelect() {
         skipSpaces();
         boolean subSelectFlag = false;
-        keep();
+        keepMarker();
         char symbol = getSymbol();
         if ('(' == symbol) {
             moveCursor();
@@ -782,7 +790,7 @@ public class SqlParser {
             subSelectFlag = wordInfo != null && SW_SELECT.equalsIgnoreCase(wordInfo.getWord())
                     && Character.isWhitespace(wordInfo.getStopSymbol());
         }
-        rollback();
+        rollbackMarker();
         return subSelectFlag;
     }
 
@@ -846,10 +854,10 @@ public class SqlParser {
     }
 
     private boolean checkIsSqlWord() {
-        keep();
+        keepMarker();
         String word = parseStatementWord();
         boolean flag = isSqlWord(word);
-        rollback();
+        rollbackMarker();
         return flag;
     }
 
@@ -885,9 +893,9 @@ public class SqlParser {
 
     private boolean checkIsTableReference(boolean useJoin) {
         if (checkIsSqlWord()) {
-            keep();
+            keepMarker();
             String word = parseStatementWord();
-            rollback();
+            rollbackMarker();
             return useJoin && startFrom(word, SW_INNER_JOIN, SW_LEFT_OUTER_JOIN, SW_RIGHT_OUTER_JOIN, SW_FULL_OUTER_JOIN, SW_CROSS_JOIN);
         }
         if (checkIsSubSelect()) {
@@ -925,15 +933,15 @@ public class SqlParser {
 
     private boolean checkIsTableValuesExpression() {
         skipSpaces();
-        keep();
+        keepMarker();
         char symbol = getSymbol();
         if ('(' != symbol) {
-            rollback();
+            rollbackMarker();
             return false;
         }
         moveCursor();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_VALUES.equalsIgnoreCase(word);
     }
 
@@ -966,14 +974,14 @@ public class SqlParser {
         }
         moveCursor();
         from = cursor;
-        keep();
+        keepMarker();
         boolean asWordFlag = false;
         String asWord = parseStatementWord();
         if (!SW_AS.equalsIgnoreCase(asWord)) {
-            rollback();
+            rollbackMarker();
         } else {
             asWordFlag = true;
-            popupKeep();
+            skipMarker();
         }
         from = cursor;
         FuncExpression templateExpr = null;
@@ -1112,9 +1120,9 @@ public class SqlParser {
     }
 
     private boolean checkIsWhereStatement() {
-        keep();
+        keepMarker();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_WHERE.equalsIgnoreCase(word);
     }
 
@@ -1376,9 +1384,9 @@ public class SqlParser {
     }
 
     private boolean checkIsNotWord() {
-        keep();
+        keepMarker();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_NOT.equalsIgnoreCase(word);
     }
 
@@ -1413,24 +1421,24 @@ public class SqlParser {
     }
 
     private boolean checkIsExistsPredicateExpr() {
-        keep();
+        keepMarker();
         WordInfo wordInfo = parseWordInfo();
         if (wordInfo == null || !wordInfo.isSqlWord()) {
-            rollback();
+            rollbackMarker();
             return false;
         }
         if (SW_NOT.equalsIgnoreCase(wordInfo.getWord())) {
             wordInfo = parseWordInfo();
             if (wordInfo == null || !wordInfo.isSqlWord()) {
-                rollback();
+                rollbackMarker();
                 return false;
             }
         }
         if (!SW_EXISTS.equalsIgnoreCase(wordInfo.getWord())) {
-            rollback();
+            rollbackMarker();
             return false;
         }
-        rollback();
+        rollbackMarker();
         return true;
     }
 
@@ -1458,9 +1466,9 @@ public class SqlParser {
     }
 
     private boolean checkIsUniquePredicateExpression() {
-        keep();
+        keepMarker();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_UNIQUE.equalsIgnoreCase(word);
     }
 
@@ -1479,10 +1487,10 @@ public class SqlParser {
         if (!checkIsComparisonOperatorType()) {
             return false;
         }
-        keep();
+        keepMarker();
         parseComparisonOperatorType();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_ANY.equalsIgnoreCase(word) || SW_SOME.equalsIgnoreCase(word) || SW_ALL.equalsIgnoreCase(word);
     }
 
@@ -1544,9 +1552,9 @@ public class SqlParser {
 
     private boolean checkIsNullablePredicateExpression() {
         skipSpaces();
-        keep();
+        keepMarker();
         WordInfo wordInfo = parseWordInfo();
-        rollback();
+        rollbackMarker();
         return wordInfo != null && SW_IS.equalsIgnoreCase(wordInfo.getWord());
     }
 
@@ -1576,13 +1584,13 @@ public class SqlParser {
     }
 
     private boolean checkIsInPredicateExpression() {
-        keep();
+        keepMarker();
         String word = parseStatementWord();
         if (SW_NOT.equalsIgnoreCase(word)) {
             word = parseStatementWord();
         }
         boolean inPredicateExprFlag = SW_IN.equalsIgnoreCase(word);
-        rollback();
+        rollbackMarker();
         return inPredicateExprFlag;
     }
 
@@ -1647,13 +1655,13 @@ public class SqlParser {
     }
 
     private boolean checkIsLikePredicateExpression() {
-        keep();
+        keepMarker();
         String word = parseStatementWord();
         if (SW_NOT.equalsIgnoreCase(word)) {
             word = parseStatementWord();
         }
         boolean likePredicateExprFlag = SW_LIKE.equalsIgnoreCase(word);
-        rollback();
+        rollbackMarker();
         return likePredicateExprFlag;
     }
 
@@ -1683,9 +1691,9 @@ public class SqlParser {
     }
 
     private boolean checkIsEscapeWord() {
-        keep();
+        keepMarker();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_ESCAPE.equalsIgnoreCase(word);
     }
 
@@ -1699,24 +1707,24 @@ public class SqlParser {
     }
 
     private boolean checkIsBetweenPredicateExpression() {
-        keep();
+        keepMarker();
         WordInfo wordInfo = parseWordInfo();
         if (wordInfo == null || !wordInfo.isSqlWord()) {
-            rollback();
+            rollbackMarker();
             return false;
         }
         if (SW_NOT.equalsIgnoreCase(wordInfo.getWord())) {
             wordInfo = parseWordInfo();
             if (wordInfo == null || !wordInfo.isSqlWord()) {
-                rollback();
+                rollbackMarker();
                 return false;
             }
         }
         if (!SW_BETWEEN.equalsIgnoreCase(wordInfo.getWord())) {
-            rollback();
+            rollbackMarker();
             return false;
         }
-        rollback();
+        rollbackMarker();
         return true;
     }
 
@@ -1761,10 +1769,10 @@ public class SqlParser {
 
     private ConditionFlowType parseConditionFlowType() {
         skipSpaces();
-        keep();
+        keepMarker();
         WordInfo wordInfo = parseWordInfo();
         if (wordInfo == null) {
-            rollback();
+            rollbackMarker();
             return null;
         }
         if (EOF != wordInfo.getStopSymbol()) {
@@ -1773,9 +1781,9 @@ public class SqlParser {
         String conditionWord = wordInfo.getWord();
         ConditionFlowType condType = resolveConditionFlowType(conditionWord);
         if (condType == null) {
-            rollback();
+            rollbackMarker();
         } else {
-            popupKeep();
+            skipMarker();
         }
         return condType;
     }
@@ -1820,10 +1828,10 @@ public class SqlParser {
     }
 
     private boolean checkIsGroupByStatement() {
-        keep();
+        keepMarker();
         String firstWord = parseStatementWord();
         String secondWord = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_GROUP.equalsIgnoreCase(firstWord) && SW_BY.equalsIgnoreCase(secondWord);
     }
 
@@ -1857,9 +1865,9 @@ public class SqlParser {
     }
 
     private boolean checkIsHavingStatement() {
-        keep();
+        keepMarker();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_HAVING.equalsIgnoreCase(word);
     }
 
@@ -1878,13 +1886,13 @@ public class SqlParser {
     }
 
     private OrderByStatement parseOrderByStatement() {
-        keep();
+        keepMarker();
         String orderWord = parseStatementWord();
         if (!"ORDER".equalsIgnoreCase(orderWord)) {
-            rollback();
+            rollbackMarker();
             return null;
         }
-        popupKeep();
+        skipMarker();
         int from = cursor;
         String byWord = parseStatementWord();
         if (!SW_BY.equalsIgnoreCase(byWord)) {
@@ -1930,9 +1938,9 @@ public class SqlParser {
     }
 
     private boolean checkIsCollateWord() {
-        keep();
+        keepMarker();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_COLLATE.equalsIgnoreCase(word);
     }
 
@@ -1950,9 +1958,9 @@ public class SqlParser {
     }
 
     private boolean checkIsOrderingSpecification() {
-        keep();
+        keepMarker();
         String word = parseStatementWord();
-        rollback();
+        rollbackMarker();
         return SW_ASC.equalsIgnoreCase(word) || SW_DESC.equalsIgnoreCase(word);
     }
 
@@ -1963,6 +1971,63 @@ public class SqlParser {
             throw createException("Ожидается служебное слово 'ASC' или 'DESC', а имеем '" + word + "'", from);
         }
         return word;
+    }
+
+    private PageStatement parsePageStatement() {
+        LimitExpression limitExpr = parseLimitExpression();
+        OffsetExpression offsetExpr = parseOffsetExpression();
+        if (offsetExpr != null && limitExpr == null) {
+            limitExpr = parseLimitExpression();
+        }
+        if (limitExpr == null && offsetExpr == null) {
+            return null;
+        }
+        PageStatement pageStatement = new PageStatement();
+        pageStatement.setLimitExpr(limitExpr);
+        pageStatement.setOffsetExpr(offsetExpr);
+        return pageStatement;
+    }
+
+    private LimitExpression parseLimitExpression() {
+        keepMarker();
+        String limitWord = parseStatementWord();
+        if (!SW_LIMIT.equalsIgnoreCase(limitWord)) {
+            rollbackMarker();
+            return null;
+        }
+        skipMarker();
+        LimitExpression limitExpr = new LimitExpression();
+        limitExpr.setLimitWord(limitWord);
+        if (checkIsValueExpr()) {
+            ValueExpression valueExpr = parseValueExpr();
+            limitExpr.setLimitExpr(valueExpr);
+        } else if (checkIsAllWord()) {
+            String allWord = parseStatementWord();
+            KeyWordExpression kwAllExpr = new KeyWordExpression(allWord);
+            limitExpr.setLimitExpr(kwAllExpr);
+        } else {
+            throw createException("Ожидается служебное слово 'ALL' или выражение значения в секции 'LIMIT'", cursor);
+        }
+        return limitExpr;
+    }
+
+    private OffsetExpression parseOffsetExpression() {
+        keepMarker();
+        String limitWord = parseStatementWord();
+        if (!SW_OFFSET.equalsIgnoreCase(limitWord)) {
+            rollbackMarker();
+            return null;
+        }
+        skipMarker();
+        OffsetExpression offsetExpr = new OffsetExpression();
+        offsetExpr.setOffsetWord(limitWord);
+        if (checkIsValueExpr()) {
+            ValueExpression valueExpr = parseValueExpr();
+            offsetExpr.setOffsetExpr(valueExpr);
+        } else {
+            throw createException("Ожидается выражение значения в секции 'OFFSET'", cursor);
+        }
+        return offsetExpr;
     }
 
     /**
@@ -2031,9 +2096,9 @@ public class SqlParser {
         if (EOF == symbol || !Character.isJavaIdentifierPart(symbol)) {
             return false;
         }
-        keep();
+        keepMarker();
         WordInfo holder = parseWordInfo();
-        rollback();
+        rollbackMarker();
         return holder != null && !holder.isSqlWord();
     }
 
@@ -2088,18 +2153,18 @@ public class SqlParser {
         return query.charAt(pos);
     }
 
-    private void keep() {
+    private void keepMarker() {
         markers.push(new Marker(cursor, lineNumber));
     }
 
-    private void popupKeep() {
+    private void skipMarker() {
         if (markers.isEmpty()) {
             throw new IllegalStateException("Не возможно откатитить состояние парсера");
         }
         markers.pop();
     }
 
-    private void rollback() {
+    private void rollbackMarker() {
         if (markers.isEmpty()) {
             throw new IllegalStateException("Не возможно откатитить состояние парсера");
         }

@@ -105,6 +105,12 @@ public class SqlWords {
 
     public static String SW_COLLATE = "COLLATE";
 
+    // POSTGRESQL
+    public static String SW_LIMIT = "LIMIT";
+
+    // POSTGRESQL
+    public static String SW_OFFSET = "OFFSET";
+
     private static final Map<String, Boolean> WORDS = init();
 
     private static Map<String, Boolean> init() {
@@ -141,6 +147,7 @@ public class SqlWords {
         addWords(SW_CORRESPONDING, words);
         addWords(words, SW_ASC, SW_DESC);
         addWords(SW_COLLATE, words);
+        addWords(words, SW_LIMIT, SW_OFFSET);
         return Collections.unmodifiableMap(words);
     }
 

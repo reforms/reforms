@@ -8,6 +8,7 @@ import com.reforms.orm.select.bobj.ResultSetValueAdapter;
 import com.reforms.orm.select.bobj.reader.ParamRsReaderFactory;
 import com.reforms.orm.select.report.ColumnToRecordNameConverter;
 import com.reforms.orm.select.report.converter.ColumnValueConverterFactory;
+import com.reforms.sql.db.DbType;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,7 +35,9 @@ public class OrmConfigurator {
         ormContext.setResultSetValueAdapter(new ResultSetValueAdapter());
         ormContext.setColumnToFieldNameConverter(new ColumnToFieldNameConverter());
         ormContext.setReflexorCache(new ReflexorCache());
-        ormContext.setSchemeManager(new SchemeManager());
+        SchemeManager schemeManager = new SchemeManager();
+        schemeManager.setDefaultDbType(DbType.MIX);
+        ormContext.setSchemeManager(schemeManager);
         ormConf.configureReportEngine(ormContext);
         OrmConfigurator.setInstance(ormConf);
     }

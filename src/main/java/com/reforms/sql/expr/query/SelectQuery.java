@@ -11,7 +11,10 @@ import com.reforms.sql.expr.term.SelectableExpression;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
 /**
+ * TODO: ссылки.
  * https://www.postgresql.org/docs/9.0/static/sql-select.html
+ * http://savage.net.au/SQL/sql-92.bnf.html
+ * https://dev.mysql.com/doc/refman/5.6/en/select.html
  * @author evgenie
  */
 public class SelectQuery extends SelectableExpression {
@@ -29,6 +32,8 @@ public class SelectQuery extends SelectableExpression {
     private List<LinkingSelectQuery> linkingQueries = new ArrayList<>();
 
     private OrderByStatement orderByStatement;
+
+    private PageStatement pageStatement;
 
     public SelectStatement getSelectStatement() {
         return selectStatement;
@@ -90,6 +95,14 @@ public class SelectQuery extends SelectableExpression {
         this.orderByStatement = orderByStatement;
     }
 
+    public PageStatement getPageStatement() {
+        return pageStatement;
+    }
+
+    public void setPageStatement(PageStatement pageStatement) {
+        this.pageStatement = pageStatement;
+    }
+
     @Override
     public ExpressionType getType() {
         return ET_SELECT_QUERY;
@@ -104,5 +117,6 @@ public class SelectQuery extends SelectableExpression {
         sqlBuilder.appendExpression(havingStatement);
         sqlBuilder.appendExpressions(linkingQueries, "");
         sqlBuilder.appendExpression(orderByStatement);
+        sqlBuilder.appendExpression(pageStatement);
     }
 }

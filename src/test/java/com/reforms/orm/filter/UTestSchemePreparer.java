@@ -40,7 +40,7 @@ public class UTestSchemePreparer {
             sm.putSchemeName("schemeName1", "local");
             sm.putSchemeName("schemeName2", "public");
             sm.putSchemeName("schemeName3", "shared");
-            sm.putDefaultSchemeName("free");
+            sm.setDefaultSchemeName("free");
             assertScheme(QUERY_1, QUERY_ETALON_1);
             assertScheme(QUERY_2, QUERY_ETALON_2);
             assertScheme(QUERY_3, QUERY_ETALON_3);

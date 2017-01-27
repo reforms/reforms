@@ -262,14 +262,37 @@ public class UTestSqlParser {
         assertSelectQuery("SELECT t1.c1, t1.c2, t2.c1, t2.c2 FROM tableName1 t1, tableName2 t2 ORDER BY " + orderByStatement);
     }
 
+    @Test
+    public void testPageStatement() {
+        assertSelectQuery("SELECT t1 FROM tableName1 LIMIT 10");
+        assertSelectQuery("SELECT t1 FROM tableName1 LIMIT ?");
+        assertSelectQuery("SELECT t1 FROM tableName1 LIMIT :limitCount");
+        assertSelectQuery("SELECT t1 FROM tableName1 LIMIT ::limitCount");
+        assertSelectQuery("SELECT t1 FROM tableName1 LIMIT 10 OFFSET 20");
+        assertSelectQuery("SELECT t1 FROM tableName1 LIMIT 10 OFFSET ?");
+        assertSelectQuery("SELECT t1 FROM tableName1 LIMIT 10 OFFSET ::offsetCount");
+        assertSelectQuery("SELECT t1 FROM tableName1 LIMIT ALL OFFSET 20");
+        assertSelectQuery("SELECT t1 FROM tableName1 LIMIT ALL");
+        assertSelectQuery("SELECT t1 FROM tableName1 OFFSET 20");
+        assertSelectQuery("SELECT t1 FROM tableName1 ORDER BY t1 LIMIT 10");
+        assertSelectQuery("SELECT t1 FROM tableName1 ORDER BY t1 LIMIT 10 OFFSET 20");
+        assertSelectQuery("SELECT t1 FROM tableName1 ORDER BY t1 LIMIT ALL OFFSET 20");
+        assertSelectQuery("SELECT t1 FROM tableName1 ORDER BY t1 LIMIT ALL");
+        assertSelectQuery("SELECT t1 FROM tableName1 ORDER BY t1 OFFSET 20");
+        assertSelectQuery("SELECT t1 FROM tableName1 OFFSET 20 LIMIT 10", "SELECT t1 FROM tableName1 LIMIT 10 OFFSET 20");
+    }
+
     private void assertSelectQuery(String query) {
+        assertSelectQuery(query, null);
+    }
+
+    private void assertSelectQuery(String query, String expectedQuery) {
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        assertQuery(query, selectQuery);
+        assertQuery(expectedQuery != null ? expectedQuery : query, selectQuery);
     }
 
     private void assertQuery(String query, SelectQuery selectQuery) {
-        // assertEquals(query.replace(" ", ""), queryToString(selectQuery).replace(" ", ""));
         assertEquals(query, queryToString(selectQuery));
     }
 
