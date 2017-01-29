@@ -1,9 +1,17 @@
 package com.reforms.orm.filter;
 
+import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
+import static com.reforms.sql.expr.term.value.ValueExpressionType.*;
+
+import java.lang.reflect.Array;
+import java.util.Collection;
+import java.util.List;
+
 import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.OrmContext;
 import com.reforms.orm.extractor.FilterExpressionExtractor;
 import com.reforms.orm.extractor.TableExpressionExtractor;
+import com.reforms.orm.filter.modifier.PageModifier;
 import com.reforms.orm.filter.modifier.PredicateModifier;
 import com.reforms.orm.filter.param.ParamSetterFactory;
 import com.reforms.orm.scheme.ISchemeManager;
@@ -12,14 +20,8 @@ import com.reforms.orm.tree.SelectQueryTree;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.term.from.TableExpression;
 import com.reforms.sql.expr.term.value.FilterExpression;
+import com.reforms.sql.expr.term.value.PageQuestionExpression;
 import com.reforms.sql.expr.term.value.ValueExpression;
-import com.reforms.sql.expr.term.value.ValueExpressionType;
-
-import java.lang.reflect.Array;
-import java.util.Collection;
-import java.util.List;
-
-import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
 
 /**
  * Подготовка SelectQuery к тому виду, в котором она будет отправлена в PrepareStatement
@@ -39,8 +41,20 @@ public class SelectQueryPreparer {
      * @return
      */
     public FilterPrepareStatementSetter prepare(SelectQuery selectQuery, FilterValues filters) {
+        if (filters == null) {
+            filters = EMPTY_FILTER_MAP;
+        }
+        // TODO: порядок важен.
+        preparePage(selectQuery, filters);
         prepareScheme(selectQuery);
         return prepareFilters(selectQuery, filters);
+    }
+
+    private void preparePage(SelectQuery selectQuery, FilterValues filters) {
+        if (filters.hasPageFilter()) {
+            PageModifier pageModifer = new PageModifier();
+            pageModifer.changeSelectQuery(selectQuery, filters);
+        }
     }
 
     private void prepareScheme(SelectQuery selectQuery) {
@@ -64,9 +78,6 @@ public class SelectQueryPreparer {
         OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
         ParamSetterFactory paramSetterFactory = rCtx.getParamSetterFactory();
         FilterPrepareStatementSetter fpss = new FilterPrepareStatementSetter(paramSetterFactory);
-        if (filters == null) {
-            filters = EMPTY_FILTER_MAP;
-        }
         FilterExpressionExtractor filterExprExtractor = new FilterExpressionExtractor();
         List<ValueExpression> filterExprs = filterExprExtractor.extractFilterExpressions(selectQuery);
         if (filterExprs.isEmpty()) {
@@ -78,7 +89,7 @@ public class SelectQueryPreparer {
         PredicateModifier predicateModifier = new PredicateModifier(queryTree);
         FilterValueParser filterValueParser = new FilterValueParser();
         for (ValueExpression valueFilterExpr : filterExprs) {
-            if (ValueExpressionType.VET_FILTER == valueFilterExpr.getValueExprType()) {
+            if (VET_FILTER == valueFilterExpr.getValueExprType()) {
                 FilterExpression filterExpr = (FilterExpression) valueFilterExpr;
                 String filterName = filterExpr.getFilterName();
                 ColumnAlias filterDetails = filterValueParser.parseFilterValue(filterName);
@@ -124,10 +135,23 @@ public class SelectQueryPreparer {
                             }
                         }
                 }
-            } else if (ValueExpressionType.VET_QUESTION == valueFilterExpr.getValueExprType()) {
+            } else if (VET_QUESTION == valueFilterExpr.getValueExprType()) {
                 Object filterValue = filters.get(++questionCount);
                 if (filterValue == null) {
                     throw new IllegalStateException("Значение null недопустимо для 'QuestionExpression'");
+                }
+                fpss.addFilterValue(filterValue);
+            } else if (VET_PAGE_QUESTION == valueFilterExpr.getValueExprType()) {
+                Object filterValue = null;
+                PageQuestionExpression pageQuestionExpr = (PageQuestionExpression) valueFilterExpr;
+                if (pageQuestionExpr.isLimitType()) {
+                    filterValue = filters.getPageLimit();
+                }
+                if (pageQuestionExpr.isOffsetType()) {
+                    filterValue = filters.getPageOffset();
+                }
+                if (filterValue == null) {
+                    throw new IllegalStateException("Значение null недопустимо для 'PageQuestionExpression'");
                 }
                 fpss.addFilterValue(filterValue);
             } else {

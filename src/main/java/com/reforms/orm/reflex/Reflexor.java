@@ -36,7 +36,12 @@ public class Reflexor implements IReflexor {
 
     @Override
     public boolean hasKey(String fieldName) {
-        return getType(fieldName) != null;
+        try {
+            return getType(fieldName) != null;
+        } catch (IllegalStateException mute) {
+            // TODO это плохо конечно, но пока так.
+        }
+        return false;
     }
 
     @Override

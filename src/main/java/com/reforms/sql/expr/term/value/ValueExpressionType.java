@@ -9,5 +9,6 @@ public enum ValueExpressionType {
     VET_TRUE,
     VET_FALSE,
     VET_QUESTION,
+    VET_PAGE_QUESTION,
     VET_FILTER
 }

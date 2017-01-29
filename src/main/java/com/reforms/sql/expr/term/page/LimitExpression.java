@@ -6,6 +6,8 @@ import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
+import static com.reforms.sql.expr.term.SqlWords.SW_LIMIT;
+
 /**
  * Example:
  *  - 'LIMIT 10'
@@ -14,7 +16,7 @@ import com.reforms.sql.expr.viewer.SqlBuilder;
  */
 public class LimitExpression extends Expression {
 
-    private String limitWord;
+    private String limitWord = SW_LIMIT;
 
     private Expression limitExpr;
 

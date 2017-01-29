@@ -13,6 +13,9 @@ import java.util.Map;
  */
 public class FilterMap implements FilterValues {
 
+    public static final String PAGE_LIMIT_KEY = "__PAGE_LIMIT__";
+    public static final String PAGE_OFFSET_KEY = "__PAGE_OFFSET__";
+
     /**
      * TODO не полноценный фильтр - нужно сделать не изменяемым.
      */
@@ -109,19 +112,27 @@ public class FilterMap implements FilterValues {
 
     @Override
     public Integer getPageLimit() {
-        Object pageLimit = getValue("PAGE_LIMIT", null);
+        Object pageLimit = getValue(PAGE_LIMIT_KEY, null);
         if (pageLimit instanceof Integer) {
             return (Integer) pageLimit;
         }
         return null;
     }
 
+    public void setPageLimit(int pageLimit) {
+        putValue(PAGE_LIMIT_KEY, pageLimit);
+    }
+
     @Override
     public Integer getPageOffset() {
-        Object pageOffset = getValue("PAGE_OFFSET", null);
+        Object pageOffset = getValue(PAGE_OFFSET_KEY, null);
         if (pageOffset instanceof Integer) {
             return (Integer) pageOffset;
         }
         return null;
+    }
+
+    public void setPageOffset(int pageOffset) {
+        putValue(PAGE_OFFSET_KEY, pageOffset);
     }
 }
