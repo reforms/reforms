@@ -13,6 +13,8 @@ import com.reforms.orm.filter.*;
 import com.reforms.orm.reflex.Reflexor;
 import com.reforms.orm.select.SelectedColumn;
 import com.reforms.orm.select.bobj.ResultSetOrmReader;
+import com.reforms.orm.select.bobj.model.OrmHandler;
+import com.reforms.orm.select.bobj.model.OrmIterator;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
 
@@ -88,6 +90,84 @@ public class OrmDao {
             }
         }
         return orms;
+    }
+
+    public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, Object filterBobj)
+            throws Exception {
+        handleOrms(ormClass, sqlQuery, handler, new FilterObject(filterBobj));
+    }
+
+    public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler) throws Exception {
+        handleOrms(ormClass, sqlQuery, handler, EMPTY_FILTER_MAP);
+    }
+
+    public <OrmType> void handleSimpleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, Object... filters)
+            throws Exception {
+        handleOrms(ormClass, sqlQuery, handler, new FilterSequence(filters));
+    }
+
+    public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, FilterValues filters)
+            throws Exception {
+        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
+        IConnectionHolder cHolder = rCtx.getConnectionHolder();
+        Connection connection = cHolder.getConnection(connectionHolder);
+        SelectQuery selectQuery = parseSqlQuery(sqlQuery);
+        SelectColumnExtractorAndAliasModifier selectedColumnExtractor = new SelectColumnExtractorAndAliasModifier();
+        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
+        ResultSetOrmReader rsReader = new ResultSetOrmReader(selectedColumns, Reflexor.createReflexor(ormClass), rCtx);
+        SelectQueryPreparer filterPreparer = new SelectQueryPreparer();
+        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
+        String preparedSqlQuery = selectQuery.toString();
+        try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
+            paramSetterEngine.setParamsTo(ps);
+            try (ResultSet rs = ps.executeQuery()) {
+                handler.startHandle();
+                Object orm = null;
+                while ((orm = rsReader.read(rs)) != null) {
+                    handler.handleOrm((OrmType) orm);
+                }
+                handler.endHandle();
+            }
+        }
+    }
+
+    public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery, Object filterBobj) throws Exception {
+        return loadOrmIterator(ormClass, sqlQuery, new FilterObject(filterBobj));
+    }
+
+    public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery) throws Exception {
+        return loadOrmIterator(ormClass, sqlQuery, EMPTY_FILTER_MAP);
+    }
+
+    public <OrmType> OrmIterator<OrmType> loadSimpleOrmIterator(Class<OrmType> ormClass, String sqlQuery, Object... filters)
+            throws Exception {
+        return loadOrmIterator(ormClass, sqlQuery, new FilterSequence(filters));
+    }
+
+    public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery, FilterValues filters) throws Exception {
+        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
+        IConnectionHolder cHolder = rCtx.getConnectionHolder();
+        Connection connection = cHolder.getConnection(connectionHolder);
+        SelectQuery selectQuery = parseSqlQuery(sqlQuery);
+        SelectColumnExtractorAndAliasModifier selectedColumnExtractor = new SelectColumnExtractorAndAliasModifier();
+        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
+        ResultSetOrmReader rsReader = new ResultSetOrmReader(selectedColumns, Reflexor.createReflexor(ormClass), rCtx);
+        SelectQueryPreparer filterPreparer = new SelectQueryPreparer();
+        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
+        String preparedSqlQuery = selectQuery.toString();
+        PreparedStatement ps = null;
+        try {
+            ps = connection.prepareStatement(preparedSqlQuery);
+            paramSetterEngine.setParamsTo(ps);
+            OrmIterator<OrmType> ormIterator = new OrmIterator<OrmType>(ps, rsReader);
+            ormIterator.prepare();
+            return ormIterator;
+        } catch (Exception ex) {
+            if (ps != null) {
+                ps.close();
+            }
+            throw ex;
+        }
     }
 
     private SelectQuery parseSqlQuery(String sqlQuery) {
