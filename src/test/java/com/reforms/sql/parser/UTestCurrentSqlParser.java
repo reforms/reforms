@@ -1,12 +1,11 @@
 package com.reforms.sql.parser;
 
-import static org.junit.Assert.assertEquals;
+import com.reforms.sql.expr.query.SelectQuery;
+import com.reforms.sql.expr.viewer.SqlBuilder;
 
 import org.junit.Test;
 
-import com.reforms.sql.expr.query.SelectQuery;
-import com.reforms.sql.expr.viewer.SqlBuilder;
-import com.reforms.sql.parser.SqlParser;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -22,7 +21,8 @@ public class UTestCurrentSqlParser {
         // assertWhereStatement("id = ::id AND name = ::name");
         // assertWhereStatement("id = :id? AND name = :name?");
         // assertOrderByStatement("1 ASC, 2 DESC");
-        assertSelectQuery("SELECT 1 FROM goods WHERE name LIKE '12' OR (CASE WHEN id = ::id1 OR id = ::id2 THEN 0 WHEN name = ::name THEN 1 ELSE id END) > 2");
+        assertSelectQuery("SELECT age AS bobj1.bobj2.bobj3");
+        assertSelectQuery("SELECT age AS #t_bobj1.bobj2.bobj3");
     }
 
     private void assertWhereStatement(String whereStatement) {

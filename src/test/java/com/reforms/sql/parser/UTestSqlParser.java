@@ -1,12 +1,11 @@
 package com.reforms.sql.parser;
 
-import static org.junit.Assert.assertEquals;
+import com.reforms.sql.expr.query.SelectQuery;
+import com.reforms.sql.expr.viewer.SqlBuilder;
 
 import org.junit.Test;
 
-import com.reforms.sql.expr.query.SelectQuery;
-import com.reforms.sql.expr.viewer.SqlBuilder;
-import com.reforms.sql.parser.SqlParser;
+import static org.junit.Assert.assertEquals;
 
 /**
  * 1.
@@ -29,6 +28,8 @@ public class UTestSqlParser {
         assertSelectQuery("SELECT -1E+3");
         assertSelectQuery("SELECT age");
         assertSelectQuery("SELECT age AS AGE");
+        assertSelectQuery("SELECT age AS bobj1.bobj2.bobj3");
+        assertSelectQuery("SELECT age AS #t_bobj1.bobj2.bobj3");
         assertSelectQuery("SELECT MAX(age)");
         assertSelectQuery("SELECT MAX(age + 2)");
         assertSelectQuery("SELECT MAX(age + (lower + 2))");

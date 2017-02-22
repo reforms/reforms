@@ -1,17 +1,5 @@
 package com.reforms.sql.parser;
 
-import static com.reforms.sql.expr.term.ConditionFlowType.resolveConditionFlowType;
-import static com.reforms.sql.expr.term.MathOperator.MO_CONCAT;
-import static com.reforms.sql.expr.term.MathOperator.resolveMathOperator;
-import static com.reforms.sql.expr.term.SqlWords.*;
-import static com.reforms.sql.expr.term.from.TableJoinTypes.TJT_CROSS_JOIN;
-import static com.reforms.sql.expr.term.predicate.ComparisonOperatorType.*;
-
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.List;
-
 import com.reforms.sql.expr.query.LinkingSelectQuery;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.statement.*;
@@ -23,6 +11,15 @@ import com.reforms.sql.expr.term.page.LimitExpression;
 import com.reforms.sql.expr.term.page.OffsetExpression;
 import com.reforms.sql.expr.term.predicate.*;
 import com.reforms.sql.expr.term.value.*;
+
+import java.util.*;
+
+import static com.reforms.sql.expr.term.ConditionFlowType.resolveConditionFlowType;
+import static com.reforms.sql.expr.term.MathOperator.MO_CONCAT;
+import static com.reforms.sql.expr.term.MathOperator.resolveMathOperator;
+import static com.reforms.sql.expr.term.SqlWords.*;
+import static com.reforms.sql.expr.term.from.TableJoinTypes.TJT_CROSS_JOIN;
+import static com.reforms.sql.expr.term.predicate.ComparisonOperatorType.*;
 
 /**
  * 1. ORACLE: SELECT selection_fields FROM (SELECT selection_fields,ROWNUM RN FROM (SELECT selection_fields FROM schemaName.tableName WHERE conditions ORDER BY orderFields)) WHERE RN > ? AND RN <= ?
@@ -168,7 +165,7 @@ public class SqlParser {
         skipSpaces();
         SelectableExpression selectExpr = parseSingleSelectExpr();
         if (selectExpr != null) {
-            AsClauseExpression asClauseExpr = parseAsClauseExpression();
+            AsClauseExpression asClauseExpr = parseAsClauseExpression(true);
             if (asClauseExpr != null) {
                 AliasExpression aliasExpr = new AliasExpression();
                 aliasExpr.setPrimaryExpr(selectExpr);
@@ -365,19 +362,20 @@ public class SqlParser {
         return funcExpr;
     }
 
-    private AsClauseExpression parseAsClauseExpression() {
+    private AsClauseExpression parseAsClauseExpression(boolean selectExpr) {
         skipSpaces();
         keepMarker();
+        List<Character> chars = selectExpr ? DONT_SQL_WORD_LETTERS_EXCLUDE_CLAUSE : DONT_SQL_WORD_LETTERS;
         int from = cursor;
         AsClauseExpression asClauseExpr = new AsClauseExpression();
-        String word = parseStatementWord(false);
+        String word = parseStatementWord(false, chars);
         if (word.isEmpty()) {
             word = parseDoubleQuoteValue();
         }
         if (SW_AS.equalsIgnoreCase(word)) {
             asClauseExpr.setAsWord(word);
             from = cursor;
-            word = parseStatementWord(false);
+            word = parseStatementWord(false, chars);
             if (word.isEmpty()) {
                 word = parseDoubleQuoteValue();
                 if (word.isEmpty()) {
@@ -927,7 +925,7 @@ public class SqlParser {
         SelectQuery selectQuery = parseSubSelect();
         TableSubQueryExpression tableSubQuery = new TableSubQueryExpression();
         tableSubQuery.setSubQueryExpr(selectQuery);
-        tableSubQuery.setAsClauseExpr(parseAsClauseExpression());
+        tableSubQuery.setAsClauseExpr(parseAsClauseExpression(false));
         return tableSubQuery;
     }
 
@@ -1024,7 +1022,7 @@ public class SqlParser {
         moveCursor(-1);
         tableExpr.setSchemeName(schemaName);
         tableExpr.setTableName(tableName);
-        tableExpr.setAsClauseExpr(parseAsClauseExpression());
+        tableExpr.setAsClauseExpr(parseAsClauseExpression(false));
         return tableExpr;
     }
 
@@ -2038,8 +2036,16 @@ public class SqlParser {
         return parseStatementWord(true);
     }
 
+    private String parseStatementWord(List<Character> dontSqlWordLetters) {
+        return parseStatementWord(true, dontSqlWordLetters);
+    }
+
     private String parseStatementWord(boolean toUpperCase) {
-        WordInfo wordInfo = parseWordInfo();
+        return parseStatementWord(toUpperCase, DONT_SQL_WORD_LETTERS);
+    }
+
+    private String parseStatementWord(boolean toUpperCase, List<Character> dontSqlWordLetters) {
+        WordInfo wordInfo = parseWordInfo(dontSqlWordLetters);
         if (wordInfo != null) {
             String word = wordInfo.getWord();
             cursor = wordInfo.getAfterWordPos();
@@ -2051,15 +2057,28 @@ public class SqlParser {
     private static final List<Character> DONT_SQL_WORD_LETTERS = Arrays.asList(
             '.', ':', '(', ')', '!', '?', '<', '>', '=', ',', '*', '+', '-', '/', '&', '^', '%', '~', '"', '\'', '\0');
 
+    private static final List<Character> DONT_SQL_WORD_LETTERS_EXCLUDE_CLAUSE = initClause();
+
+    private static List<Character> initClause() {
+        List<Character> chars = new ArrayList<>(DONT_SQL_WORD_LETTERS);
+        chars.remove((Character) '#');
+        chars.remove((Character) '.');
+        return Collections.unmodifiableList(chars);
+    }
+
     private WordInfo parseWordInfo() {
+        return parseWordInfo(DONT_SQL_WORD_LETTERS);
+    }
+
+    private WordInfo parseWordInfo(List<Character> dontSqlWordLetters) {
         skipSpaces();
         int from = cursor;
         int afterWordPos = cursor;
-        while (!DONT_SQL_WORD_LETTERS.contains(getSymbol())) {
+        while (!dontSqlWordLetters.contains(getSymbol())) {
             if (Character.isWhitespace(getSymbol())) {
                 int tempPos = cursor;
                 skipSpaces();
-                if (DONT_SQL_WORD_LETTERS.contains(getSymbol())) {
+                if (dontSqlWordLetters.contains(getSymbol())) {
                     break;
                 }
                 cursor = tempPos;
