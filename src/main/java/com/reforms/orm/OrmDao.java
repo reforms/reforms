@@ -46,6 +46,7 @@ public class OrmDao {
         SelectQueryPreparer filterPreparer = new SelectQueryPreparer();
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
+        System.out.println(preparedSqlQuery);
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
             paramSetterEngine.setParamsTo(ps);
             try (ResultSet rs = ps.executeQuery()) {

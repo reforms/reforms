@@ -1,7 +1,7 @@
 package com.reforms.orm.scenario.nested;
 
 /**
- * Àäğåñ
+ * ĞĞ´Ñ€ĞµÑ
  * @author evgenie
  */
 public class AddressOrm {
@@ -38,6 +38,6 @@ public class AddressOrm {
 
     @Override
     public String toString() {
-        return "AddressOrm [addressId=" + addressId + ", refCity=" + refCity + ", refStreet=" + refStreet + "]";
+        return "[addressId=" + addressId + ", refCity=" + refCity + ", refStreet=" + refStreet + "]";
     }
 }

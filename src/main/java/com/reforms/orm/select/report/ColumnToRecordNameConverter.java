@@ -12,7 +12,7 @@ public class ColumnToRecordNameConverter implements IColumnToRecordNameConverter
     @Override
     public String getRecordName(SelectedColumn column) {
         ColumnAlias cAlias = column.getColumnAlias();
-        String metaFieldName = cAlias.getAliasKey();
+        String metaFieldName = cAlias.getJavaAliasKey();
         if (metaFieldName == null) {
             metaFieldName = column.getColumnName();
             if (metaFieldName == null) {

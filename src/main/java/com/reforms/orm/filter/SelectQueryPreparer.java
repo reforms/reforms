@@ -16,6 +16,7 @@ import com.reforms.orm.filter.modifier.PredicateModifier;
 import com.reforms.orm.filter.param.ParamSetterFactory;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.select.ColumnAlias;
+import com.reforms.orm.select.ColumnAliasParser;
 import com.reforms.orm.tree.SelectQueryTree;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.term.from.TableExpression;
@@ -87,12 +88,12 @@ public class SelectQueryPreparer {
         int questionCount = 0;
         SelectQueryTree queryTree = SelectQueryTree.build(selectQuery);
         PredicateModifier predicateModifier = new PredicateModifier(queryTree);
-        FilterValueParser filterValueParser = new FilterValueParser();
+        ColumnAliasParser filterValueParser = OrmConfigurator.get(ColumnAliasParser.class);
         for (ValueExpression valueFilterExpr : filterExprs) {
             if (VET_FILTER == valueFilterExpr.getValueExprType()) {
                 FilterExpression filterExpr = (FilterExpression) valueFilterExpr;
                 String filterName = filterExpr.getFilterName();
-                ColumnAlias filterDetails = filterValueParser.parseFilterValue(filterName);
+                ColumnAlias filterDetails = filterValueParser.parseColumnAlias(filterName);
                 if (filterDetails == null || filterDetails.getAliasType() == null) {
                     Object filterValue = filters.get(filterName);
                     if (filterValue == null && filterExpr.isStaticFilter() && !filterExpr.isQuestionFlag()) {
@@ -113,7 +114,7 @@ public class SelectQueryPreparer {
                         }
 
                 } else {
-                    String shortFilterName = filterDetails.getAliasKey();
+                    String shortFilterName = filterDetails.getJavaAliasKey();
                     Object filterValue = filters.get(shortFilterName);
                     if (filterValue == null) {
                         filterValue = filters.get(filterName);
@@ -125,7 +126,7 @@ public class SelectQueryPreparer {
                     if (filterValue == null && filterExpr.isStaticFilter() && filterExpr.isQuestionFlag()) {
                         predicateModifier.changeStaticFilter(filterExpr);
                     } else
-                    // Динамический фильтр
+                        // Динамический фильтр
                         if (isEmptyValue(filterValue) && filterExpr.isDynamicFilter()) {
                             predicateModifier.changeDynamicFilter(filterExpr);
                         } else {

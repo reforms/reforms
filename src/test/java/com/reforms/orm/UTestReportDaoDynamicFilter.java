@@ -25,7 +25,7 @@ public class UTestReportDaoDynamicFilter extends GoodsDbTest {
     }
 
     private static final String SELECT_GOODS_SIMPLE_QUERY =
-            "SELECT id l_ID, name NAME, description DESCRIPTION, price n_PRICE, articul ARTICUL, act_time t_ACT_TIME " +
+            "SELECT id l#ID, name NAME, description DESCRIPTION, price n#PRICE, articul ARTICUL, act_time t#ACT_TIME " +
                     "    FROM goods WHERE id = ::id AND name = ::name AND price = ::price";
 
     @Test

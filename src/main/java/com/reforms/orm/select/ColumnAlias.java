@@ -8,19 +8,36 @@ package com.reforms.orm.select;
  *      aliasType = CAT_LONG -  потому что префикс l
  *      aliasKey = ID
  *
+ * Алиас, в котором есть вся информация для коректного вычитывания объекта из ResulSet и установки его DTO
+ * Примеры (все что после AS - мета-алиас):
+ *  age AS bobj1.bobj2.bobj3
+ *  age AS b3:bobj1.bobj2.bobj3
+ *  age AS b3:
+ *  age AS #t_bobj1.bobj2.bobj3
+ *  age AS b3t:bobj1.bobj2.bobj3
+ *  age AS b3:#t
+ *  age AS #t
  * @author evgenie
  *
  */
 public class ColumnAlias {
 
+    /** Полное значение алиаса */
     private String alias;
 
+    /** Тип, который явно указан в описании алиаса */
     private ColumnAliasType aliasType;
 
-    private String aliasKey;
+    /** Настоящий алиас для sql выражения, то-что должно быть после AS */
+    private String sqlAliasKey;
 
+    /** Значение алиаса без типа - fieldName или fieldName1.fieldName2.fieldNameN */
+    private String javaAliasKey;
+
+    /** Дополнительные параметры указанные в типе */
     private String extra;
 
+    /** Тип и экстра вместе */
     private String aliasPrefix;
 
     public String getAlias() {
@@ -39,12 +56,20 @@ public class ColumnAlias {
         this.aliasType = aliasType;
     }
 
-    public String getAliasKey() {
-        return aliasKey;
+    public String getSqlAliasKey() {
+        return sqlAliasKey;
     }
 
-    public void setAliasKey(String aliasKey) {
-        this.aliasKey = aliasKey;
+    public void setSqlAliasKey(String sqlAliasKey) {
+        this.sqlAliasKey = sqlAliasKey;
+    }
+
+    public String getJavaAliasKey() {
+        return javaAliasKey;
+    }
+
+    public void setJavaAliasKey(String javaAliasKey) {
+        this.javaAliasKey = javaAliasKey;
     }
 
     public String getExtra() {
@@ -71,14 +96,14 @@ public class ColumnAlias {
     }
 
     public boolean hasType() {
-        return aliasType != null && alias != null && !alias.equals(aliasKey);
+        return aliasType != null && alias != null && !alias.equals(javaAliasKey);
     }
 
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append(alias).append("-").append(aliasType).append("-")
-                .append(aliasKey).append("-").append(extra).append("-").append(aliasPrefix);
+        builder.append(alias).append("-").append(aliasType).append("-").append(sqlAliasKey).append("-")
+                .append(javaAliasKey).append("-").append(extra).append("-").append(aliasPrefix);
         return builder.toString();
     }
 

@@ -28,8 +28,6 @@ public class UTestSqlParser {
         assertSelectQuery("SELECT -1E+3");
         assertSelectQuery("SELECT age");
         assertSelectQuery("SELECT age AS AGE");
-        assertSelectQuery("SELECT age AS bobj1.bobj2.bobj3");
-        assertSelectQuery("SELECT age AS #t_bobj1.bobj2.bobj3");
         assertSelectQuery("SELECT MAX(age)");
         assertSelectQuery("SELECT MAX(age + 2)");
         assertSelectQuery("SELECT MAX(age + (lower + 2))");
@@ -63,6 +61,22 @@ public class UTestSqlParser {
         assertSelectQuery("SELECT name \"Имя\" FROM local.users");
         assertSelectQuery("SELECT name AS \"Полное Имя\" FROM local.users");
 
+    }
+
+    @Test
+    public void testSingleArgSelectMapStatement() {
+        // Результат без алиаса
+        assertSelectQuery("SELECT age AS bobj1.bobj2.bobj3");
+        // Результат с алиаса b3
+        assertSelectQuery("SELECT age AS b3:bobj1.bobj2.bobj3");
+        // Результат с алиаса b3, в качестве сетера будет setAge
+        assertSelectQuery("SELECT age AS b3:");
+        // Результат без алиаса
+        assertSelectQuery("SELECT age AS t#bobj1.bobj2.bobj3");
+        // Результат с алиаса b3
+        assertSelectQuery("SELECT age AS b3:t#bobj1.bobj2.bobj3");
+        // Результат с алиаса b3, в качестве сетера будет setAge и типом timestamp
+        assertSelectQuery("SELECT age AS b3:t#");
     }
 
     @Test

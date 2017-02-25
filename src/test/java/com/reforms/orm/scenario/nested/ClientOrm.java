@@ -3,7 +3,7 @@ package com.reforms.orm.scenario.nested;
 import java.util.Date;
 
 /**
- * Êëèåíò
+ * ĞšĞ»Ğ¸ĞµĞ½Ñ‚
  * @author evgenie
  */
 public class ClientOrm {
@@ -50,6 +50,6 @@ public class ClientOrm {
 
     @Override
     public String toString() {
-        return "ClientOrm [clientId=" + clientId + ", clientName=" + clientName + ", clientAddress=" + clientAddress + ", logDate=" + logDate + "]";
+        return "[clientId=" + clientId + ", clientName=" + clientName + ", clientAddress=" + clientAddress + ", logDate=" + logDate + "]";
     }
 }

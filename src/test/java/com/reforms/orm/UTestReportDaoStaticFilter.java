@@ -30,9 +30,9 @@ public class UTestReportDaoStaticFilter extends GoodsDbTest {
     }
 
     private static final String SELECT_GOODS_FULL_QUERY =
-            "SELECT id l_ID, name NAME, description DESCRIPTION, price n_PRICE, articul ARTICUL, act_time t_ACT_TIME "
+            "SELECT id AS l#ID, name NAME, description DESCRIPTION, price n#PRICE, articul ARTICUL, act_time t#ACT_TIME "
                     +
-                    "    FROM goods WHERE id = :id AND name = :name AND price = :price AND act_time >= :t_act_time_after AND act_time <= :t_act_time_before";
+                    "    FROM goods WHERE id = :id AND name = :name AND price = :price AND act_time >= :t#act_time_after AND act_time <= :t#act_time_before";
 
     @Test
     public void runTestReportDaoStaticMapFilter_full_loadReport() throws Exception {
@@ -49,8 +49,8 @@ public class UTestReportDaoStaticFilter extends GoodsDbTest {
     }
 
     private static final String SELECT_GOODS_QUERY =
-            "SELECT id l_ID, name NAME, description DESCRIPTION, price n_PRICE, articul ARTICUL, act_time t_ACT_TIME " +
-                    "    FROM goods WHERE id = :id AND name = :name AND price = :price AND act_time = :t_actTime";
+            "SELECT id l#ID, name NAME, description DESCRIPTION, price n#PRICE, articul ARTICUL, act_time t#ACT_TIME " +
+                    "    FROM goods WHERE id = :id AND name = :name AND price = :price AND act_time = :t#actTime";
 
     @Test
     public void runTestReportDaoStaticObjectFilter_full_loadReport() throws Exception {
@@ -65,7 +65,7 @@ public class UTestReportDaoStaticFilter extends GoodsDbTest {
     }
 
     private static final String SELECT_GOODS_SIMPLE_QUERY =
-            "SELECT id l_ID, name NAME, description DESCRIPTION, price n_PRICE, articul ARTICUL, act_time t_ACT_TIME " +
+            "SELECT id l#ID, name NAME, description DESCRIPTION, price n#PRICE, articul ARTICUL, act_time t#ACT_TIME " +
                     "    FROM goods WHERE id = :id AND name = :name AND price = :price";
 
     @Test
@@ -74,8 +74,8 @@ public class UTestReportDaoStaticFilter extends GoodsDbTest {
     }
 
     private static final String SELECT_GOODS_QUERY_WITH_INNER_FILTER =
-            "SELECT id l_ID, name NAME, description DESCRIPTION, price n_PRICE, articul ARTICUL, act_time t_ACT_TIME " +
-                    "    FROM goods WHERE id = :goods.id AND name = :goods.name AND price = :goods.price AND act_time = :t_goods.actTime";
+            "SELECT id l#ID, name NAME, description DESCRIPTION, price n#PRICE, articul ARTICUL, act_time t#ACT_TIME " +
+                    "    FROM goods WHERE id = :goods.id AND name = :goods.name AND price = :goods.price AND act_time = :t#goods.actTime";
 
     @Test
     public void runTestReportDaoStaticObjectInnerFilter_full_loadReport() throws Exception {
@@ -150,7 +150,7 @@ public class UTestReportDaoStaticFilter extends GoodsDbTest {
     }
 
     private static final String SELECT_GOODS_FULL_QUERY_IN_FILTER =
-            "SELECT id l_ID, name NAME, description DESCRIPTION, price n_PRICE, articul ARTICUL, act_time t_ACT_TIME " +
+            "SELECT id l#ID, name NAME, description DESCRIPTION, price n#PRICE, articul ARTICUL, act_time t#ACT_TIME " +
                     "    FROM goods WHERE id IN (:ids)";
 
     @Test
@@ -160,7 +160,7 @@ public class UTestReportDaoStaticFilter extends GoodsDbTest {
     }
 
     private static final String SELECT_GOODS_FULL_QUERY_IN_FILTER_ARRAY =
-            "SELECT id l_ID, name NAME, description DESCRIPTION, price n_PRICE, articul ARTICUL, act_time t_ACT_TIME " +
+            "SELECT id l#ID, name NAME, description DESCRIPTION, price n#PRICE, articul ARTICUL, act_time t#ACT_TIME " +
                     "    FROM goods WHERE id IN (:ids)";
 
     @Test
@@ -170,7 +170,7 @@ public class UTestReportDaoStaticFilter extends GoodsDbTest {
     }
 
     private static final String SELECT_GOODS_FULL_QUERY_ANDS =
-            "SELECT id l_ID, name NAME, description DESCRIPTION, price n_PRICE, articul ARTICUL, act_time t_ACT_TIME " +
+            "SELECT id l#ID, name NAME, description DESCRIPTION, price n#PRICE, articul ARTICUL, act_time t#ACT_TIME " +
                     "    FROM goods WHERE (id, name) = (:id, :name)";
 
     @Test

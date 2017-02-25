@@ -16,7 +16,7 @@ public class UTestReportDao extends GoodsDbTest {
     }
 
     private static final String SELECT_GOODS_FULL_QUERY =
-            "SELECT id l_ID, name s_NAME, description s_DESCRIPTION, price n_PRICE, articul s_ARTICUL, act_time t_ACT_TIME " +
+            "SELECT id l#ID, name s#NAME, description s#DESCRIPTION, price n#PRICE, articul s#ARTICUL, act_time t#ACT_TIME " +
                     "    FROM goods";
 
     @Test
@@ -25,7 +25,7 @@ public class UTestReportDao extends GoodsDbTest {
     }
 
     private static final String SELECT_GOODS_SHORT_QUERY =
-            "SELECT id l_ID, name, description, price n_PRICE, articul, act_time t_ACT_TIME " +
+            "SELECT id l#ID, name, description, price n#PRICE, articul, act_time t#ACT_TIME " +
                     "    FROM goods";
 
     @Test
@@ -34,7 +34,7 @@ public class UTestReportDao extends GoodsDbTest {
     }
 
     private static final String SELECT_GOODS_VERY_SHORT_QUERY =
-            "SELECT id #l, name, description, price #n, articul, act_time #t " +
+            "SELECT id l#, name, description, price n#, articul, act_time t# " +
                     "    FROM goods";
 
     @Test

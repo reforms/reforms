@@ -619,6 +619,10 @@ public class SqlParser {
         return ':' == getSymbol();
     }
 
+    /**
+     * TODO: переделать через parseStatementWord(false, FILTER_CHARS);
+     * @return
+     */
     private FilterExpression parseFilterExpr() {
         int from = cursor;
         if (!checkIsFilterExpr()) {
@@ -631,7 +635,7 @@ public class SqlParser {
         from = cursor;
         int filterNameCursor = cursor;
         while (EOF != getSymbol() &&
-                (Character.isJavaIdentifierPart(getSymbol()) || '.' == getSymbol())) {
+                (Character.isJavaIdentifierPart(getSymbol()) || '.' == getSymbol() || '#' == getSymbol())) {
             moveCursor();
         }
         if (filterNameCursor == cursor) {
@@ -2063,6 +2067,7 @@ public class SqlParser {
         List<Character> chars = new ArrayList<>(DONT_SQL_WORD_LETTERS);
         chars.remove((Character) '#');
         chars.remove((Character) '.');
+        chars.remove((Character) ':');
         return Collections.unmodifiableList(chars);
     }
 

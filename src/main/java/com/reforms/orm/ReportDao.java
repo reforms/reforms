@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.List;
 
+import com.reforms.orm.extractor.ReportSelectColumnExtractorAndAliasModifier;
 import com.reforms.orm.extractor.SelectColumnExtractorAndAliasModifier;
 import com.reforms.orm.filter.*;
 import com.reforms.orm.select.SelectedColumn;
@@ -53,7 +54,7 @@ public class ReportDao {
         IConnectionHolder cHolder = rCtx.getConnectionHolder();
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        SelectColumnExtractorAndAliasModifier selectedColumnExtractor = new SelectColumnExtractorAndAliasModifier();
+        SelectColumnExtractorAndAliasModifier selectedColumnExtractor = new ReportSelectColumnExtractorAndAliasModifier();
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         ResultSetRecordReader rsReader = new ResultSetRecordReader(selectedColumns, rCtx);
         Report report = new Report();
@@ -90,7 +91,7 @@ public class ReportDao {
         IConnectionHolder cHolder = rCtx.getConnectionHolder();
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        SelectColumnExtractorAndAliasModifier selectedColumnExtractor = new SelectColumnExtractorAndAliasModifier();
+        SelectColumnExtractorAndAliasModifier selectedColumnExtractor = new ReportSelectColumnExtractorAndAliasModifier();
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         ResultSetRecordReader rsReader = new ResultSetRecordReader(selectedColumns, rCtx);
         SelectQueryPreparer filterPreparer = new SelectQueryPreparer();
@@ -126,7 +127,7 @@ public class ReportDao {
         IConnectionHolder cHolder = rCtx.getConnectionHolder();
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        SelectColumnExtractorAndAliasModifier selectedColumnExtractor = new SelectColumnExtractorAndAliasModifier();
+        SelectColumnExtractorAndAliasModifier selectedColumnExtractor = new ReportSelectColumnExtractorAndAliasModifier();
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         ResultSetRecordReader rsReader = new ResultSetRecordReader(selectedColumns, rCtx);
         SelectQueryPreparer filterPreparer = new SelectQueryPreparer();

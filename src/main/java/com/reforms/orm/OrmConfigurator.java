@@ -3,6 +3,7 @@ package com.reforms.orm;
 import com.reforms.orm.filter.param.ParamSetterFactory;
 import com.reforms.orm.reflex.ReflexorCache;
 import com.reforms.orm.scheme.SchemeManager;
+import com.reforms.orm.select.ColumnAliasParser;
 import com.reforms.orm.select.bobj.ColumnToFieldNameConverter;
 import com.reforms.orm.select.bobj.ResultSetValueAdapter;
 import com.reforms.orm.select.bobj.reader.ParamRsReaderFactory;
@@ -38,7 +39,7 @@ public class OrmConfigurator {
         SchemeManager schemeManager = new SchemeManager();
         schemeManager.setDefaultDbType(DbType.MIX);
         ormContext.setSchemeManager(schemeManager);
-        ormConf.configureReportEngine(ormContext);
+        ormConf.configureOrmContext(ormContext);
         OrmConfigurator.setInstance(ormConf);
     }
 
@@ -60,8 +61,9 @@ public class OrmConfigurator {
 
     private Map<String, Object> settings = new ConcurrentHashMap<>();
 
-    public void configureReportEngine(OrmContext reportContext) {
-        settings.put(OrmContext.class.getName(), reportContext);
+    public void configureOrmContext(OrmContext ormContext) {
+        settings.put(OrmContext.class.getName(), ormContext);
+        settings.put(ColumnAliasParser.class.getName(), new ColumnAliasParser());
     }
 
 }

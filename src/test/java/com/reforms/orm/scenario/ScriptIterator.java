@@ -10,7 +10,7 @@ import java.nio.file.Files;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * Получение скриптов для выполнения из файла
+ * РџРѕР»СѓС‡РµРЅРёРµ СЃРєСЂРёРїС‚РѕРІ РґР»СЏ РІС‹РїРѕР»РЅРµРЅРёСЏ РёР· С„Р°Р№Р»Р°
  * @author evgenie
  */
 public class ScriptIterator {
@@ -69,18 +69,18 @@ public class ScriptIterator {
     }
 
     /**
-     * Получить ресурс как файл
-     * @param relativePath относительный путь к файлу
-     * @param owner класс, относительно расположения которого указывается путь к ресурсу
-     * @return файл
+     * РџРѕР»СѓС‡РёС‚СЊ СЂРµСЃСѓСЂСЃ РєР°Рє С„Р°Р№Р»
+     * @param relativePath РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅС‹Р№ РїСѓС‚СЊ Рє С„Р°Р№Р»Сѓ
+     * @param owner РєР»Р°СЃСЃ, РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ СЂР°СЃРїРѕР»РѕР¶РµРЅРёСЏ РєРѕС‚РѕСЂРѕРіРѕ СѓРєР°Р·С‹РІР°РµС‚СЃСЏ РїСѓС‚СЊ Рє СЂРµСЃСѓСЂСЃСѓ
+     * @return С„Р°Р№Р»
      * @throws IOException
      */
     public static ScriptIterator getResourceIterator(String relativePath, Class<?> owner) throws IOException {
         URL resourceUrl = owner.getResource(relativePath);
-        assertNotNull("Ресурс " + relativePath + " не найден", resourceUrl);
+        assertNotNull("Р РµСЃСѓСЂСЃ " + relativePath + " РЅРµ РЅР°Р№РґРµРЅ", resourceUrl);
         File resource = new File(resourceUrl.getFile());
         byte[] content = Files.readAllBytes(resource.toPath());
-        return new ScriptIterator(new String(content, "Cp1251"));
+        return new ScriptIterator(new String(content, "UTF-8"));
     }
 
     public static void main(String[] args) {
