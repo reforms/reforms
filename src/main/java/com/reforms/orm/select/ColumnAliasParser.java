@@ -2,6 +2,8 @@ package com.reforms.orm.select;
 
 import static com.reforms.orm.select.ColumnAliasType.*;
 
+import com.reforms.ann.ThreadSafe;
+
 /**
  *
  * ОБЩИЙ ФОРМАТ выражения после слова AS
@@ -54,6 +56,7 @@ import static com.reforms.orm.select.ColumnAliasType.*;
  *  age AS t#
  * @author evgenie
  */
+@ThreadSafe
 public class ColumnAliasParser {
 
     /**
@@ -87,9 +90,6 @@ public class ColumnAliasParser {
                 }
                 char typeSymbol = preparedAlias.charAt(0);
                 aliasType = ColumnAliasType.getType(typeSymbol);
-                if (aliasType == null) {
-                    throw new IllegalStateException("Не корректное выражение в алиасе '" + alias + "'. Указан неизвестный тип '" + typeSymbol + "'");
-                }
                 if (sharpIndex > 1) {
                     extra = preparedAlias.substring(1, sharpIndex);
                 }

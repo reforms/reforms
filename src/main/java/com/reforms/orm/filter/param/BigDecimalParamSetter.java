@@ -5,10 +5,13 @@ import java.math.BigInteger;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import com.reforms.ann.ThreadSafe;
+
 /**
  * Установить параметр типа BigDecimal
- *
+ * @author evgenie
  */
+@ThreadSafe
 public class BigDecimalParamSetter implements ParamSetter {
 
     @Override
@@ -16,13 +19,26 @@ public class BigDecimalParamSetter implements ParamSetter {
         ps.setBigDecimal(index, getBigDecimalValue(value));
     }
 
+    @Override
+    public boolean acceptValue(Object value) {
+        return convertValue(value) != null;
+    }
+
     protected BigDecimal getBigDecimalValue(Object value) {
+        BigDecimal bigDecimalValue = convertValue(value);
+        if (bigDecimalValue == null) {
+            throw new IllegalStateException("Невозможно преобразовать значение '" + value + "' к типу java.math.BigDecimal");
+        }
+        return bigDecimalValue;
+    }
+
+    protected BigDecimal convertValue(Object value) {
         if (value instanceof BigDecimal) {
             return (BigDecimal) value;
         }
         if (value instanceof BigInteger) {
             return new BigDecimal((BigInteger) value);
         }
-        throw new IllegalStateException("Невозможно преобразовать значение '" + value + "' к типу java.math.BigDecimal");
+        return null;
     }
 }

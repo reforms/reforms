@@ -1,5 +1,9 @@
 package com.reforms.orm.select;
 
+/**
+ * Контейнер для хранения информации о выбираемых колонках
+ * @author evgenie
+ */
 public class SelectedColumn {
 
     private int index;

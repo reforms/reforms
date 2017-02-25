@@ -51,7 +51,7 @@ public class UTestSchemePreparer {
     }
 
     private void assertScheme(String query, String expectedQuery) {
-        SelectQueryPreparer queryPreaprer = new SelectQueryPreparer();
+        SelectQueryPreparer queryPreaprer = OrmConfigurator.get(SelectQueryPreparer.class);
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
         queryPreaprer.prepare(selectQuery, EMPTY_FILTER_MAP);

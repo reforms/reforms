@@ -1,12 +1,12 @@
 package com.reforms.orm.extractor;
 
-import static com.reforms.orm.select.ColumnAliasType.CAT_S_STRING;
 import static com.reforms.sql.expr.term.ExpressionType.ET_ALIAS_EXPRESSION;
 import static com.reforms.sql.expr.term.ExpressionType.ET_COLUMN_EXPRESSION;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.select.ColumnAlias;
 import com.reforms.orm.select.ColumnAliasParser;
@@ -19,7 +19,11 @@ import com.reforms.sql.expr.term.*;
  * TODO логика: подумать над тем, какой символ использовать в качестве краткого алиаса, сейчас используется символ '#'.
  * @author evgenie
  */
+@ThreadSafe
 public class SelectColumnExtractorAndAliasModifier {
+
+    public SelectColumnExtractorAndAliasModifier() {
+    }
 
     public List<SelectedColumn> extractSelectedColumns(SelectQuery selectQuery) {
         List<SelectedColumn> columns = new ArrayList<>();

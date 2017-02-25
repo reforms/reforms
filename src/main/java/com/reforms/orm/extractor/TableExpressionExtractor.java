@@ -11,7 +11,7 @@ import java.util.List;
 import static com.reforms.sql.expr.term.ExpressionType.ET_TABLE_EXPRESSION;
 
 /**
- * Возвращает список TableExpression
+ * Р’РѕР·РІСЂР°С‰Р°РµС‚ СЃРїРёСЃРѕРє TableExpression
  * @author evgenie
  */
 public class TableExpressionExtractor extends SqlBuilder {

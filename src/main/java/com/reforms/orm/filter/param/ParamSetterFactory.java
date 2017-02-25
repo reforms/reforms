@@ -2,15 +2,19 @@ package com.reforms.orm.filter.param;
 
 import static com.reforms.orm.select.ColumnAliasType.*;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
+/**
+ * Фабрика установщиков параметров в ResultSet
+ * @author evgenie
+ */
 public class ParamSetterFactory {
 
     private Map<String, ParamSetter> baseParamSetters;
 
     private Map<String, ParamSetter> customParamSetters;
+
+    private Set<String> prefixes = null;
 
     public ParamSetterFactory configure() {
         baseParamSetters = new HashMap<>();
@@ -46,6 +50,11 @@ public class ParamSetterFactory {
             customParamSetters = new HashMap<>();
         }
         customParamSetters = Collections.unmodifiableMap(customParamSetters);
+
+        prefixes = new TreeSet<>(new ParamSetterMarkerComparator());
+        prefixes.addAll(customParamSetters.keySet());
+        prefixes.addAll(baseParamSetters.keySet());
+
         return this;
     }
 
@@ -60,5 +69,17 @@ public class ParamSetterFactory {
             throw new IllegalStateException("Необходимо сконфигурировать 'ParamSetterFactory'");
         }
         return baseParamSetters.get(key);
+    }
+
+    public String findParamSetterMarker(Object value) {
+        if (value != null) {
+            for (String marker : prefixes) {
+                ParamSetter paramSetter = getParamSetter(marker);
+                if (paramSetter.acceptValue(value)) {
+                    return marker;
+                }
+            }
+        }
+        return null;
     }
 }

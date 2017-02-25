@@ -5,6 +5,9 @@ package com.reforms.orm;
  * @author evgenie
  */
 public class ConverterConfig {
+    
+    public ConverterConfig() {
+    }
 
     private String datePattern = "dd.MM.yyyy";
 

@@ -6,7 +6,7 @@ import java.util.Map;
 import com.reforms.sql.db.DbType;
 
 /**
- *
+ * Конфигурация некоторых параметров БД
  * @author evgenie
  */
 public class SchemeManager implements ISchemeManager {
@@ -52,5 +52,4 @@ public class SchemeManager implements ISchemeManager {
     public void setDefaultDbType(DbType dbType) {
         putDbType(DEFAULT_SCHEME_NAME, dbType);
     }
-
 }

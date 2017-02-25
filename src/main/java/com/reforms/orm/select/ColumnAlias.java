@@ -13,10 +13,10 @@ package com.reforms.orm.select;
  *  age AS bobj1.bobj2.bobj3
  *  age AS b3:bobj1.bobj2.bobj3
  *  age AS b3:
- *  age AS #t_bobj1.bobj2.bobj3
+ *  age AS t#bobj1.bobj2.bobj3
  *  age AS b3t:bobj1.bobj2.bobj3
- *  age AS b3:#t
- *  age AS #t
+ *  age AS b3:t#
+ *  age AS t#
  * @author evgenie
  *
  */

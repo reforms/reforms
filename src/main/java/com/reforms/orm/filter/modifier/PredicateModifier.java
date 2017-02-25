@@ -13,6 +13,10 @@ import com.reforms.sql.expr.term.casee.CaseExpression;
 import com.reforms.sql.expr.term.casee.WhenThenExpression;
 import com.reforms.sql.expr.term.predicate.*;
 
+/**
+ * TODO доработка - проверить математические операции
+ * @author evgenie
+ */
 public class PredicateModifier {
 
     private SelectQueryTree queryTree;

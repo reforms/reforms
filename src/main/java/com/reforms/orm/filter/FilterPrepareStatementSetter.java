@@ -41,46 +41,14 @@ public class FilterPrepareStatementSetter {
     }
 
     /**
-     * TODO оптимизация - распределить if блоки по частоте вызова (чаще будут строки, даты и целые)
+     *
      * @param filterValue
      * @return
      */
     private ColumnAliasType getFilterType(Object filterValue) {
-        if (filterValue instanceof Boolean) {
-            return CAT_Z_BOOLEAN;
-        }
-        if (filterValue instanceof Byte) {
-            return CAT_Y_BYTE;
-        }
-        if (filterValue instanceof Short) {
-            return CAT_X_SHORT;
-        }
-        if (filterValue instanceof Integer) {
-            return CAT_I_INT;
-        }
-        if (filterValue instanceof Long) {
-            return CAT_L_LONG;
-        }
-        if (filterValue instanceof Float) {
-            return CAT_F_FLOAT;
-        }
-        if (filterValue instanceof Double) {
-            return CAT_W_DOUBLE;
-        }
-        if (filterValue instanceof String) {
-            return CAT_S_STRING;
-        }
-        if (filterValue instanceof BigDecimal) {
-            return CAT_N_BIGDECIMAL;
-        }
-        if (filterValue instanceof Timestamp) {
-            return CAT_T_TIMESTAMP;
-        }
-        if (filterValue instanceof Time) {
-            return CAT_V_TIME;
-        }
-        if (filterValue instanceof Date) {
-            return CAT_D_DATE;
+        String prefix = paramSetterFactory.findParamSetterMarker(filterValue);
+        if (prefix != null) {
+            return ColumnAliasType.getType(prefix.charAt(0));
         }
         if (filterValue instanceof Iterable) {
             Iterable<?> values = (Iterable<?>) filterValue;

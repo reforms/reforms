@@ -1,5 +1,6 @@
 package com.reforms.orm.extractor;
 
+import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.OrmContext;
 import com.reforms.orm.scheme.ISchemeManager;
@@ -12,7 +13,11 @@ import com.reforms.sql.expr.term.from.TableExpression;
  * TODO: оптимизация
  * @author evgenie
  */
+@ThreadSafe
 public class DbTypeExtractor {
+
+    public DbTypeExtractor() {
+    }
 
     public DbType extractDbType(SelectQuery selectQuery) {
         OrmContext rCtx = OrmConfigurator.get(OrmContext.class);

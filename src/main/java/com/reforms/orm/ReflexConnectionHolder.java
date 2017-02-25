@@ -5,7 +5,17 @@ import java.sql.Connection;
 
 import javax.sql.DataSource;
 
+import com.reforms.ann.ThreadSafe;
+
+/**
+ * Получение соединения из держателя
+ * @author evgenie
+ */
+@ThreadSafe
 public class ReflexConnectionHolder implements IConnectionHolder {
+
+    public ReflexConnectionHolder() {
+    }
 
     @Override
     public Connection getConnection(Object connectionHolder) throws Exception {

@@ -3,9 +3,13 @@ package com.reforms.orm.filter.param;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import com.reforms.ann.ThreadSafe;
+
 /**
  * Установить параметр типа Double
+ * @author evgenie
  */
+@ThreadSafe
 public class DoubleParamSetter implements ParamSetter {
 
     @Override
@@ -13,10 +17,23 @@ public class DoubleParamSetter implements ParamSetter {
         ps.setDouble(index, getDoubleValue(value));
     }
 
+    @Override
+    public boolean acceptValue(Object value) {
+        return convertValue(value) != null;
+    }
+
     protected double getDoubleValue(Object value) {
-        if (value instanceof Double) {
-            return ((Double) value).doubleValue();
+        Double doubleValue = convertValue(value);
+        if (doubleValue == null) {
+            throw new IllegalStateException("Невозможно преобразовать значение '" + value + "' к типу double");
         }
-        throw new IllegalStateException("Невозможно преобразовать значение '" + value + "' к типу double");
+        return doubleValue;
+    }
+
+    protected Double convertValue(Object value) {
+        if (value instanceof Double) {
+            return ((Double) value);
+        }
+        return null;
     }
 }

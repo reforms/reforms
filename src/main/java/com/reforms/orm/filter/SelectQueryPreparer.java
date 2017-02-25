@@ -7,6 +7,7 @@ import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.List;
 
+import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.OrmContext;
 import com.reforms.orm.extractor.FilterExpressionExtractor;
@@ -28,7 +29,11 @@ import com.reforms.sql.expr.term.value.ValueExpression;
  * Подготовка SelectQuery к тому виду, в котором она будет отправлена в PrepareStatement
  * @author evgenie
  */
+@ThreadSafe
 public class SelectQueryPreparer {
+
+    public SelectQueryPreparer() {
+    }
 
     /**
      * TODO подумать.
@@ -53,7 +58,7 @@ public class SelectQueryPreparer {
 
     private void preparePage(SelectQuery selectQuery, FilterValues filters) {
         if (filters.hasPageFilter()) {
-            PageModifier pageModifer = new PageModifier();
+            PageModifier pageModifer = OrmConfigurator.get(PageModifier.class);
             pageModifer.changeSelectQuery(selectQuery, filters);
         }
     }
@@ -104,14 +109,14 @@ public class SelectQueryPreparer {
                         predicateModifier.changeStaticFilter(filterExpr);
                     } else
                     // Динамический фильтр
-                        if (isEmptyValue(filterValue) && filterExpr.isDynamicFilter()) {
-                            predicateModifier.changeDynamicFilter(filterExpr);
-                        } else {
-                            int newParamCount = fpss.addFilterValue(filterValue);
-                            if (filterValue != null) {
-                                filterExpr.setPsQuestionCount(newParamCount);
-                            }
+                    if (isEmptyValue(filterValue) && filterExpr.isDynamicFilter()) {
+                        predicateModifier.changeDynamicFilter(filterExpr);
+                    } else {
+                        int newParamCount = fpss.addFilterValue(filterValue);
+                        if (filterValue != null) {
+                            filterExpr.setPsQuestionCount(newParamCount);
                         }
+                    }
 
                 } else {
                     String shortFilterName = filterDetails.getJavaAliasKey();
@@ -126,15 +131,15 @@ public class SelectQueryPreparer {
                     if (filterValue == null && filterExpr.isStaticFilter() && filterExpr.isQuestionFlag()) {
                         predicateModifier.changeStaticFilter(filterExpr);
                     } else
-                        // Динамический фильтр
-                        if (isEmptyValue(filterValue) && filterExpr.isDynamicFilter()) {
-                            predicateModifier.changeDynamicFilter(filterExpr);
-                        } else {
-                            int newParamCount = fpss.addFilterValue(filterDetails.getAliasPrefix(), filterValue);
-                            if (filterValue != null) {
-                                filterExpr.setPsQuestionCount(newParamCount);
-                            }
+                    // Динамический фильтр
+                    if (isEmptyValue(filterValue) && filterExpr.isDynamicFilter()) {
+                        predicateModifier.changeDynamicFilter(filterExpr);
+                    } else {
+                        int newParamCount = fpss.addFilterValue(filterDetails.getAliasPrefix(), filterValue);
+                        if (filterValue != null) {
+                            filterExpr.setPsQuestionCount(newParamCount);
                         }
+                    }
                 }
             } else if (VET_QUESTION == valueFilterExpr.getValueExprType()) {
                 Object filterValue = filters.get(++questionCount);

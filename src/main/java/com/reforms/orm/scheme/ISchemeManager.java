@@ -3,7 +3,7 @@ package com.reforms.orm.scheme;
 import com.reforms.sql.db.DbType;
 
 /**
- *
+ * Контракт на получение некоторых параметров БД
  * @author evgenie
  */
 public interface ISchemeManager {

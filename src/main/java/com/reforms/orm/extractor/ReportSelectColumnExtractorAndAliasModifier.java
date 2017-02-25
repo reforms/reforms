@@ -2,6 +2,7 @@ package com.reforms.orm.extractor;
 
 import static com.reforms.orm.select.ColumnAliasType.CAT_S_STRING;
 
+import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.select.ColumnAlias;
 import com.reforms.orm.select.SelectedColumn;
 import com.reforms.sql.expr.term.AliasExpression;
@@ -11,7 +12,11 @@ import com.reforms.sql.expr.term.ColumnExpression;
  * Для отчетов нужно указывать тип по умолчанию - строковой
  * @author evgenie
  */
+@ThreadSafe
 public class ReportSelectColumnExtractorAndAliasModifier extends SelectColumnExtractorAndAliasModifier {
+
+    public ReportSelectColumnExtractorAndAliasModifier() {
+    }
 
     @Override
     protected SelectedColumn fromAliasExpression(int index, AliasExpression aliasExpr) {

@@ -3,6 +3,10 @@ package com.reforms.orm.filter;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Фильтр в виде последовательного набора значений
+ * @author evgenie
+ */
 public class FilterSequence implements FilterValues {
 
     private int pageIndex;

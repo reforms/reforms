@@ -63,7 +63,11 @@ public enum ColumnAliasType {
     }
 
     public static ColumnAliasType getType(char marker) {
-        return MARKER2TYPES.get(String.valueOf(marker));
+        ColumnAliasType cAliasType = MARKER2TYPES.get(String.valueOf(marker));
+        if (cAliasType == null) {
+            return CAT_U_CUSTOM_TYPE;
+        }
+        return cAliasType;
     }
 
     public static ColumnAliasType getType(String marker) {

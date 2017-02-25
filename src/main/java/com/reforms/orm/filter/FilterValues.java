@@ -1,5 +1,9 @@
 package com.reforms.orm.filter;
 
+/**
+ * Контракт на получение значения фильтра по ключу
+ * @author evgenie
+ */
 public interface FilterValues extends PageFilter {
 
     /**

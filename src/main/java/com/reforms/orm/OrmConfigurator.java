@@ -1,18 +1,18 @@
 package com.reforms.orm;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.filter.param.ParamSetterFactory;
 import com.reforms.orm.reflex.ReflexorCache;
 import com.reforms.orm.scheme.SchemeManager;
-import com.reforms.orm.select.ColumnAliasParser;
 import com.reforms.orm.select.bobj.ColumnToFieldNameConverter;
 import com.reforms.orm.select.bobj.ResultSetValueAdapter;
 import com.reforms.orm.select.bobj.reader.ParamRsReaderFactory;
 import com.reforms.orm.select.report.ColumnToRecordNameConverter;
 import com.reforms.orm.select.report.converter.ColumnValueConverterFactory;
 import com.reforms.sql.db.DbType;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class OrmConfigurator {
 
@@ -39,7 +39,7 @@ public class OrmConfigurator {
         SchemeManager schemeManager = new SchemeManager();
         schemeManager.setDefaultDbType(DbType.MIX);
         ormContext.setSchemeManager(schemeManager);
-        ormConf.configureOrmContext(ormContext);
+        ormConf.settings.put(OrmContext.class.getName(), ormContext);
         OrmConfigurator.setInstance(ormConf);
     }
 
@@ -51,19 +51,25 @@ public class OrmConfigurator {
         CONFIGURATOR = configurator;
     }
 
-    public static <T> T get(String key) {
-        return (T) CONFIGURATOR.settings.get(key);
-    }
 
     public static <T> T get(Class<T> clazz) {
-        return (T) CONFIGURATOR.settings.get(clazz.getName());
+        Object value = CONFIGURATOR.settings.get(clazz.getName());
+        if (value == null) {
+            if (! clazz.isAnnotationPresent(ThreadSafe.class)) {
+                throw new IllegalStateException("Необходимо указать аннотацию com.reforms.ann.ThreadSafe для класса '" + clazz + "'");
+            }
+            synchronized (CONFIGURATOR.settings) {
+                try {
+                    value = clazz.newInstance();
+                } catch (ReflectiveOperationException roe) {
+                    throw new IllegalStateException("Невозможно создать экземпляр класса '" + clazz + "'", roe);
+                }
+                CONFIGURATOR.settings.put(clazz.getName(), value);
+            }
+        }
+        return  (T) value;
     }
 
     private Map<String, Object> settings = new ConcurrentHashMap<>();
-
-    public void configureOrmContext(OrmContext ormContext) {
-        settings.put(OrmContext.class.getName(), ormContext);
-        settings.put(ColumnAliasParser.class.getName(), new ColumnAliasParser());
-    }
 
 }
