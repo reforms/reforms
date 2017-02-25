@@ -1,4 +1,4 @@
-package com.reforms.orm.scenario.nested;
+package com.reforms.orm.scenario.simple;
 
 import com.reforms.orm.H2DataSource;
 import com.reforms.orm.OrmDao;
@@ -18,12 +18,12 @@ public class ClientDao {
     }
 
     private static final String LOAD_CLIENTS_QUERY =
-            "SELECT cl.id AS cid:clientId, " +
-            "       cl.name AS clientName, " +
-            "       addr.id AS clientAddress.addressId, " +
-            "       addr.city AS clientAddress.refCity, " +
-            "       addr.street AS clientAddress.refStreet, " +
-            "       cl.act_time AS t#logDate " +
+            "SELECT cl.id, " +
+            "       cl.name, " +
+            "       addr.id AS address_id, " +
+            "       addr.city, " +
+            "       addr.street, " +
+            "       cl.act_time AS t# " +
             "    FROM client AS cl, " +
             "         address AS addr" +
             "        WHERE cl.address_id = addr.id AND " +
