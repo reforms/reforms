@@ -3,6 +3,8 @@ package com.reforms.orm.select.bobj.reader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import com.reforms.orm.select.SelectedColumn;
+
 /**
  * Контракт на чтение значения Double из выборки ResultSet
  * @author evgenie
@@ -10,8 +12,8 @@ import java.sql.SQLException;
 class FloatParamRsReader implements IParamRsReader<Float> {
 
     @Override
-    public Float readValue(int columnIndex, ResultSet rs) throws SQLException {
-        float value = rs.getFloat(columnIndex);
+    public Float readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws SQLException {
+        float value = rs.getFloat(column.getIndex());
         if (rs.wasNull()) {
             return null;
         }

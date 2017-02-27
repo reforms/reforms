@@ -33,6 +33,7 @@ public enum ColumnAliasType {
     CAT_F_FLOAT("f"),
     CAT_W_DOUBLE("w"),
     CAT_L_LONG("l"),
+    CAT_E_ENUM("e"),
     CAT_S_STRING("s"),
     CAT_N_BIGDECIMAL("n"),
     CAT_D_DATE("d"),

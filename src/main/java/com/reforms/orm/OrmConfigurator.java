@@ -24,7 +24,9 @@ public class OrmConfigurator {
 
     public static void defaultConfiguration() {
         OrmConfigurator ormConf = new OrmConfigurator();
+        OrmConfigurator.setInstance(ormConf);
         OrmContext ormContext = new OrmContext();
+        ormConf.settings.put(OrmContext.class.getName(), ormContext);
         ColumnValueConverterFactory columnConverterFactory = new ColumnValueConverterFactory().configure(new ConverterConfig()).sealed();
         ormContext.setColumnValueConverterFactory(columnConverterFactory);
         ormContext.setColumnToRecordNameConverter(new ColumnToRecordNameConverter());
@@ -39,8 +41,6 @@ public class OrmConfigurator {
         SchemeManager schemeManager = new SchemeManager();
         schemeManager.setDefaultDbType(DbType.MIX);
         ormContext.setSchemeManager(schemeManager);
-        ormConf.settings.put(OrmContext.class.getName(), ormContext);
-        OrmConfigurator.setInstance(ormConf);
     }
 
     public static OrmConfigurator getInstance() {

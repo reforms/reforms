@@ -25,6 +25,7 @@ public class ParamSetterFactory {
         baseParamSetters.put(CAT_F_FLOAT.getMarker(), new FloatParamSetter());
         baseParamSetters.put(CAT_W_DOUBLE.getMarker(), new DoubleParamSetter());
         baseParamSetters.put(CAT_L_LONG.getMarker(), new LongParamSetter());
+        baseParamSetters.put(CAT_E_ENUM.getMarker(), new EnumParamSetter(this));
         baseParamSetters.put(CAT_S_STRING.getMarker(), new StringParamSetter());
         baseParamSetters.put(CAT_N_BIGDECIMAL.getMarker(), new BigDecimalParamSetter());
         baseParamSetters.put(CAT_D_DATE.getMarker(), new DateParamSetter());
@@ -77,6 +78,18 @@ public class ParamSetterFactory {
                 ParamSetter paramSetter = getParamSetter(marker);
                 if (paramSetter.acceptValue(value)) {
                     return marker;
+                }
+            }
+        }
+        return null;
+    }
+
+    public ParamSetter findParamSetter(Object value) {
+        if (value != null) {
+            for (String marker : prefixes) {
+                ParamSetter paramSetter = getParamSetter(marker);
+                if (paramSetter.acceptValue(value)) {
+                    return paramSetter;
                 }
             }
         }

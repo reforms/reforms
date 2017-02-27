@@ -4,6 +4,8 @@ import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import com.reforms.orm.select.SelectedColumn;
+
 /**
  * Контракт на чтение значения Date из выборки ResultSet
  * @author evgenie
@@ -11,8 +13,8 @@ import java.sql.SQLException;
 class DateParamRsReader implements IParamRsReader<Date> {
 
     @Override
-    public Date readValue(int columnIndex, ResultSet rs) throws SQLException {
-        java.sql.Date value = rs.getDate(columnIndex);
+    public Date readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws SQLException {
+        java.sql.Date value = rs.getDate(column.getIndex());
         if (rs.wasNull()) {
             return null;
         }

@@ -24,6 +24,7 @@ public class ParamRsReaderFactory {
         addParamRsReader(new FloatParamRsReader(), CAT_F_FLOAT.getMarker(), Float.class, float.class);
         addParamRsReader(new DoubleParamRsReader(), CAT_W_DOUBLE.getMarker(), Double.class, double.class);
         addParamRsReader(new LongParamRsReader(), CAT_L_LONG.getMarker(), Long.class, long.class);
+        addParamRsReader(new EnumParamRsReader(this), CAT_E_ENUM.getMarker(), Enum.class);
         addParamRsReader(new StringParamRsReader(), CAT_S_STRING.getMarker(), String.class);
         addParamRsReader(new BigDecimalParamRsReader(), CAT_N_BIGDECIMAL.getMarker(), BigDecimal.class);
         addParamRsReader(new DateParamRsReader(), CAT_D_DATE.getMarker(), java.sql.Date.class, java.util.Date.class);

@@ -2,12 +2,14 @@ package com.reforms.orm.select.bobj.reader;
 
 import java.sql.ResultSet;
 
+import com.reforms.orm.select.SelectedColumn;
+
 /**
  * Контракт на чтение значения <ParamType> из выборки ResultSet
  * @author evgenie
  */
 public interface IParamRsReader<ParamType> {
 
-    public ParamType readValue(int columnIndex, ResultSet rs) throws Exception;
+    public ParamType readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws Exception;
 
 }

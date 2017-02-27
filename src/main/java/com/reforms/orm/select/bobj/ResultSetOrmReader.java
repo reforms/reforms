@@ -37,7 +37,10 @@ public class ResultSetOrmReader {
             Class<?> clazz = reflexor.getType(metaFieldName);
             Object paramKey = cAlias.hasType() ? cAlias.getAliasPrefix() : clazz;
             IParamRsReader<?> paramReader = paramRsReaderFactory.getParamRsReader(paramKey);
-            Object paramValue = paramReader.readValue(column.getIndex(), rs);
+            if (paramReader == null) {
+                throw new IllegalStateException("Не найден IParamRsReader для чтения из ResultSet значения для '" + paramKey + "'");
+            }
+            Object paramValue = paramReader.readValue(column, rs, clazz);
             Object adaptedValue = valueAdapter.adapt(column, paramValue, clazz);
             reflexor.setValue(ormInstance, metaFieldName, adaptedValue);
         }

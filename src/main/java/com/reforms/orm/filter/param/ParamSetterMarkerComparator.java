@@ -47,6 +47,10 @@ class ParamSetterMarkerComparator implements Comparator<String> {
             return index;
         }
         index++;
+        if (CAT_E_ENUM == cat) {
+            return index;
+        }
+        index++;
         if (CAT_S_STRING == cat) {
             return index;
         }

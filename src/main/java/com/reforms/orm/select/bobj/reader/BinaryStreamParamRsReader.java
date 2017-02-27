@@ -4,6 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.sql.ResultSet;
 
+import com.reforms.orm.select.SelectedColumn;
+
 /**
  * Контракт на чтение значения byte[] из выборки ResultSet
  * @author evgenie
@@ -11,8 +13,8 @@ import java.sql.ResultSet;
 class BinaryStreamParamRsReader implements IParamRsReader<byte[]> {
 
     @Override
-    public byte[] readValue(int columnIndex, ResultSet rs) throws Exception {
-        try (InputStream stream = rs.getBinaryStream(columnIndex)) {
+    public byte[] readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws Exception {
+        try (InputStream stream = rs.getBinaryStream(column.getIndex())) {
             if (rs.wasNull()) {
                 return null;
             }
