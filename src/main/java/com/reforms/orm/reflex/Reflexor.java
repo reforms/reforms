@@ -1,5 +1,8 @@
 package com.reforms.orm.reflex;
 
+import com.reforms.orm.OrmConfigurator;
+import com.reforms.orm.OrmContext;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -7,9 +10,6 @@ import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.OrmContext;
 
 /**
  * Скан экземпляра, предоставление информации об объекте
@@ -59,49 +59,6 @@ public class Reflexor implements IReflexor {
             return subReflxor.getValue(value, subMetaFieldName);
         }
         return getValueFrom(instance, metaFieldName);
-    }
-
-    /**
-     * TODO оптимизация: добавить кеш
-     */
-    @Override
-    public Object getValue(IMethodAcceptor methodAcceptor) {
-        Method method = findMethod(methodAcceptor);
-        if (method != null) {
-            Object instance = methodAcceptor.getInstanceObjectFor(method);
-            Object[] args = methodAcceptor.getArgsFor(method);
-            return invokeAnyMethod(method, instance, args);
-        }
-        return null;
-    }
-
-    @Override
-    public Method findMethod(IMethodAcceptor methodAcceptor) {
-        Class<?> curClass = instanceClass;
-        while (curClass != null && Object.class != curClass) {
-            Method[] methods = curClass.getDeclaredMethods();
-            for (Method method : methods) {
-                if (methodAcceptor.acceptMethod(method)) {
-                    return method;
-                }
-            }
-            curClass = curClass.getSuperclass();
-        }
-        return null;
-    }
-
-
-    /**
-     * TODO оптимизация: добавить кеш
-     */
-    @Override
-    public Object getValue(Object instance, IFieldAcceptor fieldAcceptor) {
-        for (Field field : fields.values()) {
-            if (fieldAcceptor.acceptField(field)) {
-                return getValueFromField(instance, field);
-            }
-        }
-        return null;
     }
 
     @Override
@@ -258,23 +215,6 @@ public class Reflexor implements IReflexor {
         }
     }
 
-    private Object invokeAnyMethod(Method method, Object instance, Object ... args) {
-        boolean methodAccessible = method.isAccessible();
-        if (!methodAccessible) {
-            method.setAccessible(true);
-        }
-        try {
-            return method.invoke(instance, args);
-        } catch (ReflectiveOperationException roe) {
-            throw new IllegalStateException("Не удалось выполнить метод '" + method.getName() + "' в объекте класса '" + instanceClass
-                    + "'", roe);
-        } finally {
-            if (!methodAccessible) {
-                method.setAccessible(false);
-            }
-        }
-    }
-
     private void invokeSetterMethod(Object instance, Method method, Object value) {
         boolean methodAccessible = method.isAccessible();
         if (!methodAccessible) {
@@ -415,7 +355,7 @@ public class Reflexor implements IReflexor {
     public static IReflexor createReflexor(Class<?> instanceClass) {
         OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
         ReflexorCache reflexorCache = rCtx.getReflexorCache();
-        return reflexorCache.get(instanceClass);
+        return reflexorCache.getReflexor(instanceClass);
     }
 
 }

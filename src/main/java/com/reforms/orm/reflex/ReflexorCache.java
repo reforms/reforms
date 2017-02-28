@@ -11,16 +11,35 @@ public class ReflexorCache {
 
     private ConcurrentHashMap<Class<?>, IReflexor> reflexors = new ConcurrentHashMap<>();
 
+    private ConcurrentHashMap<Class<?>, IEnumReflexor> enumReflexors = new ConcurrentHashMap<>();
+
     /**
      * Умышленно не делаем грамотную синхронизацию
      * @param clazz
      * @return
      */
-    public IReflexor get(Class<?> clazz) {
+    public IReflexor getReflexor(Class<?> clazz) {
         IReflexor reflexor = reflexors.get(clazz);
         if (reflexor == null) {
             reflexor = new Reflexor(clazz);
             IReflexor oldReflexor = reflexors.putIfAbsent(clazz, reflexor);
+            if (oldReflexor != null) {
+                reflexor = oldReflexor;
+            }
+        }
+        return reflexor;
+    }
+
+    /**
+     * Умышленно не делаем грамотную синхронизацию
+     * @param clazz
+     * @return
+     */
+    public IEnumReflexor getEnumReflexor(Class<?> clazz) {
+        IEnumReflexor reflexor = enumReflexors.get(clazz);
+        if (reflexor == null) {
+            reflexor = new EnumReflexor(clazz);
+            IEnumReflexor oldReflexor = enumReflexors.putIfAbsent(clazz, reflexor);
             if (oldReflexor != null) {
                 reflexor = oldReflexor;
             }
