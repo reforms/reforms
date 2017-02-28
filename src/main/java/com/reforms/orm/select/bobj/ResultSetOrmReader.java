@@ -1,14 +1,14 @@
 package com.reforms.orm.select.bobj;
 
-import java.sql.ResultSet;
-import java.util.List;
-
 import com.reforms.orm.OrmContext;
 import com.reforms.orm.reflex.IReflexor;
 import com.reforms.orm.select.ColumnAlias;
 import com.reforms.orm.select.SelectedColumn;
 import com.reforms.orm.select.bobj.reader.IParamRsReader;
 import com.reforms.orm.select.bobj.reader.ParamRsReaderFactory;
+
+import java.sql.ResultSet;
+import java.util.List;
 
 public class ResultSetOrmReader {
 
@@ -21,9 +21,9 @@ public class ResultSetOrmReader {
     public ResultSetOrmReader(List<SelectedColumn> columns, IReflexor reflexor, OrmContext rCtx) {
         this.columns = columns;
         this.reflexor = reflexor;
-        this.paramRsReaderFactory = rCtx.getParamRsReaderFactory();
-        this.valueAdapter = rCtx.getResultSetValueAdapter();
-        this.columnToFieldNameConverter = rCtx.getColumnToFieldNameConverter();
+        paramRsReaderFactory = rCtx.getParamRsReaderFactory();
+        valueAdapter = rCtx.getResultSetValueAdapter();
+        columnToFieldNameConverter = rCtx.getColumnToFieldNameConverter();
     }
 
     public Object read(ResultSet rs) throws Exception {
@@ -35,7 +35,12 @@ public class ResultSetOrmReader {
             ColumnAlias cAlias = column.getColumnAlias();
             String metaFieldName = columnToFieldNameConverter.getFieldName(column);
             Class<?> clazz = reflexor.getType(metaFieldName);
-            Object paramKey = cAlias.hasType() ? cAlias.getAliasPrefix() : clazz;
+            Object paramKey = clazz;
+            if (cAlias.hasType()) {
+                paramKey = cAlias.getAliasPrefix();
+            } else if (clazz != null && (clazz.isEnum() || (clazz.isAnonymousClass() && clazz.getSuperclass().isEnum()))) {
+                paramKey = Enum.class;
+            }
             IParamRsReader<?> paramReader = paramRsReaderFactory.getParamRsReader(paramKey);
             if (paramReader == null) {
                 throw new IllegalStateException("Не найден IParamRsReader для чтения из ResultSet значения для '" + paramKey + "'");

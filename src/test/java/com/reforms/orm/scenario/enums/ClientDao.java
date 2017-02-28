@@ -22,6 +22,7 @@ public class ClientDao {
             "       mode e#" +
             "    FROM client AS cl" +
             "        WHERE cl.type = ::client_type";
+
     /**
      * Загрузить информацию о клиенте
      * @param clientId
@@ -65,6 +66,59 @@ public class ClientDao {
      */
     public ClientOrm loadClient(ClientState clientState, ClientMode clientMode) throws Exception {
         return ormDao.loadSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_3, clientState, clientMode);
+    }
+
+    private static final String LOAD_CLIENT_QUERY_4 =
+            "SELECT id, " +
+            "       type, " +
+            "       state, " +
+            "       mode" +
+            "    FROM client AS cl" +
+            "        WHERE cl.type = ::client_type";
+
+    /**
+     * Загрузить информацию о клиенте
+     * @param clientId
+     * @return
+     */
+    public ClientOrm loadClient2(ClientType clientType) throws Exception {
+        return ormDao.loadSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_4, clientType);
+    }
+
+    private static final String LOAD_CLIENT_QUERY_5 =
+            "SELECT id, " +
+            "       type, " +
+            "       state, " +
+            "       mode" +
+            "    FROM client AS cl" +
+            "        WHERE cl.type = ::client_type AND " +
+            "              cl.mode = ::client_mode";
+
+    /**
+     * Загрузить информацию о клиенте
+     * @param clientId
+     * @return
+     */
+    public ClientOrm loadClient2(ClientType clientType, ClientMode clientMode) throws Exception {
+        return ormDao.loadSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_5, clientType, clientMode);
+    }
+
+    private static final String LOAD_CLIENT_QUERY_6 =
+            "SELECT id, " +
+            "       type, " +
+            "       state, " +
+            "       mode" +
+            "    FROM client AS cl" +
+            "        WHERE cl.state = ::client_state AND " +
+            "              cl.mode = ::client_mode";
+
+    /**
+     * Загрузить информацию о клиенте
+     * @param clientId
+     * @return
+     */
+    public ClientOrm loadClient2(ClientState clientState, ClientMode clientMode) throws Exception {
+        return ormDao.loadSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_6, clientState, clientMode);
     }
 
 }

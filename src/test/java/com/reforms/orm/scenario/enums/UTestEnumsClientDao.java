@@ -1,10 +1,10 @@
 package com.reforms.orm.scenario.enums;
 
-import static org.junit.Assert.assertEquals;
+import com.reforms.orm.scenario.TestScenarioDao;
 
 import org.junit.Test;
 
-import com.reforms.orm.scenario.TestScenarioDao;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Тестируем выборку для вложенных объектов
@@ -35,5 +35,25 @@ public class UTestEnumsClientDao extends TestScenarioDao {
                       "type=COMPANY, " +
                       "state=BLOCKED, " +
                       "mode=offline]", clientOrm3.toString());
+    }
+
+    @Test
+    public void testClientDaoMap2() throws Exception {
+        ClientDao clientDao = new ClientDao(h2ds);
+        ClientOrm clientOrm1 = clientDao.loadClient2(ClientType.PERSON);
+        assertEquals("[id=1, " +
+                "type=PERSON, " +
+                "state=ACTIVE, " +
+                "mode=online]", clientOrm1.toString());
+        ClientOrm clientOrm2 = clientDao.loadClient2(ClientType.COMPANY, ClientMode.ONLINE);
+        assertEquals("[id=2, " +
+                "type=COMPANY, " +
+                "state=ACTIVE, " +
+                "mode=online]", clientOrm2.toString());
+        ClientOrm clientOrm3 = clientDao.loadClient2(ClientState.BLOCKED, ClientMode.OFFLINE);
+        assertEquals("[id=3, " +
+                "type=COMPANY, " +
+                "state=BLOCKED, " +
+                "mode=offline]", clientOrm3.toString());
     }
 }
