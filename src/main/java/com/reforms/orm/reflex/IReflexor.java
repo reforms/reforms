@@ -8,6 +8,8 @@ package com.reforms.orm.reflex;
  */
 public interface IReflexor {
 
+    public Class<?> getOrmClass();
+
     public Object createInstance();
 
     public boolean hasKey(String metaFieldName);

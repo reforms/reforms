@@ -18,4 +18,9 @@ public class BobjIn {
     public String getStringic() {
         return stringic;
     }
+
+    @Override
+    public String toString() {
+        return "[inticBox=" + inticBox + ", stringic=" + stringic + "]";
+    }
 }

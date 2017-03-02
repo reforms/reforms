@@ -1,7 +1,7 @@
 package com.reforms.orm;
 
 import com.reforms.orm.filter.param.ParamSetterFactory;
-import com.reforms.orm.reflex.ReflexorCache;
+import com.reforms.orm.reflex.LocalCache;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.select.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.select.bobj.IResultSetValueAdapter;
@@ -27,7 +27,7 @@ public class OrmContext {
 
     private ISchemeManager schemeManager;
 
-    private ReflexorCache reflexorCache;
+    private LocalCache reflexorCache;
 
     public ColumnValueConverterFactory getColumnValueConverterFactory() {
         return columnValueConverterFactory;
@@ -85,11 +85,11 @@ public class OrmContext {
         this.columnToFieldNameConverter = columnToFieldNameConverter;
     }
 
-    public ReflexorCache getReflexorCache() {
+    public LocalCache getReflexorCache() {
         return reflexorCache;
     }
 
-    public void setReflexorCache(ReflexorCache reflexorCache) {
+    public void setReflexorCache(LocalCache reflexorCache) {
         this.reflexorCache = reflexorCache;
     }
 

@@ -30,6 +30,11 @@ public class Reflexor implements IReflexor {
     }
 
     @Override
+    public Class<?> getOrmClass() {
+        return instanceClass;
+    }
+
+    @Override
     public Object createInstance() {
         return createInstance(instanceClass);
     }
@@ -354,7 +359,7 @@ public class Reflexor implements IReflexor {
 
     public static IReflexor createReflexor(Class<?> instanceClass) {
         OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        ReflexorCache reflexorCache = rCtx.getReflexorCache();
+        LocalCache reflexorCache = rCtx.getReflexorCache();
         return reflexorCache.getReflexor(instanceClass);
     }
 

@@ -5,6 +5,9 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Date;
 
+/**
+ * @author evgenie
+ */
 public class Bobj {
 
     private final boolean flag;
@@ -172,5 +175,14 @@ public class Bobj {
 
     public BobjIn getBobjnnic() {
         return bobjnnic;
+    }
+
+    @Override
+    public String toString() {
+        return "[flag=" + flag + ", flagBox=" + flagBox + ", bytic=" + bytic + ", byticBox=" + byticBox + ", shortic=" + shortic + ", shorticBox=" +
+                shorticBox + ", symbol=" + symbol + ", symbolBox=" + symbolBox + ", intic=" + intic + ", inticBox=" + inticBox + ", floatic=" + floatic +
+                ", floaticBox=" + floaticBox + ", doublic=" + doublic + ", doublicBox=" + doublicBox + ", longic=" + longic + ", longicBox=" + longicBox +
+                ", stringic=" + stringic + ", decimalic=" + decimalic + ", datic=" + datic + ", timic=" + timic + ", timestampic=" + timestampic + ", enumic=" +
+                enumic + ", bobjnnic=" + bobjnnic + "]";
     }
 }

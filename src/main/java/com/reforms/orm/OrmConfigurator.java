@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.filter.param.ParamSetterFactory;
-import com.reforms.orm.reflex.ReflexorCache;
+import com.reforms.orm.reflex.LocalCache;
 import com.reforms.orm.scheme.SchemeManager;
 import com.reforms.orm.select.bobj.ColumnToFieldNameConverter;
 import com.reforms.orm.select.bobj.ResultSetValueAdapter;
@@ -37,7 +37,7 @@ public class OrmConfigurator {
         ormContext.setParamRsReaderFactory(paramRsReaderFactory);
         ormContext.setResultSetValueAdapter(new ResultSetValueAdapter());
         ormContext.setColumnToFieldNameConverter(new ColumnToFieldNameConverter());
-        ormContext.setReflexorCache(new ReflexorCache());
+        ormContext.setReflexorCache(new LocalCache());
         SchemeManager schemeManager = new SchemeManager();
         schemeManager.setDefaultDbType(DbType.MIX);
         ormContext.setSchemeManager(schemeManager);

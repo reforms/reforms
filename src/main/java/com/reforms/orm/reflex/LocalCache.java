@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author evgenie
  *
  */
-public class ReflexorCache {
+public class LocalCache {
 
     private ConcurrentHashMap<Class<?>, IReflexor> reflexors = new ConcurrentHashMap<>();
 
