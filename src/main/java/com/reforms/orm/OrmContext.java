@@ -27,7 +27,7 @@ public class OrmContext {
 
     private ISchemeManager schemeManager;
 
-    private LocalCache reflexorCache;
+    private LocalCache localCache;
 
     public ColumnValueConverterFactory getColumnValueConverterFactory() {
         return columnValueConverterFactory;
@@ -85,12 +85,12 @@ public class OrmContext {
         this.columnToFieldNameConverter = columnToFieldNameConverter;
     }
 
-    public LocalCache getReflexorCache() {
-        return reflexorCache;
+    public LocalCache getLocalCache() {
+        return localCache;
     }
 
-    public void setReflexorCache(LocalCache reflexorCache) {
-        this.reflexorCache = reflexorCache;
+    public void setLocalCache(LocalCache reflexorCache) {
+        this.localCache = reflexorCache;
     }
 
     public ISchemeManager getSchemeManager() {

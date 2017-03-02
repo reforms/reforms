@@ -2,6 +2,7 @@ package com.reforms.orm.reflex;
 
 import org.junit.Test;
 
+import static com.reforms.orm.reflex.InstanceCreator.createInstanceCreator;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -12,8 +13,8 @@ public class UTestInstanceCreator {
 
     @Test
     public void testCreateOrm() {
-        InstanceCreator creator = new InstanceCreator(Bobj.class);
-        InstanceInfo instancesInfo = creator.processSingle();
+        InstanceCreator creator = createInstanceCreator(Bobj.class);
+        InstanceInfo instancesInfo = creator.getFirstInstanceInfo();
         String actualVaue = instancesInfo.getInstance1().toString();
         String expectedPattern = "^\\[flag=true\\, " +
                 "flagBox=true\\, " +

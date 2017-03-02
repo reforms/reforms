@@ -1,14 +1,6 @@
 package com.reforms.orm;
 
-import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.reforms.orm.extractor.SelectColumnExtractorAndAliasModifier;
+import com.reforms.orm.extractor.OrmSelectColumnExtractorAndAliasModifier;
 import com.reforms.orm.filter.*;
 import com.reforms.orm.reflex.Reflexor;
 import com.reforms.orm.select.SelectedColumn;
@@ -17,6 +9,14 @@ import com.reforms.orm.select.bobj.model.OrmHandler;
 import com.reforms.orm.select.bobj.model.OrmIterator;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
 
 public class OrmDao {
 
@@ -40,7 +40,7 @@ public class OrmDao {
         IConnectionHolder cHolder = rCtx.getConnectionHolder();
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        SelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(SelectColumnExtractorAndAliasModifier.class);
+        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(OrmSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         ResultSetOrmReader rsReader = new ResultSetOrmReader(selectedColumns, Reflexor.createReflexor(ormClass), rCtx);
         SelectQueryPreparer filterPreparer = OrmConfigurator.get(SelectQueryPreparer.class);
@@ -73,7 +73,7 @@ public class OrmDao {
         IConnectionHolder cHolder = rCtx.getConnectionHolder();
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        SelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(SelectColumnExtractorAndAliasModifier.class);
+        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(OrmSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         ResultSetOrmReader rsReader = new ResultSetOrmReader(selectedColumns, Reflexor.createReflexor(ormClass), rCtx);
         SelectQueryPreparer filterPreparer = OrmConfigurator.get(SelectQueryPreparer.class);
@@ -112,7 +112,7 @@ public class OrmDao {
         IConnectionHolder cHolder = rCtx.getConnectionHolder();
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        SelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(SelectColumnExtractorAndAliasModifier.class);
+        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(OrmSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         ResultSetOrmReader rsReader = new ResultSetOrmReader(selectedColumns, Reflexor.createReflexor(ormClass), rCtx);
         SelectQueryPreparer filterPreparer = OrmConfigurator.get(SelectQueryPreparer.class);
@@ -149,7 +149,7 @@ public class OrmDao {
         IConnectionHolder cHolder = rCtx.getConnectionHolder();
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        SelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(SelectColumnExtractorAndAliasModifier.class);
+        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(OrmSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         ResultSetOrmReader rsReader = new ResultSetOrmReader(selectedColumns, Reflexor.createReflexor(ormClass), rCtx);
         SelectQueryPreparer filterPreparer = OrmConfigurator.get(SelectQueryPreparer.class);

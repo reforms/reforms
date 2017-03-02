@@ -1,6 +1,7 @@
 package com.reforms.orm.select.bobj;
 
 import com.reforms.orm.OrmContext;
+import com.reforms.orm.reflex.IInstanceBuilder;
 import com.reforms.orm.reflex.IReflexor;
 import com.reforms.orm.select.ColumnAlias;
 import com.reforms.orm.select.SelectedColumn;
@@ -16,24 +17,24 @@ public class ResultSetOrmReader {
     private IReflexor reflexor;
     private ParamRsReaderFactory paramRsReaderFactory;
     private IResultSetValueAdapter valueAdapter;
-    private IColumnToFieldNameConverter columnToFieldNameConverter;
+    private IInstanceBuilder ormInstanceBuilder;
 
     public ResultSetOrmReader(List<SelectedColumn> columns, IReflexor reflexor, OrmContext rCtx) {
         this.columns = columns;
         this.reflexor = reflexor;
         paramRsReaderFactory = rCtx.getParamRsReaderFactory();
         valueAdapter = rCtx.getResultSetValueAdapter();
-        columnToFieldNameConverter = rCtx.getColumnToFieldNameConverter();
+        ormInstanceBuilder = reflexor.createInstanceBuilder();
     }
 
     public Object read(ResultSet rs) throws Exception {
         if (!rs.next()) {
             return null;
         }
-        Object ormInstance = reflexor.createInstance();
+        ormInstanceBuilder.prepare();
         for (SelectedColumn column : columns) {
             ColumnAlias cAlias = column.getColumnAlias();
-            String metaFieldName = columnToFieldNameConverter.getFieldName(column);
+            String metaFieldName = column.getFieldName();
             Class<?> clazz = reflexor.getType(metaFieldName);
             Object paramKey = clazz;
             if (cAlias.hasType()) {
@@ -47,9 +48,9 @@ public class ResultSetOrmReader {
             }
             Object paramValue = paramReader.readValue(column, rs, clazz);
             Object adaptedValue = valueAdapter.adapt(column, paramValue, clazz);
-            reflexor.setValue(ormInstance, metaFieldName, adaptedValue);
+            ormInstanceBuilder.append(metaFieldName, adaptedValue);
         }
-        return ormInstance;
+        return ormInstanceBuilder.complete();
     }
 
 }

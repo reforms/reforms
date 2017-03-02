@@ -5,6 +5,8 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.reforms.orm.reflex.InstanceCreator.createInstanceCreator;
+
 /**
  *
  * @author evgenie
@@ -42,8 +44,8 @@ class DefaultValueCreator {
         if (nextDefaultValue != null) {
             return nextDefaultValue;
         }
-        InstanceCreator creator = new InstanceCreator(clazzType);
-        InstanceInfo insanceInfo = creator.processSingle();
+        InstanceCreator creator = createInstanceCreator(clazzType);
+        InstanceInfo insanceInfo = creator.getFirstInstanceInfo();
         return index == 0 ? insanceInfo.getInstance1() : insanceInfo.getInstance2();
     }
 

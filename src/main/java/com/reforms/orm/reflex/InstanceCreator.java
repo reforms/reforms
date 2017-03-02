@@ -1,10 +1,13 @@
 package com.reforms.orm.reflex;
 
 import com.reforms.ann.TargetConstructor;
+import com.reforms.orm.OrmConfigurator;
+import com.reforms.orm.OrmContext;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -13,68 +16,55 @@ import java.util.List;
  * TODO: добавить тест на конструктор копирования и рефакторинг
  * @author evgenie
  */
-public class InstanceCreator {
+class InstanceCreator {
 
-    public static final Object CANT_CREATE_INSTANCE_MARKER = new Object();
+    public static final Object STUB_INSTANCE_MARKER = new Object();
 
     private Class<?> ormClass;
 
     private boolean simpleConstructorFlag;
 
-    public InstanceCreator(Class<?> ormClass) {
+    private List<InstanceInfo> instancesInfo;
+
+    InstanceCreator(Class<?> ormClass) {
         this.ormClass = ormClass;
+        instancesInfo = Collections.unmodifiableList(processAll());
     }
 
     public Class<?> getOrmClass() {
         return ormClass;
     }
 
-    public InstanceInfo processSingle() {
-        Constructor<?>[] allConstructors = ormClass.getDeclaredConstructors();
-        List<Constructor<?>> constructors = filterConstructors(allConstructors);
-        for (Constructor<?> constructor : constructors) {
-            InstanceInfo instanceInfo = new InstanceInfo();
-            Object instance1 = CANT_CREATE_INSTANCE_MARKER;
-            Object instance2 = CANT_CREATE_INSTANCE_MARKER;
-            Throwable cantCreateCause = null;
-            DefaultValueCreator defaultCreator = new DefaultValueCreator();
-            try {
-                instance1 = createFirstInstance(constructor, defaultCreator);
-                if (constructor.getParameterTypes().length == 0) {
-                    simpleConstructorFlag = true;
-                } else {
-                    instance2 = createSecondInstance(constructor, defaultCreator);
-                }
-            } catch (Throwable cause) {
-                checkException(cause);
-                cantCreateCause = cause;
-            }
-            if (cantCreateCause == null) {
-                instanceInfo.setConstructor(constructor);
-                instanceInfo.setInstance1(instance1);
-                instanceInfo.setInstance2(instance2);
-                instanceInfo.setCreator(defaultCreator);
-                instanceInfo.setCause(cantCreateCause);
-                return instanceInfo;
-            }
-        }
-        throw new IllegalStateException("Не возможно создать экземпляр класса '" + ormClass + "'");
+    public List<InstanceInfo> getInstancesInfo() {
+        return instancesInfo;
     }
 
-    public List<InstanceInfo> processAll() {
+    public boolean isSimpleConstructorFlag() {
+        return simpleConstructorFlag;
+    }
+
+    public InstanceInfo getFirstInstanceInfo() {
+        if (instancesInfo.size() == 0) {
+            throw new IllegalStateException("Не возможно создать экземпляр класса '" + ormClass + "'");
+        }
+        return instancesInfo.get(0);
+    }
+
+    private List<InstanceInfo> processAll() {
         List<InstanceInfo> instancesInfo = new ArrayList<>();
         Constructor<?>[] allConstructors = ormClass.getDeclaredConstructors();
         List<Constructor<?>> constructors = filterConstructors(allConstructors);
         for (Constructor<?> constructor : constructors) {
             InstanceInfo instanceInfo = new InstanceInfo();
-            Object instance1 = CANT_CREATE_INSTANCE_MARKER;
-            Object instance2 = CANT_CREATE_INSTANCE_MARKER;
+            Object instance1 = STUB_INSTANCE_MARKER;
+            Object instance2 = STUB_INSTANCE_MARKER;
             Throwable cantCreateCause = null;
             DefaultValueCreator defaultCreator = new DefaultValueCreator();
             try {
                 instance1 = createFirstInstance(constructor, defaultCreator);
                 if (constructor.getParameterTypes().length == 0) {
                     simpleConstructorFlag = true;
+                    instance1 = STUB_INSTANCE_MARKER;
                 } else {
                     instance2 = createSecondInstance(constructor, defaultCreator);
                 }
@@ -97,10 +87,6 @@ public class InstanceCreator {
         if (cause instanceof IllegalStateException) {
             throw (IllegalStateException) cause;
         }
-    }
-
-    public boolean isSimpleConstructorFlag() {
-        return simpleConstructorFlag;
     }
 
     private List<Constructor<?>> filterConstructors(Constructor<?>[] constructors) {
@@ -169,5 +155,11 @@ public class InstanceCreator {
                 constructor.setAccessible(false);
             }
         }
+    }
+
+    public static InstanceCreator createInstanceCreator(Class<?> instanceClass) {
+        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
+        LocalCache localCache = rCtx.getLocalCache();
+        return localCache.getInstanceCreator(instanceClass);
     }
 }

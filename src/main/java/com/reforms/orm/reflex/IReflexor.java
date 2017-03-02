@@ -12,6 +12,10 @@ public interface IReflexor {
 
     public Object createInstance();
 
+    public IInstanceBuilder createInstanceBuilder();
+
+    public IInstanceBuilder createInstanceBuilderFor(String fieldName);
+
     public boolean hasKey(String metaFieldName);
 
     public Object getValue(Object instance, String metaFieldName);

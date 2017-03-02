@@ -37,7 +37,7 @@ public class OrmConfigurator {
         ormContext.setParamRsReaderFactory(paramRsReaderFactory);
         ormContext.setResultSetValueAdapter(new ResultSetValueAdapter());
         ormContext.setColumnToFieldNameConverter(new ColumnToFieldNameConverter());
-        ormContext.setReflexorCache(new LocalCache());
+        ormContext.setLocalCache(new LocalCache());
         SchemeManager schemeManager = new SchemeManager();
         schemeManager.setDefaultDbType(DbType.MIX);
         ormContext.setSchemeManager(schemeManager);

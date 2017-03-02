@@ -12,6 +12,8 @@ public class SelectedColumn {
 
     private String columnName;
 
+    private String fieldName;
+
     private ColumnAlias columnAlias;
 
     public int getIndex() {
@@ -38,6 +40,14 @@ public class SelectedColumn {
         this.columnName = columnName;
     }
 
+    public String getFieldName() {
+        return fieldName;
+    }
+
+    public void setFieldName(String fieldName) {
+        this.fieldName = fieldName;
+    }
+
     public ColumnAlias getColumnAlias() {
         return columnAlias;
     }
@@ -49,8 +59,7 @@ public class SelectedColumn {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append(index).append(":").append(columnName).append(":").append(columnAlias);
+        builder.append(index).append(":").append(columnName).append("/").append(fieldName).append(":").append(columnAlias);
         return builder.toString();
     }
-
 }

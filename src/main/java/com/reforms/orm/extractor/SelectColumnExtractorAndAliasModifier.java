@@ -1,11 +1,5 @@
 package com.reforms.orm.extractor;
 
-import static com.reforms.sql.expr.term.ExpressionType.ET_ALIAS_EXPRESSION;
-import static com.reforms.sql.expr.term.ExpressionType.ET_COLUMN_EXPRESSION;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.select.ColumnAlias;
@@ -15,14 +9,20 @@ import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.statement.SelectStatement;
 import com.reforms.sql.expr.term.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.reforms.sql.expr.term.ExpressionType.ET_ALIAS_EXPRESSION;
+import static com.reforms.sql.expr.term.ExpressionType.ET_COLUMN_EXPRESSION;
+
 /**
  * TODO логика: подумать над тем, какой символ использовать в качестве краткого алиаса, сейчас используется символ '#'.
  * @author evgenie
  */
 @ThreadSafe
-public class SelectColumnExtractorAndAliasModifier {
+class SelectColumnExtractorAndAliasModifier {
 
-    public SelectColumnExtractorAndAliasModifier() {
+    SelectColumnExtractorAndAliasModifier() {
     }
 
     public List<SelectedColumn> extractSelectedColumns(SelectQuery selectQuery) {
@@ -76,9 +76,7 @@ public class SelectColumnExtractorAndAliasModifier {
         selectedColumn.setPrefixColumnName(columnExpr.getPrefix());
         ColumnAlias cAlias = new ColumnAlias();
         cAlias.setAlias(columnName);
-        //cAlias.setAliasType(CAT_S_STRING);
         cAlias.setJavaAliasKey(columnName);
-        //cAlias.setAliasPrefix(CAT_S_STRING.getMarker());
         selectedColumn.setColumnAlias(cAlias);
         return selectedColumn;
     }

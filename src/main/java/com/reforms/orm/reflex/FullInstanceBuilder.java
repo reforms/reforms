@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import static com.reforms.orm.reflex.InstanceCreator.createInstanceCreator;
+
 /**
  * Строит объект с не дефолтным конструктором, передавая только имена полей и их значение
  * TODO: Оптимизация!!
@@ -12,17 +14,21 @@ import java.util.Map.Entry;
  */
 class FullInstanceBuilder implements IInstanceBuilder {
 
-    private Class<?> ormClass;
-
     private IReflexor reflexor;
+
+    private Class<?> ormClass;
 
     private Map<String, Object> values;
 
     private FieldsInfo fieldsInfo = null;
 
-    public FullInstanceBuilder(Class<?> ormClass) {
-        this.ormClass = ormClass;
-        reflexor = Reflexor.createReflexor(ormClass);
+    FullInstanceBuilder(Class<?> ormClass) {
+        this(Reflexor.createReflexor(ormClass));
+    }
+
+    FullInstanceBuilder(IReflexor reflexor) {
+        this.reflexor = reflexor;
+        ormClass = reflexor.getOrmClass();
     }
 
     @Override
@@ -37,8 +43,7 @@ class FullInstanceBuilder implements IInstanceBuilder {
             String fieldName = metaFieldName.substring(0, dotIndex);
             IInstanceBuilder subBuilder = (IInstanceBuilder) values.get(fieldName);
             if (subBuilder == null) {
-                Class<?> subClass = reflexor.getType(fieldName);
-                subBuilder = new FullInstanceBuilder(subClass);
+                subBuilder = reflexor.createInstanceBuilderFor(fieldName);
                 subBuilder.prepare();
                 values.put(fieldName, subBuilder);
             }
@@ -51,9 +56,10 @@ class FullInstanceBuilder implements IInstanceBuilder {
 
     @Override
     public Object complete() throws Exception {
+        // TODO оптимизация - убрать if (fieldsInfo == null) { в конструктор и добавить список ожидаемых полей
         if (fieldsInfo == null) {
-            InstanceCreator creator = new InstanceCreator(ormClass);
-            InstanceInformator informator = new InstanceInformator(ormClass, creator.processAll());
+            InstanceCreator creator = createInstanceCreator(ormClass);
+            InstanceInformator informator = new InstanceInformator(ormClass, creator.getInstancesInfo());
             fieldsInfo = informator.resolveFieldsInfo(values);
         }
         Object[] constructorValues = new Object[fieldsInfo.size()];
@@ -70,6 +76,9 @@ class FullInstanceBuilder implements IInstanceBuilder {
         for (Entry<String, Object> entryField : values.entrySet()) {
             String fieldName = entryField.getKey();
             Object fieldValue = entryField.getValue();
+            if (fieldValue instanceof IInstanceBuilder) {
+                fieldValue = ((IInstanceBuilder) fieldValue).complete();
+            }
             reflexor.setValue(instance, fieldName, fieldValue);
         }
         return instance;

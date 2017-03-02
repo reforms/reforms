@@ -1,5 +1,6 @@
 package com.reforms.orm.reflex;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -59,25 +60,28 @@ public class InstanceInformator {
     }
 
     private FieldsInfo resolveFieldsInfo(InstanceInfo instanceInfo) {
-        FieldsInfo fieldsInfo = new FieldsInfo(instanceInfo.getConstructor());
-        Object instance1 = instanceInfo.getInstance1();
-        Object instance2 = instanceInfo.getInstance2();
-        DefaultValueCreator creator = instanceInfo.getCreator();
-        DefaultValueArray intialValues1 = creator.getFirstValues();
-        DefaultValueArray intialValues2 = creator.getSecondValues();
-        for (Entry<String, Field> entryField : fields.entrySet()) {
-            Field field = entryField.getValue();
-            Object fieldValue1 = getValueFromField(instance1, field);
-            Object fieldValue2 = getValueFromField(instance2, field);
-            boolean isSame = field.getType().isPrimitive() ? Objects.equals(fieldValue1, fieldValue2) : fieldValue1 == fieldValue2;
-            if (!isSame) {
-                int index1 = intialValues1.find(fieldValue1, field.getType());
-                int index2 = intialValues2.find(fieldValue2, field.getType());
-                if (index1 != -1 && index2 != -1) {
-                    int resultIndex = Math.max(index1, index2);
-                    String fieldName = entryField.getKey();
-                    FieldInfo fieldInfo = new FieldInfo(resultIndex, fieldName);
-                    fieldsInfo.add(fieldInfo);
+        Constructor<?> constructor = instanceInfo.getConstructor();
+        FieldsInfo fieldsInfo = new FieldsInfo(constructor);
+        if (constructor.getParameterTypes().length != 0) {
+            Object instance1 = instanceInfo.getInstance1();
+            Object instance2 = instanceInfo.getInstance2();
+            DefaultValueCreator creator = instanceInfo.getCreator();
+            DefaultValueArray intialValues1 = creator.getFirstValues();
+            DefaultValueArray intialValues2 = creator.getSecondValues();
+            for (Entry<String, Field> entryField : fields.entrySet()) {
+                Field field = entryField.getValue();
+                Object fieldValue1 = getValueFromField(instance1, field);
+                Object fieldValue2 = getValueFromField(instance2, field);
+                boolean isSame = field.getType().isPrimitive() ? Objects.equals(fieldValue1, fieldValue2) : fieldValue1 == fieldValue2;
+                if (!isSame) {
+                    int index1 = intialValues1.find(fieldValue1, field.getType());
+                    int index2 = intialValues2.find(fieldValue2, field.getType());
+                    if (index1 != -1 && index2 != -1) {
+                        int resultIndex = Math.max(index1, index2);
+                        String fieldName = entryField.getKey();
+                        FieldInfo fieldInfo = new FieldInfo(resultIndex, fieldName);
+                        fieldsInfo.add(fieldInfo);
+                    }
                 }
             }
         }

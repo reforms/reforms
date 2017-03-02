@@ -40,6 +40,19 @@ public class Reflexor implements IReflexor {
     }
 
     @Override
+    public IInstanceBuilder createInstanceBuilder() {
+        // TODO оптимизация: добавить факторию выбора
+        return new FullInstanceBuilder(this);
+    }
+
+    @Override
+    public IInstanceBuilder createInstanceBuilderFor(String fieldName) {
+        // TODO оптимизация: добавить факторию выбора
+        Class<?> subClass = getType(fieldName);
+        return createReflexor(subClass).createInstanceBuilder();
+    }
+
+    @Override
     public boolean hasKey(String fieldName) {
         try {
             return getType(fieldName) != null;
@@ -359,8 +372,8 @@ public class Reflexor implements IReflexor {
 
     public static IReflexor createReflexor(Class<?> instanceClass) {
         OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        LocalCache reflexorCache = rCtx.getReflexorCache();
-        return reflexorCache.getReflexor(instanceClass);
+        LocalCache localCache = rCtx.getLocalCache();
+        return localCache.getReflexor(instanceClass);
     }
 
 }

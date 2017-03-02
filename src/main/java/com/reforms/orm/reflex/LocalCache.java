@@ -13,6 +13,8 @@ public class LocalCache {
 
     private ConcurrentHashMap<Class<?>, IEnumReflexor> enumReflexors = new ConcurrentHashMap<>();
 
+    private ConcurrentHashMap<Class<?>, InstanceCreator> creators = new ConcurrentHashMap<>();
+
     /**
      * Умышленно не делаем грамотную синхронизацию
      * @param clazz
@@ -45,5 +47,22 @@ public class LocalCache {
             }
         }
         return reflexor;
+    }
+
+    /**
+     * Умышленно не делаем грамотную синхронизацию
+     * @param clazz
+     * @return
+     */
+    public InstanceCreator getInstanceCreator(Class<?> clazz) {
+        InstanceCreator creator = creators.get(clazz);
+        if (creator == null) {
+            creator = new InstanceCreator(clazz);
+            InstanceCreator oldCreator = creators.putIfAbsent(clazz, creator);
+            if (oldCreator != null) {
+                creator = oldCreator;
+            }
+        }
+        return creator;
     }
 }

@@ -181,7 +181,7 @@ public class EnumReflexor implements IEnumReflexor {
 
     public static IEnumReflexor createEnumReflexor(Class<?> instanceClass) {
         OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        LocalCache reflexorCache = rCtx.getReflexorCache();
-        return reflexorCache.getEnumReflexor(instanceClass);
+        LocalCache localCache = rCtx.getLocalCache();
+        return localCache.getEnumReflexor(instanceClass);
     }
 }
