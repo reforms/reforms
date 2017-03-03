@@ -91,7 +91,6 @@ public class UTestFullInstanceBuilder {
         assertEquals("[int0=" + int0 + ", int1=" + int1 + ", int2=" + int2 + ", int3=" + int3 + ", int4=" + int4 + "]", actualResult);
     }
 
-
     @Test
     public void testBooleanBuilder() throws Exception {
         int count = Integer.parseInt("111111", 2);
@@ -126,16 +125,42 @@ public class UTestFullInstanceBuilder {
         builder.append("boolT", false);
         builder.append("bool2", false);
         builder.append("bool3", false);
-        String actualResult = null;
+        assertExceptionOnComplete(builder,
+                "Не возможно определить соответствие между параметром в конструкторе и полем в объекта, если boolean.class в конструкторе больше 2х");
+    }
+
+    @Test
+    public void testBobjInException() throws Exception {
+        FullInstanceBuilder builder = new FullInstanceBuilder(BobjIn.class);
+        builder.prepare();
+        assertExceptionOnComplete(builder, "Поле 'inticBox' не содержится в списке значений. Класс 'class com.reforms.orm.reflex.BobjIn'");
+        builder = new FullInstanceBuilder(BobjIn.class);
+        builder.prepare();
+        builder.append("inticBox", 1);
+        assertExceptionOnComplete(builder, "Поле 'stringic' не содержится в списке значений. Класс 'class com.reforms.orm.reflex.BobjIn'");
+        builder = new FullInstanceBuilder(BobjIn.class);
+        builder.prepare();
+        builder.append("inticBox", "wrong type");
+        builder.append("stringic", 1);
+        assertExceptionOnComplete(builder, "argument type mismatch");
+    }
+
+    @Test
+    public void testBobjNoConstructorException() throws Exception {
+        FullInstanceBuilder builder = new FullInstanceBuilder(BobjNoConstructor.class);
+        builder.prepare();
+        assertExceptionOnComplete(builder,
+                "Не найдена информация о конструкторе, с помощью которого можно создать объект для класса 'class com.reforms.orm.reflex.BobjNoConstructor'");
+    }
+
+    private void assertExceptionOnComplete(FullInstanceBuilder builder, String errorText) {
+        String actualErrorMessage = null;
         try {
-            actualResult = builder.complete().toString();
-        } catch (Exception ex) {
-            assertEquals("Не возможно определить соответствие между параметром в конструкторе и полем в объекта, если boolean.class в конструкторе больше 2х",
-                    ex.getMessage());
-            return;
+            builder.complete();
+            fail("Ожидается ошибка: " + errorText);
+        } catch (Exception cause) {
+            actualErrorMessage = cause.getMessage();
         }
-        fail("Ожидается ошибка при работе с буленом");
-        String expectedResult = "[bool0=false, bool1=false, boolF=false, boolT=false, bool2=false, bool3=false]";
-        assertEquals(expectedResult, actualResult);
+        assertEquals(errorText, actualErrorMessage);
     }
 }

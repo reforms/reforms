@@ -1,9 +1,12 @@
 package com.reforms.orm.reflex;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.reforms.orm.reflex.InstanceCreator.createInstanceCreator;
 
@@ -11,7 +14,9 @@ import static com.reforms.orm.reflex.InstanceCreator.createInstanceCreator;
  *
  * @author evgenie
  */
-class DefaultValueCreator {
+class DefaultValueCreator implements InvocationHandler {
+
+    private static ThreadLocalClassController CLASS_CREATE_CONTROLLER = new ThreadLocalClassController();
 
     private DefaultValueArray firstValues = new DefaultValueArray();
 
@@ -19,13 +24,13 @@ class DefaultValueCreator {
 
     private final Map<String, Object> typePrimitiveCache = new HashMap<>();
 
-    Object createFirst(Class<?> clazzType) {
+    Object createFirst(Class<?> clazzType) throws Throwable {
         Object result = createDefaultValue(clazzType, 0);
         firstValues.add(result);
         return result;
     }
 
-    Object createSecond(Class<?> clazzType) {
+    Object createSecond(Class<?> clazzType) throws Throwable {
         Object result = createDefaultValue(clazzType, 1);
         secondValues.add(result);
         return result;
@@ -39,14 +44,44 @@ class DefaultValueCreator {
         return secondValues;
     }
 
-    private Object createDefaultValue(Class<?> clazzType, int index) {
+    private Object createDefaultValue(Class<?> clazzType, int index) throws Throwable {
+        checkStrongClassType(clazzType);
         Object nextDefaultValue = getNextValue(clazzType, index);
         if (nextDefaultValue != null) {
             return nextDefaultValue;
         }
-        InstanceCreator creator = createInstanceCreator(clazzType);
-        InstanceInfo insanceInfo = creator.getFirstInstanceInfo();
-        return index == 0 ? insanceInfo.getInstance1() : insanceInfo.getInstance2();
+        Map<Class<?>, Object> stackClasses = CLASS_CREATE_CONTROLLER.get();
+        stackClasses.put(clazzType, "");
+        try {
+            InstanceCreator creator = createInstanceCreator(clazzType);
+            InstanceInfo insanceInfo = creator.getFirstInstanceInfo();
+            Throwable cause = insanceInfo.getCause();
+            if (cause != null) {
+                throw cause;
+            }
+            return index == 0 ? insanceInfo.getInstance1() : insanceInfo.getInstance2();
+        } finally {
+            stackClasses.remove(clazzType);
+        }
+    }
+
+    private void checkStrongClassType(Class<?> clazzType) {
+        if (clazzType == null) {
+            throw new IllegalStateException("Необходимо указать класс, null не допускается");
+        }
+        if (clazzType.isPrimitive()) {
+            return;
+        }
+        if (Modifier.isAbstract(clazzType.getModifiers()) && !clazzType.isInterface() && !clazzType.isAnnotation()) {
+            throw new IllegalStateException("Невозможно создать экземпляр абстрактного класса '" + clazzType + "'");
+        }
+        if (clazzType == Class.class) {
+            throw new IllegalStateException("Невозможно создать экземпляр класса класс '" + clazzType + "'");
+        }
+        Map<Class<?>, Object> stackClasses = CLASS_CREATE_CONTROLLER.get();
+        if (stackClasses.containsKey(clazzType)) {
+            throw new RuntimeException("Рекурсия при создании класса '" + clazzType + "'");
+        }
     }
 
     private int booleanCount = 0;
@@ -148,6 +183,12 @@ class DefaultValueCreator {
         throw new IllegalStateException("Невозможно получить значение по-умолчанию для примитивного класса '" + clazzType + "'");
     }
 
+    /**
+     * TODO оптимизация: переделать на Map и добавить контракт на создание объекта
+     * @param clazzType
+     * @param index
+     * @return
+     */
     private Object getNextValue(Class<?> clazzType, int index) {
         if (clazzType.isPrimitive()) {
             return getNextPrimitiveValue(clazzType, index);
@@ -180,7 +221,7 @@ class DefaultValueCreator {
             return new String("0");
         }
         if (BigInteger.class == clazzType) {
-            return new BigInteger("0.0");
+            return new BigInteger("0");
         }
         if (BigDecimal.class == clazzType) {
             return new BigDecimal("0.0");
@@ -200,6 +241,15 @@ class DefaultValueCreator {
         if (byte[].class == clazzType) {
             return new byte[] {};
         }
+        if (List.class == clazzType) {
+            return new ArrayList<>();
+        }
+        if (Map.class == clazzType) {
+            return new HashMap<>();
+        }
+        if (Queue.class == clazzType) {
+            return new ArrayDeque<>();
+        }
         if (clazzType.isEnum()) {
             Object[] enumValues = clazzType.getEnumConstants();
             int enumIndex = 0;
@@ -212,6 +262,32 @@ class DefaultValueCreator {
             }
             return null;
         }
+        if (clazzType.isInterface()) {
+            return Proxy.newProxyInstance(clazzType.getClassLoader(), new Class<?>[] {clazzType}, this);
+        }
         return null;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if (method.getName().equals("toString")) {
+            return proxy.getClass().toString();
+        }
+        if (method.getName().equals("hashCode")) {
+            return proxy.getClass().toString().hashCode();
+        }
+        return null;
+    }
+
+    /**
+     * Потокобезопасный форматтер
+     */
+    private static class ThreadLocalClassController extends ThreadLocal<Map<Class<?>, Object>> {
+
+        @Override
+        public Map<Class<?>, Object> initialValue() {
+            return new HashMap<>();
+        }
+
     }
 }

@@ -15,6 +15,8 @@ public class LocalCache {
 
     private ConcurrentHashMap<Class<?>, InstanceCreator> creators = new ConcurrentHashMap<>();
 
+    private ConcurrentHashMap<Class<?>, InstanceInformator> informators = new ConcurrentHashMap<>();
+
     /**
      * Умышленно не делаем грамотную синхронизацию
      * @param clazz
@@ -57,12 +59,30 @@ public class LocalCache {
     public InstanceCreator getInstanceCreator(Class<?> clazz) {
         InstanceCreator creator = creators.get(clazz);
         if (creator == null) {
-            creator = new InstanceCreator(clazz);
+            creator = new InstanceCreator(clazz).init();
             InstanceCreator oldCreator = creators.putIfAbsent(clazz, creator);
             if (oldCreator != null) {
                 creator = oldCreator;
             }
         }
         return creator;
+    }
+
+    /**
+     * Умышленно не делаем грамотную синхронизацию
+     * @param clazz
+     * @return
+     */
+    public InstanceInformator getInstanceInformator(Class<?> clazz) {
+        InstanceInformator informator = informators.get(clazz);
+        if (informator == null) {
+            InstanceCreator creator = getInstanceCreator(clazz);
+            informator = new InstanceInformator(clazz, creator.getInstancesInfo());
+            InstanceInformator oldInformator = informators.putIfAbsent(clazz, informator);
+            if (oldInformator != null) {
+                informator = oldInformator;
+            }
+        }
+        return informator;
     }
 }

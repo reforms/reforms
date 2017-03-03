@@ -1,5 +1,8 @@
 package com.reforms.orm.reflex;
 
+import com.reforms.orm.OrmConfigurator;
+import com.reforms.orm.OrmContext;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -10,37 +13,21 @@ import java.util.Map.Entry;
  * Собирает информацию об объекте заданного типа и связывает создающий конструктор с полями объекта
  * @author evgenie
  */
-public class InstanceInformator {
+class InstanceInformator {
 
     private final Class<?> clazz;
-
-    private final List<InstanceInfo> instancesInfo;
 
     private Map<String, Field> fields = new HashMap<>();
 
     private List<FieldsInfo> fieldsInfoList = new ArrayList<>();
 
-    public InstanceInformator(Class<?> clazz, List<InstanceInfo> instancesInfo) {
+    InstanceInformator(Class<?> clazz, List<InstanceInfo> instancesInfo) {
         this.clazz = clazz;
-        this.instancesInfo = instancesInfo;
         scanFields(clazz);
-        scanInstancesInfo();
+        scanInstancesInfo(instancesInfo);
     }
 
-    private void scanInstancesInfo() {
-        for (InstanceInfo instanceInfo : instancesInfo) {
-            if (instanceInfo.getCause() == null) {
-                handleInstance(instanceInfo);
-            }
-        }
-    }
-
-    private void handleInstance(InstanceInfo instanceInfo) {
-        FieldsInfo fieldsInfo = resolveFieldsInfo(instanceInfo);
-        fieldsInfoList.add(fieldsInfo);
-    }
-
-    public FieldsInfo resolveFieldsInfo(Map<String, Object> fieldNames2values) {
+    FieldsInfo resolveFieldsInfo(Map<String, Object> fieldNames2values) {
         if (fieldsInfoList.size() == 1) {
             return fieldsInfoList.get(0);
         }
@@ -57,6 +44,19 @@ public class InstanceInformator {
             }
         }
         throw new IllegalStateException("Не найдена информация о конструкторе, с помощью которого можно создать объект для класса '" + clazz + "'");
+    }
+
+    private void scanInstancesInfo(List<InstanceInfo> instancesInfo) {
+        for (InstanceInfo instanceInfo : instancesInfo) {
+            if (instanceInfo.getCause() == null) {
+                handleInstance(instanceInfo);
+            }
+        }
+    }
+
+    private void handleInstance(InstanceInfo instanceInfo) {
+        FieldsInfo fieldsInfo = resolveFieldsInfo(instanceInfo);
+        fieldsInfoList.add(fieldsInfo);
     }
 
     private FieldsInfo resolveFieldsInfo(InstanceInfo instanceInfo) {
@@ -120,4 +120,9 @@ public class InstanceInformator {
         }
     }
 
+    public static InstanceInformator createInstanceInformator(Class<?> instanceClass) {
+        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
+        LocalCache localCache = rCtx.getLocalCache();
+        return localCache.getInstanceInformator(instanceClass);
+    }
 }

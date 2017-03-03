@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import static com.reforms.orm.reflex.InstanceCreator.createInstanceCreator;
+import static com.reforms.orm.reflex.InstanceInformator.createInstanceInformator;
 
 /**
  * Строит объект с не дефолтным конструктором, передавая только имена полей и их значение
@@ -15,8 +15,6 @@ import static com.reforms.orm.reflex.InstanceCreator.createInstanceCreator;
 class FullInstanceBuilder implements IInstanceBuilder {
 
     private IReflexor reflexor;
-
-    private Class<?> ormClass;
 
     private Map<String, Object> values;
 
@@ -28,7 +26,6 @@ class FullInstanceBuilder implements IInstanceBuilder {
 
     FullInstanceBuilder(IReflexor reflexor) {
         this.reflexor = reflexor;
-        ormClass = reflexor.getOrmClass();
     }
 
     @Override
@@ -56,15 +53,16 @@ class FullInstanceBuilder implements IInstanceBuilder {
 
     @Override
     public Object complete() throws Exception {
-        // TODO оптимизация - убрать if (fieldsInfo == null) { в конструктор и добавить список ожидаемых полей
         if (fieldsInfo == null) {
-            InstanceCreator creator = createInstanceCreator(ormClass);
-            InstanceInformator informator = new InstanceInformator(ormClass, creator.getInstancesInfo());
+            InstanceInformator informator = createInstanceInformator(reflexor.getOrmClass());
             fieldsInfo = informator.resolveFieldsInfo(values);
         }
         Object[] constructorValues = new Object[fieldsInfo.size()];
         for (FieldInfo fieldInfo : fieldsInfo) {
             String fieldName = fieldInfo.getFieldName();
+            if (!values.containsKey(fieldName)) {
+                throw new IllegalStateException("Поле '" + fieldName + "' не содержится в списке значений. Класс '" + reflexor.getOrmClass() + "'");
+            }
             Object fieldValue = values.remove(fieldName);
             if (fieldValue instanceof IInstanceBuilder) {
                 fieldValue = ((IInstanceBuilder) fieldValue).complete();

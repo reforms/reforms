@@ -6,10 +6,7 @@ import com.reforms.orm.OrmContext;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Создать объект с не дефолтным конструктором.
@@ -28,15 +25,15 @@ class InstanceCreator {
 
     InstanceCreator(Class<?> ormClass) {
         this.ormClass = ormClass;
+    }
+
+    InstanceCreator init() {
         instancesInfo = Collections.unmodifiableList(processAll());
+        return this;
     }
 
     public Class<?> getOrmClass() {
         return ormClass;
-    }
-
-    public List<InstanceInfo> getInstancesInfo() {
-        return instancesInfo;
     }
 
     public boolean isSimpleConstructorFlag() {
@@ -50,10 +47,14 @@ class InstanceCreator {
         return instancesInfo.get(0);
     }
 
+    public List<InstanceInfo> getInstancesInfo() {
+        return instancesInfo;
+    }
+
     private List<InstanceInfo> processAll() {
         List<InstanceInfo> instancesInfo = new ArrayList<>();
         Constructor<?>[] allConstructors = ormClass.getDeclaredConstructors();
-        List<Constructor<?>> constructors = filterConstructors(allConstructors);
+        Set<Constructor<?>> constructors = filterConstructors(allConstructors);
         for (Constructor<?> constructor : constructors) {
             InstanceInfo instanceInfo = new InstanceInfo();
             Object instance1 = STUB_INSTANCE_MARKER;
@@ -89,9 +90,9 @@ class InstanceCreator {
         }
     }
 
-    private List<Constructor<?>> filterConstructors(Constructor<?>[] constructors) {
+    private Set<Constructor<?>> filterConstructors(Constructor<?>[] constructors) {
         boolean hasTargetConstructor = false;
-        List<Constructor<?>> targets = new ArrayList<>();
+        Set<Constructor<?>> targets = new TreeSet<>(new ConstructorComparator());
         for (Constructor<?> constructor : constructors) {
             boolean acceptConstructor = true;
             Class<?>[] paramTypes = constructor.getParameterTypes();
@@ -154,6 +155,32 @@ class InstanceCreator {
             if (notAccessible) {
                 constructor.setAccessible(false);
             }
+        }
+    }
+
+    private static class ConstructorComparator implements Comparator<Constructor<?>> {
+
+        @Override
+        public int compare(Constructor<?> constructor1, Constructor<?> constructor2) {
+            int p1 = getPriotity(constructor1);
+            int p2 = getPriotity(constructor2);
+            if (p1 < p2) {
+                return -1;
+            }
+            if (p1 > p2) {
+                return 1;
+            }
+            return constructor1.toString().compareTo(constructor2.toString());
+        }
+
+        private int getPriotity(Constructor<?> constructor1) {
+            // max priority
+            Class<?>[] params = constructor1.getParameterTypes();
+            if (params.length == 0) {
+                return -1;
+            }
+            // low priority
+            return 1000 - params.length;
         }
     }
 
