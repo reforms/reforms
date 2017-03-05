@@ -2,11 +2,14 @@ package com.reforms.orm.reflex;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.reforms.ann.ThreadSafe;
+
 /**
  * Кэшируем экземпляры Reflexor и внутри их - кешируем найденные методы и объекты
  * @author evgenie
  *
  */
+@ThreadSafe
 public class LocalCache {
 
     private ConcurrentHashMap<Class<?>, IReflexor> reflexors = new ConcurrentHashMap<>();

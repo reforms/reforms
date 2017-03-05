@@ -1,8 +1,8 @@
 package com.reforms.orm.extractor;
 
+import static com.reforms.orm.OrmConfigurator.getInstance;
+
 import com.reforms.ann.ThreadSafe;
-import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.OrmContext;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.sql.db.DbType;
 import com.reforms.sql.expr.query.SelectQuery;
@@ -20,9 +20,8 @@ public class DbTypeExtractor {
     }
 
     public DbType extractDbType(SelectQuery selectQuery) {
-        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
         TableExpressionExtractor tableExprExtractor = new TableExpressionExtractor();
-        ISchemeManager schemeManager = rCtx.getSchemeManager();
+        ISchemeManager schemeManager = getInstance(ISchemeManager.class);
         for (TableExpression tableExpr : tableExprExtractor.extractFilterExpressions(selectQuery)) {
             if (tableExpr.hasSchemeName()) {
                 String schemeKey = tableExpr.getSchemeName();

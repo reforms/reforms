@@ -90,7 +90,7 @@ public class UTestSelectQueryStaticFilterPreparer {
     private void assertStaticFilter(String query, String etalonQuery, FilterMap filters) {
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        SelectQueryPreparer queryPreaprer = OrmConfigurator.get(SelectQueryPreparer.class);
+        SelectQueryPreparer queryPreaprer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         queryPreaprer.prepare(selectQuery, filters);
         assertEquals(etalonQuery, selectQuery.toString());
     }
@@ -106,7 +106,7 @@ public class UTestSelectQueryStaticFilterPreparer {
     private void assertFailStaticFilter(String query, FilterMap filters) {
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        SelectQueryPreparer queryPreaprer = OrmConfigurator.get(SelectQueryPreparer.class);
+        SelectQueryPreparer queryPreaprer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         try {
             queryPreaprer.prepare(selectQuery, filters);
             fail("Ожидается, что выражение '" + query + "' имеет не валидный фильтр");

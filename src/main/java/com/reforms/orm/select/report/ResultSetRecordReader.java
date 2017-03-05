@@ -1,9 +1,10 @@
 package com.reforms.orm.select.report;
 
+import static com.reforms.orm.OrmConfigurator.getInstance;
+
 import java.sql.ResultSet;
 import java.util.List;
 
-import com.reforms.orm.OrmContext;
 import com.reforms.orm.select.ColumnAlias;
 import com.reforms.orm.select.SelectedColumn;
 import com.reforms.orm.select.report.converter.ColumnValueConverterFactory;
@@ -20,10 +21,10 @@ public class ResultSetRecordReader {
     private ColumnValueConverterFactory converterFactory;
     private IColumnToRecordNameConverter columnToRecordNameConverter;
 
-    public ResultSetRecordReader(List<SelectedColumn> columns, OrmContext rCtx) {
+    public ResultSetRecordReader(List<SelectedColumn> columns) {
         this.columns = columns;
-        this.converterFactory = rCtx.getColumnValueConverterFactory();
-        this.columnToRecordNameConverter = rCtx.getColumnToRecordNameConverter();
+        this.converterFactory = getInstance(ColumnValueConverterFactory.class);
+        this.columnToRecordNameConverter = getInstance(IColumnToRecordNameConverter.class);
     }
 
     public ReportRecord read(ResultSet rs) throws Exception {

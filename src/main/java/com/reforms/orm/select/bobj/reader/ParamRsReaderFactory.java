@@ -41,7 +41,7 @@ public class ParamRsReaderFactory {
         }
     }
 
-    public ParamRsReaderFactory addCustomParamRsReader(IParamRsReader<?> converter, Object... keys) {
+    public ParamRsReaderFactory addCustomParamReader(IParamRsReader<?> converter, Object... keys) {
         if (customConverters == null) {
             customConverters = new HashMap<>();
         }
@@ -56,10 +56,14 @@ public class ParamRsReaderFactory {
             baseConverters = new HashMap<>();
         }
         baseConverters = Collections.unmodifiableMap(baseConverters);
+        return this;
+    }
+
+    public ParamRsReaderFactory sealedCustom() {
         if (customConverters == null) {
             customConverters = new HashMap<>();
+            customConverters = Collections.unmodifiableMap(customConverters);
         }
-        customConverters = Collections.unmodifiableMap(customConverters);
         return this;
     }
 

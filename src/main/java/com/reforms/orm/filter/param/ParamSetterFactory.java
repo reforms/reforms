@@ -47,15 +47,17 @@ public class ParamSetterFactory {
             baseParamSetters = new HashMap<>();
         }
         baseParamSetters = Collections.unmodifiableMap(baseParamSetters);
+        prefixes = new TreeSet<>(new ParamSetterMarkerComparator());
+        prefixes.addAll(baseParamSetters.keySet());
+        return this;
+    }
+
+    public ParamSetterFactory sealedCustom() {
         if (customParamSetters == null) {
             customParamSetters = new HashMap<>();
+            customParamSetters = Collections.unmodifiableMap(customParamSetters);
+            prefixes.addAll(customParamSetters.keySet());
         }
-        customParamSetters = Collections.unmodifiableMap(customParamSetters);
-
-        prefixes = new TreeSet<>(new ParamSetterMarkerComparator());
-        prefixes.addAll(customParamSetters.keySet());
-        prefixes.addAll(baseParamSetters.keySet());
-
         return this;
     }
 

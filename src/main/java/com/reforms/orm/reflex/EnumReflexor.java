@@ -1,12 +1,12 @@
 package com.reforms.orm.reflex;
 
-import com.reforms.ann.TargetField;
-import com.reforms.ann.TargetMethod;
-import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.OrmContext;
+import static com.reforms.orm.OrmConfigurator.getInstance;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+
+import com.reforms.ann.TargetField;
+import com.reforms.ann.TargetMethod;
 
 /**
  * Реализация контракта
@@ -180,8 +180,7 @@ public class EnumReflexor implements IEnumReflexor {
     }
 
     public static IEnumReflexor createEnumReflexor(Class<?> instanceClass) {
-        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        LocalCache localCache = rCtx.getLocalCache();
+        LocalCache localCache = getInstance(LocalCache.class);
         return localCache.getEnumReflexor(instanceClass);
     }
 }

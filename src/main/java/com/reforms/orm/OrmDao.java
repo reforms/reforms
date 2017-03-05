@@ -1,14 +1,7 @@
 package com.reforms.orm;
 
-import com.reforms.orm.extractor.OrmSelectColumnExtractorAndAliasModifier;
-import com.reforms.orm.filter.*;
-import com.reforms.orm.reflex.Reflexor;
-import com.reforms.orm.select.SelectedColumn;
-import com.reforms.orm.select.bobj.ResultSetOrmReader;
-import com.reforms.orm.select.bobj.model.OrmHandler;
-import com.reforms.orm.select.bobj.model.OrmIterator;
-import com.reforms.sql.expr.query.SelectQuery;
-import com.reforms.sql.parser.SqlParser;
+import static com.reforms.orm.OrmConfigurator.getInstance;
+import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,7 +9,14 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
+import com.reforms.orm.extractor.OrmSelectColumnExtractorAndAliasModifier;
+import com.reforms.orm.filter.*;
+import com.reforms.orm.select.SelectedColumn;
+import com.reforms.orm.select.bobj.ResultSetOrmReader;
+import com.reforms.orm.select.bobj.model.OrmHandler;
+import com.reforms.orm.select.bobj.model.OrmIterator;
+import com.reforms.sql.expr.query.SelectQuery;
+import com.reforms.sql.parser.SqlParser;
 
 public class OrmDao {
 
@@ -36,14 +36,13 @@ public class OrmDao {
 
     @SuppressWarnings("unchecked")
     public <OrmType> OrmType loadOrm(Class<OrmType> ormClass, String sqlQuery, FilterValues filters) throws Exception {
-        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        IConnectionHolder cHolder = rCtx.getConnectionHolder();
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(OrmSelectColumnExtractorAndAliasModifier.class);
+        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
-        ResultSetOrmReader rsReader = new ResultSetOrmReader(selectedColumns, Reflexor.createReflexor(ormClass), rCtx);
-        SelectQueryPreparer filterPreparer = OrmConfigurator.get(SelectQueryPreparer.class);
+        ResultSetOrmReader rsReader = new ResultSetOrmReader(ormClass, selectedColumns);
+        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
@@ -69,14 +68,13 @@ public class OrmDao {
 
     @SuppressWarnings("unchecked")
     public <OrmType> List<OrmType> loadOrms(Class<OrmType> ormClass, String sqlQuery, FilterValues filters) throws Exception {
-        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        IConnectionHolder cHolder = rCtx.getConnectionHolder();
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(OrmSelectColumnExtractorAndAliasModifier.class);
+        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
-        ResultSetOrmReader rsReader = new ResultSetOrmReader(selectedColumns, Reflexor.createReflexor(ormClass), rCtx);
-        SelectQueryPreparer filterPreparer = OrmConfigurator.get(SelectQueryPreparer.class);
+        ResultSetOrmReader rsReader = new ResultSetOrmReader(ormClass, selectedColumns);
+        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
         List<OrmType> orms = new ArrayList<>();
@@ -108,14 +106,13 @@ public class OrmDao {
 
     public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, FilterValues filters)
             throws Exception {
-        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        IConnectionHolder cHolder = rCtx.getConnectionHolder();
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(OrmSelectColumnExtractorAndAliasModifier.class);
+        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
-        ResultSetOrmReader rsReader = new ResultSetOrmReader(selectedColumns, Reflexor.createReflexor(ormClass), rCtx);
-        SelectQueryPreparer filterPreparer = OrmConfigurator.get(SelectQueryPreparer.class);
+        ResultSetOrmReader rsReader = new ResultSetOrmReader(ormClass, selectedColumns);
+        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
@@ -145,14 +142,13 @@ public class OrmDao {
     }
 
     public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery, FilterValues filters) throws Exception {
-        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        IConnectionHolder cHolder = rCtx.getConnectionHolder();
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(OrmSelectColumnExtractorAndAliasModifier.class);
+        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
-        ResultSetOrmReader rsReader = new ResultSetOrmReader(selectedColumns, Reflexor.createReflexor(ormClass), rCtx);
-        SelectQueryPreparer filterPreparer = OrmConfigurator.get(SelectQueryPreparer.class);
+        ResultSetOrmReader rsReader = new ResultSetOrmReader(ormClass, selectedColumns);
+        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
         PreparedStatement ps = null;

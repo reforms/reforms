@@ -1,16 +1,18 @@
 package com.reforms.orm.filter;
 
+import static com.reforms.orm.OrmConfigurator.getInstance;
+import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
+import com.reforms.orm.CreateNewInstance;
+import com.reforms.orm.IOrmContext;
 import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.OrmContext;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.scheme.SchemeManager;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
-
-import org.junit.Test;
-
-import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
-import static org.junit.Assert.assertEquals;
 
 public class UTestSchemePreparer {
 
@@ -32,29 +34,38 @@ public class UTestSchemePreparer {
 
     @Test
     public void runTest_CheckScheme() {
-        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        ISchemeManager schemeManager = rCtx.getSchemeManager();
-        SchemeManager sm = new SchemeManager();
+        SchemeManagerCreator schemeManagerCreator = new SchemeManagerCreator();
+        IOrmContext context = getInstance(IOrmContext.class);
         try {
-            rCtx.setSchemeManager(sm);
-            sm.putSchemeName("schemeName1", "local");
-            sm.putSchemeName("schemeName2", "public");
-            sm.putSchemeName("schemeName3", "shared");
-            sm.setDefaultSchemeName("free");
+            context.changeSchemeManager(schemeManagerCreator);
             assertScheme(QUERY_1, QUERY_ETALON_1);
             assertScheme(QUERY_2, QUERY_ETALON_2);
             assertScheme(QUERY_3, QUERY_ETALON_3);
             assertScheme(QUERY_4, QUERY_ETALON_4);
         } finally {
-            rCtx.setSchemeManager(schemeManager);
+            context.setSchemeManager(schemeManagerCreator.schemeManager);
         }
     }
 
     private void assertScheme(String query, String expectedQuery) {
-        SelectQueryPreparer queryPreaprer = OrmConfigurator.get(SelectQueryPreparer.class);
+        SelectQueryPreparer queryPreaprer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
         queryPreaprer.prepare(selectQuery, EMPTY_FILTER_MAP);
         assertEquals(expectedQuery, selectQuery.toString());
+    }
+
+    private static class SchemeManagerCreator implements CreateNewInstance<ISchemeManager> {
+        private ISchemeManager schemeManager;
+        @Override
+        public ISchemeManager createNew(ISchemeManager current) {
+            this.schemeManager = current;
+            SchemeManager sm = new SchemeManager();
+            sm.putSchemeName("schemeName1", "local");
+            sm.putSchemeName("schemeName2", "public");
+            sm.putSchemeName("schemeName3", "shared");
+            sm.setDefaultSchemeName("free");
+            return sm;
+        }
     }
 }

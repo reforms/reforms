@@ -1,5 +1,13 @@
 package com.reforms.orm;
 
+import static com.reforms.orm.OrmConfigurator.getInstance;
+import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.List;
+
 import com.reforms.orm.extractor.ReportSelectColumnExtractorAndAliasModifier;
 import com.reforms.orm.filter.*;
 import com.reforms.orm.select.SelectedColumn;
@@ -10,13 +18,6 @@ import com.reforms.orm.select.report.model.ReportRecord;
 import com.reforms.orm.select.report.model.ReportRecordHandler;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.List;
-
-import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
 
 /**
  * TODO фитчи - проработать вопрос:
@@ -49,15 +50,14 @@ public class ReportDao {
     }
 
     public Report loadReport(Object connectionHolder, String sqlQuery, FilterValues filters) throws Exception {
-        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        IConnectionHolder cHolder = rCtx.getConnectionHolder();
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        ReportSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(ReportSelectColumnExtractorAndAliasModifier.class);
+        ReportSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(ReportSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
-        ResultSetRecordReader rsReader = new ResultSetRecordReader(selectedColumns, rCtx);
+        ResultSetRecordReader rsReader = new ResultSetRecordReader(selectedColumns);
         Report report = new Report();
-        SelectQueryPreparer filterPreparer = OrmConfigurator.get(SelectQueryPreparer.class);
+        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
@@ -86,14 +86,13 @@ public class ReportDao {
     }
 
     public void handleReport(Object connectionHolder, String sqlQuery, ReportRecordHandler handler, FilterValues filters) throws Exception {
-        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        IConnectionHolder cHolder = rCtx.getConnectionHolder();
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        ReportSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(ReportSelectColumnExtractorAndAliasModifier.class);
+        ReportSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(ReportSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
-        ResultSetRecordReader rsReader = new ResultSetRecordReader(selectedColumns, rCtx);
-        SelectQueryPreparer filterPreparer = OrmConfigurator.get(SelectQueryPreparer.class);
+        ResultSetRecordReader rsReader = new ResultSetRecordReader(selectedColumns);
+        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
@@ -122,14 +121,13 @@ public class ReportDao {
     }
 
     public ReportIterator loadReportIterator(Object connectionHolder, String sqlQuery, FilterValues filters) throws Exception {
-        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        IConnectionHolder cHolder = rCtx.getConnectionHolder();
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        ReportSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.get(ReportSelectColumnExtractorAndAliasModifier.class);
+        ReportSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(ReportSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
-        ResultSetRecordReader rsReader = new ResultSetRecordReader(selectedColumns, rCtx);
-        SelectQueryPreparer filterPreparer = OrmConfigurator.get(SelectQueryPreparer.class);
+        ResultSetRecordReader rsReader = new ResultSetRecordReader(selectedColumns);
+        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
         PreparedStatement ps = null;

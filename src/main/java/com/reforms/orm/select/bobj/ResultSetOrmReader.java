@@ -1,15 +1,17 @@
 package com.reforms.orm.select.bobj;
 
-import com.reforms.orm.OrmContext;
+import static com.reforms.orm.OrmConfigurator.getInstance;
+import static com.reforms.orm.reflex.Reflexor.createReflexor;
+
+import java.sql.ResultSet;
+import java.util.List;
+
 import com.reforms.orm.reflex.IInstanceBuilder;
 import com.reforms.orm.reflex.IReflexor;
 import com.reforms.orm.select.ColumnAlias;
 import com.reforms.orm.select.SelectedColumn;
 import com.reforms.orm.select.bobj.reader.IParamRsReader;
 import com.reforms.orm.select.bobj.reader.ParamRsReaderFactory;
-
-import java.sql.ResultSet;
-import java.util.List;
 
 public class ResultSetOrmReader {
 
@@ -19,12 +21,12 @@ public class ResultSetOrmReader {
     private IResultSetValueAdapter valueAdapter;
     private IInstanceBuilder ormInstanceBuilder;
 
-    public ResultSetOrmReader(List<SelectedColumn> columns, IReflexor reflexor, OrmContext rCtx) {
+    public ResultSetOrmReader(Class<?> ormClass, List<SelectedColumn> columns) {
         this.columns = columns;
-        this.reflexor = reflexor;
-        paramRsReaderFactory = rCtx.getParamRsReaderFactory();
-        valueAdapter = rCtx.getResultSetValueAdapter();
-        ormInstanceBuilder = reflexor.createInstanceBuilder();
+        this.reflexor = createReflexor(ormClass);
+        this.paramRsReaderFactory = getInstance(ParamRsReaderFactory.class);
+        this.valueAdapter = getInstance(IResultSetValueAdapter.class);
+        this.ormInstanceBuilder = reflexor.createInstanceBuilder();
     }
 
     public Object read(ResultSet rs) throws Exception {

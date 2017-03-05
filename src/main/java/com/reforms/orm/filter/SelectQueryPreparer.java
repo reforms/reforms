@@ -1,5 +1,6 @@
 package com.reforms.orm.filter;
 
+import static com.reforms.orm.OrmConfigurator.getInstance;
 import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
 import static com.reforms.sql.expr.term.value.ValueExpressionType.*;
 
@@ -9,7 +10,6 @@ import java.util.List;
 
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.OrmContext;
 import com.reforms.orm.extractor.FilterExpressionExtractor;
 import com.reforms.orm.extractor.TableExpressionExtractor;
 import com.reforms.orm.filter.modifier.PageModifier;
@@ -58,15 +58,14 @@ public class SelectQueryPreparer {
 
     private void preparePage(SelectQuery selectQuery, FilterValues filters) {
         if (filters.hasPageFilter()) {
-            PageModifier pageModifer = OrmConfigurator.get(PageModifier.class);
+            PageModifier pageModifer = OrmConfigurator.getInstance(PageModifier.class);
             pageModifer.changeSelectQuery(selectQuery, filters);
         }
     }
 
     private void prepareScheme(SelectQuery selectQuery) {
-        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
         TableExpressionExtractor tableExprExtractor = new TableExpressionExtractor();
-        ISchemeManager schemeManager = rCtx.getSchemeManager();
+        ISchemeManager schemeManager = getInstance(ISchemeManager.class);
         for (TableExpression tableExpr : tableExprExtractor.extractFilterExpressions(selectQuery)) {
             if (tableExpr.hasSchemeName()) {
                 String schemeKey = tableExpr.getSchemeName();
@@ -81,8 +80,7 @@ public class SelectQueryPreparer {
     }
 
     private FilterPrepareStatementSetter prepareFilters(SelectQuery selectQuery, FilterValues filters) {
-        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        ParamSetterFactory paramSetterFactory = rCtx.getParamSetterFactory();
+        ParamSetterFactory paramSetterFactory = getInstance(ParamSetterFactory.class);
         FilterPrepareStatementSetter fpss = new FilterPrepareStatementSetter(paramSetterFactory);
         FilterExpressionExtractor filterExprExtractor = new FilterExpressionExtractor();
         List<ValueExpression> filterExprs = filterExprExtractor.extractFilterExpressions(selectQuery);
@@ -93,7 +91,7 @@ public class SelectQueryPreparer {
         int questionCount = 0;
         SelectQueryTree queryTree = SelectQueryTree.build(selectQuery);
         PredicateModifier predicateModifier = new PredicateModifier(queryTree);
-        ColumnAliasParser filterValueParser = OrmConfigurator.get(ColumnAliasParser.class);
+        ColumnAliasParser filterValueParser = OrmConfigurator.getInstance(ColumnAliasParser.class);
         for (ValueExpression valueFilterExpr : filterExprs) {
             if (VET_FILTER == valueFilterExpr.getValueExprType()) {
                 FilterExpression filterExpr = (FilterExpression) valueFilterExpr;

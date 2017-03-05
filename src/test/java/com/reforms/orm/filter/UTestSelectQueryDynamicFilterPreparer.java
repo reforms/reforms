@@ -240,7 +240,7 @@ public class UTestSelectQueryDynamicFilterPreparer {
     private void assertDynamicFilter(String query, String etalonQuery, FilterMap filters) {
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        SelectQueryPreparer queryPreaprer = OrmConfigurator.get(SelectQueryPreparer.class);
+        SelectQueryPreparer queryPreaprer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         queryPreaprer.prepare(selectQuery, filters);
         assertEquals(etalonQuery, selectQuery.toString());
     }

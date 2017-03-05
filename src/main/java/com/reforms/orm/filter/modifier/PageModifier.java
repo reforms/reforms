@@ -27,7 +27,7 @@ public class PageModifier {
     }
 
     public void changeSelectQuery(SelectQuery selectQuery, FilterValues filters) {
-        DbTypeExtractor dbTypeExtractor = OrmConfigurator.get(DbTypeExtractor.class);
+        DbTypeExtractor dbTypeExtractor = OrmConfigurator.getInstance(DbTypeExtractor.class);
         DbType dbType = dbTypeExtractor.extractDbType(selectQuery);
         if (POSTGRESQL == dbType || MIX == dbType) {
             changeSelectQueryWhenPostgreSql(selectQuery, filters);

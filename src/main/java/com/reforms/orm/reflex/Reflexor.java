@@ -1,7 +1,6 @@
 package com.reforms.orm.reflex;
 
-import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.OrmContext;
+import static com.reforms.orm.OrmConfigurator.getInstance;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -371,8 +370,7 @@ public class Reflexor implements IReflexor {
     }
 
     public static IReflexor createReflexor(Class<?> instanceClass) {
-        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        LocalCache localCache = rCtx.getLocalCache();
+        LocalCache localCache = getInstance(LocalCache.class);
         return localCache.getReflexor(instanceClass);
     }
 

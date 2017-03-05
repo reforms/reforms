@@ -56,7 +56,7 @@ class SelectColumnExtractorAndAliasModifier {
         }
         AsClauseExpression asClauseExpr = aliasExpr.getAsClauseExpr();
         String alias = asClauseExpr.getAlias();
-        ColumnAliasParser columnAliasParser = OrmConfigurator.get(ColumnAliasParser.class);
+        ColumnAliasParser columnAliasParser = OrmConfigurator.getInstance(ColumnAliasParser.class);
         ColumnAlias cAlias = columnAliasParser.parseColumnAlias(alias);
         // Для краткости можно использовать синтаксис #type
         // Эта часть кода обрабатывает такую ситуацию

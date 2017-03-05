@@ -1,8 +1,9 @@
 package com.reforms.orm.reflex;
 
+import static com.reforms.orm.OrmConfigurator.getInstance;
+
 import com.reforms.ann.TargetConstructor;
 import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.OrmContext;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
@@ -185,8 +186,7 @@ class InstanceCreator {
     }
 
     public static InstanceCreator createInstanceCreator(Class<?> instanceClass) {
-        OrmContext rCtx = OrmConfigurator.get(OrmContext.class);
-        LocalCache localCache = rCtx.getLocalCache();
+        LocalCache localCache = getInstance(LocalCache.class);
         return localCache.getInstanceCreator(instanceClass);
     }
 }

@@ -1,8 +1,8 @@
 package com.reforms.orm.extractor;
 
+import static com.reforms.orm.OrmConfigurator.getInstance;
+
 import com.reforms.ann.ThreadSafe;
-import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.OrmContext;
 import com.reforms.orm.select.SelectedColumn;
 import com.reforms.orm.select.bobj.IColumnToFieldNameConverter;
 import com.reforms.sql.expr.term.AliasExpression;
@@ -18,7 +18,7 @@ public class OrmSelectColumnExtractorAndAliasModifier extends SelectColumnExtrac
     private IColumnToFieldNameConverter columnToFieldNameConverter;
 
     public OrmSelectColumnExtractorAndAliasModifier() {
-        columnToFieldNameConverter = OrmConfigurator.get(OrmContext.class).getColumnToFieldNameConverter();
+        columnToFieldNameConverter = getInstance(IColumnToFieldNameConverter.class);
     }
 
     @Override

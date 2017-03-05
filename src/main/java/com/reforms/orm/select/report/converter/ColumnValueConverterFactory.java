@@ -54,10 +54,14 @@ public class ColumnValueConverterFactory {
             baseConverters = new HashMap<>();
         }
         baseConverters = Collections.unmodifiableMap(baseConverters);
+        return this;
+    }
+
+    public ColumnValueConverterFactory sealedCustom() {
         if (customConverters == null) {
             customConverters = new HashMap<>();
+            customConverters = Collections.unmodifiableMap(customConverters);
         }
-        customConverters = Collections.unmodifiableMap(customConverters);
         return this;
     }
 
