@@ -2,6 +2,10 @@ package com.reforms.sql.parser;
 
 import com.reforms.sql.expr.term.SqlWords;
 
+/**
+ * TODO: нужно переосмыслить и удалить
+ * @author evgenie
+ */
 class WordInfo {
 
     private String word;
