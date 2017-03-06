@@ -168,7 +168,7 @@ public class SqlParser {
     }
 
     private SelectableExpression parseFullSelectableExpression() {
-        skipSpaces();
+        stream.skipSpaces();
         SelectableExpression selectExpr = parseSingleSelectExpr();
         if (selectExpr != null) {
             AsClauseExpression asClauseExpr = parseAsClauseExpression(true);
@@ -186,12 +186,12 @@ public class SqlParser {
         int from = stream.getCursor();
         boolean expressionState = true;
         ParenLevels levels = new ParenLevels();
-        skipSpaces();
+        stream.skipSpaces();
         if (!isOpenBrace()) {
             levels.push(new ParenLevel(false));
         }
         while (true) {
-            skipSpaces();
+            stream.skipSpaces();
             if (isOpenBrace()) {
                 levels.incDepth();
                 levels.push(new ParenLevel(true));
@@ -254,13 +254,13 @@ public class SqlParser {
     private static final List<Character> MATH_OPERAND = Arrays.asList('+', '-', '*', '/', '|');
 
     private boolean checkIsMathOperator() {
-        skipSpaces();
+        stream.skipSpaces();
         char symbol = stream.getSymbol();
         return MATH_OPERAND.contains(symbol);
     }
 
     private MathOperator parseMathOperator() {
-        skipSpaces();
+        stream.skipSpaces();
         char symbol = stream.getSymbol();
         if (!MATH_OPERAND.contains(symbol)) {
             throw stream.createException("Некорректный математический оператор '" + symbol + "'", stream.getCursor());
@@ -278,7 +278,7 @@ public class SqlParser {
     }
 
     private SelectableExpression parseSelectableExpression() {
-        skipSpaces();
+        stream.skipSpaces();
         if (checkIsAsterisk()) {
             return parseAsterisk();
         }
@@ -304,7 +304,7 @@ public class SqlParser {
     }
 
     private boolean checkIsAsterisk() {
-        skipSpaces();
+        stream.skipSpaces();
         char symbol = stream.getSymbol();
         return '*' == symbol;
     }
@@ -333,7 +333,7 @@ public class SqlParser {
             throw stream.createException("Ожидается наименование функции", from);
         }
         funcExpr.setName(funcName);
-        skipSpaces();
+        stream.skipSpaces();
         from = stream.getCursor();
         char symol = stream.getSymbol();
         if ('(' != symol) {
@@ -343,7 +343,7 @@ public class SqlParser {
         String quantifier = parseSelectModeWord();
         funcExpr.setQuantifier(quantifier);
         from = stream.getCursor();
-        skipSpaces();
+        stream.skipSpaces();
         symol = stream.getSymbol();
         if (')' != symol) {
             from = stream.getCursor();
@@ -361,7 +361,7 @@ public class SqlParser {
                 from = stream.getCursor();
                 arg = parseSingleSelectExpr();
             }
-            skipSpaces();
+            stream.skipSpaces();
         }
         if (')' != stream.getSymbol()) {
             throw stream.createException("Ожидается заврешение функции символом ')', а получен '" + stream.getSymbol() + "'", from);
@@ -371,21 +371,21 @@ public class SqlParser {
     }
 
     private AsClauseExpression parseAsClauseExpression(boolean selectExpr) {
-        skipSpaces();
+        stream.skipSpaces();
         stream.keepParserState();
         List<Character> chars = selectExpr ? DONT_SQL_WORD_LETTERS_EXCLUDE_CLAUSE : DONT_SQL_WORD_LETTERS;
         int from = stream.getCursor();
         AsClauseExpression asClauseExpr = new AsClauseExpression();
         String word = parseStatementWord(false, chars);
         if (word.isEmpty()) {
-            word = parseDoubleQuoteValue();
+            word = stream.parseDoubleQuoteValue();
         }
         if (SW_AS.equalsIgnoreCase(word)) {
             asClauseExpr.setAsWord(word);
             from = stream.getCursor();
             word = parseStatementWord(false, chars);
             if (word.isEmpty()) {
-                word = parseDoubleQuoteValue();
+                word = stream.parseDoubleQuoteValue();
                 if (word.isEmpty()) {
                     throw stream.createException("После ключеого слова 'AS' ожидается алиас", from);
                 }
@@ -428,13 +428,13 @@ public class SqlParser {
     }
 
     private boolean checkIsNumericExpr() {
-        skipSpaces();
+        stream.skipSpaces();
         char symbol = stream.getSymbol();
         return symbol == '-' || symbol == '+' || Character.isDigit(symbol);
     }
 
     private NumericExpression parseNumericExpr() {
-        skipSpaces();
+        stream.skipSpaces();
         int from = stream.getCursor();
         boolean wasDot = false;
         boolean wasE = false;
@@ -476,18 +476,18 @@ public class SqlParser {
         if (stream.getCursor() - from == 1 && ('+' == prevSymbol || '-' == prevSymbol)) {
             throw stream.createException("Ожидается после знака '+' или '-' хотя бы 1 число!", from);
         }
-        String numericValue = stream.getPartFrom(from);
+        String numericValue = stream.getValueFrom(from);
         return new NumericExpression(numericValue);
     }
 
     private boolean checkIsStringExpr() {
-        skipSpaces();
+        stream.skipSpaces();
         char symbol = stream.getSymbol();
         return '\'' == symbol;
     }
 
     private StringExpression parseStringExpr() {
-        skipSpaces();
+        stream.skipSpaces();
         int from = stream.getCursor();
         char symbol = stream.getSymbol();
         if ('\'' == symbol) {
@@ -500,27 +500,8 @@ public class SqlParser {
             throw stream.createException("Не является строкой", from);
         }
         stream.moveCursor();
-        String stringValue = stream.getPartFrom(from);
+        String stringValue = stream.getValueFrom(from);
         return new StringExpression(stringValue);
-    }
-
-    private String parseDoubleQuoteValue() {
-        skipSpaces();
-        int from = stream.getCursor();
-        char symbol = stream.getSymbol();
-        if ('"' != symbol) {
-            return "";
-        }
-        stream.moveCursor();
-        while ('"' != (symbol = stream.getSymbol()) && symbol != '\0') {
-            stream.moveCursor();
-        }
-        if (symbol == '\0') {
-            throw stream.createException("Не является строкой в двойных кавычках", from);
-        }
-        stream.moveCursor();
-        String doubleQuoteValue = stream.getPartFrom(from);
-        return doubleQuoteValue;
     }
 
     private boolean checkIsDateExpr() {
@@ -565,13 +546,13 @@ public class SqlParser {
     }
 
     private boolean checkIsQuestionExpr() {
-        skipSpaces();
+        stream.skipSpaces();
         char symbol = stream.getSymbol();
         return symbol == '?';
     }
 
     private QuestionExpression parseQuestionExpr() {
-        skipSpaces();
+        stream.skipSpaces();
         char symbol = stream.getSymbol();
         if ('?' != symbol) {
             throw stream.createException("Ожидается '?', а получен символ '" + symbol + "'", stream.getCursor());
@@ -623,7 +604,7 @@ public class SqlParser {
     }
 
     private boolean checkIsFilterExpr() {
-        skipSpaces();
+        stream.skipSpaces();
         return ':' == stream.getSymbol();
     }
 
@@ -650,13 +631,13 @@ public class SqlParser {
             throw stream.createException("Не является фильтром", from);
         }
         from = stream.getCursor();
-        String filterName = stream.getPartFrom(filterNameCursor);
+        String filterName = stream.getValueFrom(filterNameCursor);
         boolean questionFlag = false;
         if ('?' == stream.getSymbol()) {
             questionFlag = true;
             stream.moveCursor();
         }
-        String filterValue = stream.getPartFrom(startExprCursor);
+        String filterValue = stream.getValueFrom(startExprCursor);
         FilterExpression filterExpr = new FilterExpression(filterValue);
         filterExpr.setColonCount(filterNameCursor - startExprCursor);
         filterExpr.setFilterName(filterName);
@@ -790,7 +771,7 @@ public class SqlParser {
     }
 
     private boolean checkIsSubSelect() {
-        skipSpaces();
+        stream.skipSpaces();
         boolean subSelectFlag = false;
         stream.keepParserState();
         char symbol = stream.getSymbol();
@@ -805,14 +786,14 @@ public class SqlParser {
     }
 
     private SelectQuery parseSubSelect() {
-        skipSpaces();
+        stream.skipSpaces();
         if ('(' != stream.getSymbol()) {
             throw stream.createException("Ожидается начало подзапроса символом '(', а получен '" + stream.getSymbol() + "'", stream
                     .getCursor());
         }
         stream.moveCursor(); // skip '('
         SelectQuery subSelectQuery = parseSingleSelectQuery();
-        skipSpaces();
+        stream.skipSpaces();
         if (')' != stream.getSymbol()) {
             throw stream.createException("Ожидается заврешение подзапроса символом ')', а получен '" + stream.getSymbol() + "'", stream
                     .getCursor());
@@ -827,7 +808,7 @@ public class SqlParser {
     }
 
     private ColumnExpression parseColumnExpr() {
-        skipSpaces();
+        stream.skipSpaces();
         int from = stream.getCursor();
         while (EOF != stream.getSymbol() && Character.isJavaIdentifierPart(stream.getSymbol())) {
             stream.moveCursor();
@@ -838,7 +819,7 @@ public class SqlParser {
         ColumnExpression columnExpr = new ColumnExpression();
         String prefix = null;
         String columnName = null;
-        String value = stream.getPartFrom(from);
+        String value = stream.getValueFrom(from);
         char symbol = stream.getSymbol();
         if ('.' == symbol) {
             stream.moveCursor();
@@ -855,7 +836,7 @@ public class SqlParser {
                 if (from == stream.getCursor()) {
                     throw stream.createException("Не является именем колонки", from);
                 }
-                columnName = stream.getPartFrom(from);
+                columnName = stream.getValueFrom(from);
             }
         } else {
             columnName = value;
@@ -944,7 +925,7 @@ public class SqlParser {
     }
 
     private boolean checkIsTableValuesExpression() {
-        skipSpaces();
+        stream.skipSpaces();
         stream.keepParserState();
         char symbol = stream.getSymbol();
         if ('(' != symbol) {
@@ -958,7 +939,7 @@ public class SqlParser {
     }
 
     private TableValuesExpression parseTableValuesExpression() {
-        skipSpaces();
+        stream.skipSpaces();
         int from = stream.getCursor();
         if ('(' != stream.getSymbol()) {
             throw stream.createException("Ожидается начало секции '(VALUES', а получен '" + stream.getSymbol() + "'", from);
@@ -973,12 +954,12 @@ public class SqlParser {
         from = stream.getCursor();
         ValueListExpression valueExpr = parseValueListExpression();
         tableValuesExpr.addValuesExpr(valueExpr);
-        skipSpaces();
+        stream.skipSpaces();
         while (',' == stream.getSymbol()) {
             stream.moveCursor();
             valueExpr = parseValueListExpression();
             tableValuesExpr.addValuesExpr(valueExpr);
-            skipSpaces();
+            stream.skipSpaces();
         }
         from = stream.getCursor();
         if (')' != stream.getSymbol()) {
@@ -1161,12 +1142,12 @@ public class SqlParser {
         int from = stream.getCursor();
         boolean expressionState = true;
         ParenLevels levels = new ParenLevels();
-        skipSpaces();
+        stream.skipSpaces();
         if (!isOpenBrace()) {
             levels.push(new ParenLevel(false));
         }
         while (true) {
-            skipSpaces();
+            stream.skipSpaces();
             if (isOpenBrace()) {
                 levels.incDepth();
                 levels.push(new ParenLevel(true));
@@ -1323,9 +1304,9 @@ public class SqlParser {
         int from = stream.getCursor();
         boolean expressionState = true;
         int fromIndex = levels.isEmpty() ? 0 : levels.peek().size();
-        skipSpaces();
+        stream.skipSpaces();
         while (true) {
-            skipSpaces();
+            stream.skipSpaces();
             if (isOpenBrace()) {
                 levels.incDepth();
                 levels.push(new ParenLevel(true));
@@ -1528,13 +1509,13 @@ public class SqlParser {
     }
 
     private boolean checkIsComparisonOperatorType() {
-        skipSpaces();
+        stream.skipSpaces();
         char symbol = stream.getSymbol();
         return '=' == symbol || '<' == symbol || '>' == symbol || '!' == symbol;
     }
 
     private ComparisonOperatorType parseComparisonOperatorType() {
-        skipSpaces();
+        stream.skipSpaces();
         char firstSymbol = stream.getSymbol();
         stream.moveCursor();
         char secondSymbol = stream.getSymbol();
@@ -1567,7 +1548,7 @@ public class SqlParser {
     }
 
     private boolean checkIsNullablePredicateExpression() {
-        skipSpaces();
+        stream.skipSpaces();
         stream.keepParserState();
         WordInfo wordInfo = parseWordInfo();
         stream.rollbackParserState();
@@ -1638,7 +1619,7 @@ public class SqlParser {
     }
 
     private ValueListExpression parseValueListExpression() {
-        skipSpaces();
+        stream.skipSpaces();
         int from = stream.getCursor();
         char symol = stream.getSymbol();
         if ('(' != symol) {
@@ -1661,7 +1642,7 @@ public class SqlParser {
             from = stream.getCursor();
             valueExpr = parseSingleSelectExpr();
         }
-        skipSpaces();
+        stream.skipSpaces();
         from = stream.getCursor();
         if (stream.getSymbol() != ')') {
             throw stream.createException("Ожидается заврешение блока значений ')', а получен '" + stream.getSymbol() + "'", from);
@@ -1786,7 +1767,7 @@ public class SqlParser {
     }
 
     private ConditionFlowType parseConditionFlowType() {
-        skipSpaces();
+        stream.skipSpaces();
         stream.keepParserState();
         WordInfo wordInfo = parseWordInfo();
         if (wordInfo == null) {
@@ -1807,7 +1788,7 @@ public class SqlParser {
     }
 
     private boolean checkIsValuesComparisonPredicateExpression() {
-        skipSpaces();
+        stream.skipSpaces();
         return ',' == stream.getSymbol();
     }
 
@@ -1818,12 +1799,12 @@ public class SqlParser {
         }
         ValueListExpression leftValuesExpr = new ValueListExpression();
         leftValuesExpr.addValueExpr(firstExpr);
-        skipSpaces();
+        stream.skipSpaces();
         while (',' == stream.getSymbol()) {
             stream.moveCursor();
             from = stream.getCursor();
             Expression valueExpr = parseSelectableExpression();
-            skipSpaces();
+            stream.skipSpaces();
             leftValuesExpr.addValueExpr(valueExpr);
         }
         from = stream.getCursor();
@@ -1865,12 +1846,12 @@ public class SqlParser {
             GroupByStatement groupByStatement = new GroupByStatement();
             GroupingColumnReferenceExpression firstRefColumnExpr = parseGroupingColumnReferenceExpression();
             groupByStatement.addGroupByExpr(firstRefColumnExpr);
-            skipSpaces();
+            stream.skipSpaces();
             while (',' == stream.getSymbol()) {
                 stream.moveCursor();
                 GroupingColumnReferenceExpression refColumnExpr = parseGroupingColumnReferenceExpression();
                 groupByStatement.addGroupByExpr(refColumnExpr);
-                skipSpaces();
+                stream.skipSpaces();
             }
             return groupByStatement;
         }
@@ -2090,13 +2071,13 @@ public class SqlParser {
     }
 
     private WordInfo parseWordInfo(List<Character> dontSqlWordLetters) {
-        skipSpaces();
+        stream.skipSpaces();
         int from = stream.getCursor();
         int afterWordPos = stream.getCursor();
         while (!dontSqlWordLetters.contains(stream.getSymbol())) {
             if (Character.isWhitespace(stream.getSymbol())) {
                 int tempPos = stream.getCursor();
-                skipSpaces();
+                stream.skipSpaces();
                 if (dontSqlWordLetters.contains(stream.getSymbol())) {
                     break;
                 }
@@ -2108,7 +2089,7 @@ public class SqlParser {
         }
         String word = null;
         if (stream.getCursor() != from) {
-            word = stream.getPartFrom(from).trim();
+            word = stream.getValueFrom(from).trim();
             char delim = stream.getSymbol();
             stream.moveCursor();
             return new WordInfo(word, afterWordPos, delim);
@@ -2117,7 +2098,7 @@ public class SqlParser {
     }
 
     private char parseDelim(List<Character> delims, boolean throwFlag) {
-        skipSpaces();
+        stream.skipSpaces();
         char symbol = stream.getSymbol();
         if (!delims.contains(symbol)) {
             if (throwFlag) {
@@ -2129,7 +2110,7 @@ public class SqlParser {
     }
 
     private boolean checkIsIdentifier() {
-        skipSpaces();
+        stream.skipSpaces();
         char symbol = stream.getSymbol();
         if (EOF == symbol || !Character.isJavaIdentifierPart(symbol)) {
             return false;
@@ -2138,11 +2119,5 @@ public class SqlParser {
         WordInfo holder = parseWordInfo();
         stream.rollbackParserState();
         return holder != null && !holder.isSqlWord();
-    }
-
-    private void skipSpaces() {
-        while (Character.isWhitespace(stream.getSymbol())) {
-            stream.moveCursor();
-        }
     }
 }

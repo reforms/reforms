@@ -1,7 +1,11 @@
 package com.reforms.sql.parser;
 
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
+import java.util.List;
+
+import com.reforms.sql.expr.term.SqlWords;
 
 /**
  * Поток для работы с sql выражениями
@@ -25,11 +29,69 @@ public class SqlStream implements ISqlStream {
         this.query = query;
     }
 
+    //-------------------------- TOKEN API ------------------------- \\
     @Override
-    public String getPartFrom(int from) {
+    public String parseDoubleQuoteValue() {
+        skipSpaces();
+        int from = getCursor();
+        char symbol = getSymbol();
+        if ('"' != symbol) {
+            return "";
+        }
+        moveCursor();
+        while ('"' != (symbol = getSymbol()) && symbol != '\0') {
+            moveCursor();
+        }
+        if (symbol == '\0') {
+            throw createException("Не является строкой в двойных кавычках", from);
+        }
+        moveCursor();
+        String doubleQuoteValue = getValueFrom(from);
+        return doubleQuoteValue;
+    }
+
+    private static final List<Character> DONT_SQL_IDENTIFIER_CHARS = Arrays.asList(
+            '.', ':', '(', ')', '!', '?', '<', '>', '=', ',', '*', '+', '-', '/', '&', '^', '%', '~', '"', '\'', '\0', ' ');
+
+    @Override
+    public boolean checkIsIdentifierValue() {
+        keepParserState();
+        String identifier = parseIdentifierValue();
+        rollbackParserState();
+        return identifier != null && !SqlWords.isSqlWord(identifier);
+    }
+
+    @Override
+    public String parseIdentifierValue() {
+        return parseIdentifierValue(DONT_SQL_IDENTIFIER_CHARS);
+    }
+
+    private String parseIdentifierValue(List<Character> dontSqlWordLetters) {
+        skipSpaces();
+        int from = getCursor();
+        while (!dontSqlWordLetters.contains(getSymbol())) {
+            moveCursor();
+        }
+        String word = null;
+        if (from != getCursor()) {
+            word = getValueFrom(from).trim();
+        }
+        return word;
+    }
+
+    @Override
+    public String getValueFrom(int from) {
         return query.substring(from, cursor);
     }
 
+    @Override
+    public void skipSpaces() {
+        while (Character.isWhitespace(getSymbol())) {
+            moveCursor();
+        }
+    }
+
+    //-------------------------- SYMBOL API ------------------------- \\
     @Override
     public char getSymbol() {
         return getSymvol(0);
@@ -94,6 +156,7 @@ public class SqlStream implements ISqlStream {
         return cursor >= query.length();
     }
 
+    //-------------------------- STATE API ------------------------- \\
     @Override
     public void keepParserState() {
         markers.push(new SqlParserState(cursor, lineNumber));
@@ -117,6 +180,7 @@ public class SqlStream implements ISqlStream {
         lineNumber = marker.getLineNumber();
     }
 
+    //------------------------ EXCEPTION API ----------------------- \\
     @Override
     public IllegalStateException createException(String message) {
         return createException(message, null);
