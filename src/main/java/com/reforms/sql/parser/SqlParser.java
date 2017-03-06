@@ -12,7 +12,10 @@ import com.reforms.sql.expr.term.page.OffsetExpression;
 import com.reforms.sql.expr.term.predicate.*;
 import com.reforms.sql.expr.term.value.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static com.reforms.sql.expr.term.ConditionFlowType.resolveConditionFlowType;
 import static com.reforms.sql.expr.term.MathOperator.MO_CONCAT;
@@ -1252,7 +1255,6 @@ public class SqlParser {
     }
 
     /**
-     * TODO ДОБАВИТЬ разбор выражения (column_name1, column_name2, column_name3) = (value1, value2, value3)
      * @return
      */
     private Expression parseSearchConditionExpr(ParenLevels levels) {

@@ -16,7 +16,6 @@ import static com.reforms.sql.expr.term.ExpressionType.ET_ALIAS_EXPRESSION;
 import static com.reforms.sql.expr.term.ExpressionType.ET_COLUMN_EXPRESSION;
 
 /**
- * TODO логика: подумать над тем, какой символ использовать в качестве краткого алиаса, сейчас используется символ '#'.
  * @author evgenie
  */
 @ThreadSafe
