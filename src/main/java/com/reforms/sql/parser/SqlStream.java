@@ -1,17 +1,19 @@
 package com.reforms.sql.parser;
 
+import com.reforms.sql.expr.term.SqlWords;
+
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 
-import com.reforms.sql.expr.term.SqlWords;
-
 /**
  * Поток для работы с sql выражениями
+ * TODO превисти к единообразию логику проверки check и parse, а именно или все функции check должны выражаться через parse или parse всегда должен через check
+ *      лучше так: check = parse != null;
  * @author evgenie
  */
-public class SqlStream implements ISqlStream {
+public class SqlStream extends AbstractSqlStream {
 
     private static final char EOL = '\n';
 
@@ -29,14 +31,192 @@ public class SqlStream implements ISqlStream {
         this.query = query;
     }
 
+    //-------------------------- OPERATOR API ------------------------- \\
+    @Override
+    public boolean checkIsMathOperatorValue() {
+        keepParserState();
+        String mathOperatorValue = parseMathOperatorValue();
+        rollbackParserState();
+        return mathOperatorValue != null;
+    }
+
+    private static final List<Character> MATH_OPERAND = Arrays.asList('+', '-', '*', '/', '|');
+
+    @Override
+    public String parseMathOperatorValue() {
+        skipSpaces();
+        char symbol = getSymbol();
+        if (MATH_OPERAND.contains(symbol)) {
+            if ('|' != symbol) {
+                moveCursor();
+                return String.valueOf(symbol);
+            }
+            char secondSymbol = getSymbol(1);
+            if ('|' == secondSymbol) {
+                moveCursor(2);
+                return "||";
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public boolean checkIsComparisonOperatorValue() {
+        keepParserState();
+        String operatorValue = parseComparisonOperatorValue();
+        rollbackParserState();
+        return operatorValue != null;
+    }
+
+    @Override
+    public String parseComparisonOperatorValue() {
+        skipSpaces();
+        char firstSymbol = getSymbol();
+        moveCursor();
+        char secondSymbol = getSymbol();
+        moveCursor();
+        if ('=' == firstSymbol) {
+            moveCursor(-1);
+            return "=";
+        }
+        if ('!' == firstSymbol && '=' == secondSymbol) {
+            return "!=";
+        }
+        if ('<' == firstSymbol) {
+            if ('>' == secondSymbol) {
+                return "<>";
+            }
+            if ('=' == secondSymbol) {
+                return "<=";
+            }
+            moveCursor(-1);
+            return "<";
+        }
+        if ('>' == firstSymbol) {
+            if ('=' == secondSymbol) {
+                return ">=";
+            }
+            moveCursor(-1);
+            return ">";
+        }
+        moveCursor(-2);
+        return null;
+    }
+
     //-------------------------- TOKEN API ------------------------- \\
+    @Override
+    public boolean checkIsFilterValue() {
+        skipSpaces();
+        return ':' == getSymbol();
+    }
+
+    @Override
+    public String parseFilterValue() {
+        return parseIdentifierValue(DONT_SQL_FILTER_IDENTIFIER_CHARS);
+    }
+
+    @Override
+    public boolean checkIsQuestionValue() {
+        skipSpaces();
+        return '?' == getSymbol();
+    }
+
+    @Override
+    public boolean checkIsAsteriskValue() {
+        skipSpaces();
+        return '*' == getSymbol();
+    }
+
+    @Override
+    public boolean checkIsNumericValue() {
+        skipSpaces();
+        char symbol = getSymbol();
+        return '-' == symbol || '+' == symbol || Character.isDigit(symbol);
+    }
+
+    @Override
+    public String parseNumericValue() {
+        if (checkIsNumericValue()) {
+            int from = getCursor();
+            boolean wasDot = false;
+            boolean wasE = false;
+            while (true) {
+                char symbol = getSymbol();
+                if (('+' == symbol || '-' == symbol) && from == getCursor()) {
+                    moveCursor();
+                    continue;
+                }
+                if (Character.isDigit(symbol)) {
+                    moveCursor();
+                    continue;
+                }
+                if ('.' == symbol && !(wasDot || wasE)) {
+                    wasDot = true;
+                    moveCursor();
+                    continue;
+                }
+                if (('E' == symbol || 'e' == symbol) && !wasE) {
+                    moveCursor();
+                    char signSymbol = getSymbol();
+                    if ('+' == signSymbol || '-' == signSymbol) {
+                        moveCursor();
+                        char digitSymbol = getSymbol();
+                        if (Character.isDigit(digitSymbol)) {
+                            wasE = true;
+                            continue;
+                        }
+                        moveCursor(-1);
+                    }
+                    moveCursor(-1);
+                }
+                break;
+            }
+            if (from == getCursor()) {
+                throw createException("Не является числом", from);
+            }
+            char prevSymbol = getSymbol(-1);
+            if (getCursor() - from == 1 && ('+' == prevSymbol || '-' == prevSymbol)) {
+                throw createException("Ожидается после знака '+' или '-' хотя бы 1 число!", from);
+            }
+            String numericValue = getValueFrom(from);
+            return numericValue;
+        }
+        return null;
+    }
+
+    @Override
+    public boolean checkIsStringValue() {
+        skipSpaces();
+        return '\'' == getSymbol();
+    }
+
+    @Override
+    public String parseStringValue() {
+        if (checkIsStringValue()) {
+            char symbol = getSymbol();
+            int from = getCursor();
+            if ('\'' == symbol) {
+                moveCursor();
+                while ('\'' != (symbol = getSymbol()) && symbol != '\0') {
+                    moveCursor();
+                }
+            }
+            if (symbol == '\0') {
+                throw createException("Не является строкой", from);
+            }
+            moveCursor();
+            return getValueFrom(from);
+        }
+        return null;
+    }
+
     @Override
     public String parseDoubleQuoteValue() {
         skipSpaces();
         int from = getCursor();
         char symbol = getSymbol();
         if ('"' != symbol) {
-            return "";
+            return null;
         }
         moveCursor();
         while ('"' != (symbol = getSymbol()) && symbol != '\0') {
@@ -50,16 +230,114 @@ public class SqlStream implements ISqlStream {
         return doubleQuoteValue;
     }
 
-    private static final List<Character> DONT_SQL_IDENTIFIER_CHARS = Arrays.asList(
-            '.', ':', '(', ')', '!', '?', '<', '>', '=', ',', '*', '+', '-', '/', '&', '^', '%', '~', '"', '\'', '\0', ' ');
+    @Override
+    public boolean checkIsSpecialWordValueOneOf(String ... checkedWords) {
+        keepParserState();
+        String specialWordValue = parseSpecialWordValue();
+        rollbackParserState();
+        if (specialWordValue != null) {
+            for (String checkedWord : checkedWords) {
+                if (specialWordValue.equalsIgnoreCase(checkedWord)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     @Override
-    public boolean checkIsIdentifierValue() {
+    public String parseSpecialWordValueAndCheckOneOf(String ... checkedWords) {
+        int from = getCursor();
+        String specialWordValue = parseSpecialWordValueVariants(checkedWords);
+        if (specialWordValue == null) {
+            throw createException("Ожидается ключевое слово одно из '" + Arrays.asList(checkedWords) + "', а получено '" + specialWordValue + "'", from);
+        }
+        return specialWordValue;
+    }
+
+    @Override
+    public String parseSpecialWordValueVariants(String ... variantWords) {
+        keepParserState();
+        String specialWordValue = parseSpecialWordValue();
+        if (specialWordValue != null) {
+            for (String variantWord : variantWords) {
+                if (specialWordValue.equalsIgnoreCase(variantWord)) {
+                    skipParserState();
+                    return specialWordValue;
+                }
+            }
+        }
+        rollbackParserState();
+        return null;
+    }
+
+    @Override
+    public boolean checkIsSpecialWordValueSame(String word) {
+        keepParserState();
+        String specialWordValue = parseSpecialWordValue();
+        rollbackParserState();
+        return word != null && specialWordValue != null && word.equalsIgnoreCase(specialWordValue);
+    }
+
+    @Override
+    public String parseSpecialWordValueAndCheck(String checkedWord) {
+        int from = getCursor();
+        String word = parseSpecialWordValue();
+        if (checkedWord == null || word == null || !checkedWord.equalsIgnoreCase(word)) {
+            throw createException("Ожидается ключевое слово '" + checkedWord + "', а получено '" + word + "'", from);
+        }
+        return word;
+    }
+
+    @Override
+    public boolean checkIsSpecialWordValue() {
+        keepParserState();
+        String specialWordValue = parseSpecialWordValue();
+        rollbackParserState();
+        return SqlWords.isSqlWord(specialWordValue);
+    }
+
+    @Override
+    public String parseSpecialWordValue(boolean toUpperCase) {
+        String specialWordValue = parseIdentifierValue();
+        if (specialWordValue != null && toUpperCase) {
+            specialWordValue = specialWordValue.toUpperCase();
+        }
+        return specialWordValue;
+    }
+
+    @Override
+    public boolean checkIsIdentifierValue(boolean ignoreSqlSpecialWord) {
         keepParserState();
         String identifier = parseIdentifierValue();
         rollbackParserState();
-        return identifier != null && !SqlWords.isSqlWord(identifier);
+        return !(identifier == null || (SqlWords.isSqlWord(identifier) && ignoreSqlSpecialWord));
     }
+
+    /**
+     * Убраны '.', ':', '#' и '?'
+     * TODO: переделать в MAP
+     */
+    private static final List<Character> DONT_SQL_FILTER_IDENTIFIER_CHARS = Arrays.asList(
+            '(', ')', '!', '<', '>', '=', ',', '*', '+', '-', '/', '&', '^', '%', '~', '"', '\'', '\0', ' ');
+
+    /**
+     * Убраны '.', ':' и '#'
+     * TODO: переделать в MAP
+     */
+    private static final List<Character> DONT_SQL_EXT_IDENTIFIER_CHARS = Arrays.asList(
+            '?', '(', ')', '!', '<', '>', '=', ',', '*', '+', '-', '/', '&', '^', '%', '~', '"', '\'', '\0', ' ');
+
+    @Override
+    public String parseMetaIdentifierValue() {
+        return parseIdentifierValue(DONT_SQL_EXT_IDENTIFIER_CHARS);
+    }
+
+    /**
+     * TODO: переделать в MAP
+     */
+    private static final List<Character> DONT_SQL_IDENTIFIER_CHARS = Arrays.asList(
+            '.', ':', '#', '?', '(', ')', '!', '<', '>', '=', ',', '*', '+', '-', '/', '&', '^', '%', '~', '"', '\'', '\0', ' ');
 
     @Override
     public String parseIdentifierValue() {
@@ -93,12 +371,7 @@ public class SqlStream implements ISqlStream {
 
     //-------------------------- SYMBOL API ------------------------- \\
     @Override
-    public char getSymbol() {
-        return getSymvol(0);
-    }
-
-    @Override
-    public char getSymvol(int offset) {
+    public char getSymbol(int offset) {
         int pos = offset + cursor;
         if (pos < 0 || pos >= query.length()) {
             return EOF;
@@ -106,6 +379,7 @@ public class SqlStream implements ISqlStream {
         return query.charAt(pos);
     }
 
+    @Override
     public int getCursor() {
         return cursor;
     };
@@ -113,12 +387,7 @@ public class SqlStream implements ISqlStream {
     //TODO удалить - решение временно
     @Override
     public void changeCursor(int newPosCursor) {
-        this.cursor = newPosCursor;
-    }
-
-    @Override
-    public void moveCursor() {
-        moveCursor(1);
+        cursor = newPosCursor;
     }
 
     @Override
@@ -182,21 +451,6 @@ public class SqlStream implements ISqlStream {
 
     //------------------------ EXCEPTION API ----------------------- \\
     @Override
-    public IllegalStateException createException(String message) {
-        return createException(message, null);
-    }
-
-    @Override
-    public IllegalStateException createException(String message, Throwable cause) {
-        return createException(message, cursor, cause);
-    }
-
-    @Override
-    public IllegalStateException createException(String message, int from) {
-        return createException(message, from, null);
-    }
-
-    @Override
     public IllegalStateException createException(String message, int from, Throwable cause) {
         StringBuilder errorText = new StringBuilder();
         errorText.append(message);
@@ -208,5 +462,10 @@ public class SqlStream implements ISqlStream {
             errorText.append(". Текущий анализ остановлен на '").append(scanPart).append("'");
         }
         return new IllegalStateException(errorText.toString(), cause);
+    }
+
+    @Override
+    public String toString() {
+        return query;
     }
 }

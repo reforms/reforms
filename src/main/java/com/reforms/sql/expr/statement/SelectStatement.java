@@ -13,8 +13,19 @@ import static com.reforms.sql.expr.term.SqlWords.SW_SELECT;
 
 public class SelectStatement extends Expression {
 
+    /** SELECT */
+    private String selectWord = SW_SELECT;
+
     /** ALL | DISTINCT */
     private String modeWord;
+
+    public void setSelectWord(String selectWord) {
+        this.selectWord = selectWord;
+    }
+
+    public String getSelectWord() {
+        return selectWord;
+    }
 
     public String getModeWord() {
         return modeWord;
@@ -46,7 +57,7 @@ public class SelectStatement extends Expression {
     @Override
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_SELECT);
+        sqlBuilder.appendWord(selectWord);
         if (modeWord != null) {
             sqlBuilder.appendSpace();
             sqlBuilder.appendWord(modeWord);

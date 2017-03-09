@@ -79,65 +79,65 @@ public class UTestSqlParser {
         assertSelectQuery("SELECT age AS b3:t#");
     }
 
-    @Test
-    public void testCommonSqlDateAndTime() {
-        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC'");
-        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC'");
-        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC' AS datetime_alias");
-        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS datetime_alias");
-        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC' AS \"Сейчас\"");
-        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS \"Сейчас\"");
-        assertSelectQuery("SELECT TIME '2004-10-19 10:23:54'");
-        assertSelectQuery("SELECT TIME '2004-10-19 10:23:54' AS time_alias");
-        assertSelectQuery("SELECT DATE '2004-10-19 10:23:54'");
-        assertSelectQuery("SELECT DATE '2004-10-19 10:23:54' AS date_alias");
-        assertSelectQuery("SELECT TIMESTAMP '2004-10-19 10:23:54'");
-        assertSelectQuery("SELECT TIMESTAMP '2004-10-19 10:23:54' AS timestamp_alias");
-    }
-
-    @Test
-    public void testPostgreSqlDateAndTime() {
-        // Общие
-        assertSelectQuery("SELECT TIME '2004-10-19 10:23:54'");
-        assertSelectQuery("SELECT TIME WITH TIME ZONE '2004-10-19 10:23:54+02'");
-        assertSelectQuery("SELECT TIMESTAMP '2004-10-19 10:23:54'");
-        assertSelectQuery("SELECT TIMESTAMP WITH TIME ZONE '2004-10-19 10:23:54+02'");
-        //  Временная арифметика
-        assertSelectQuery("SELECT '2012-01-05'::date - '2012-01-01'::date AS result");
-        assertSelectQuery("SELECT '2012-01-05'::timestamp - '2012-01-01'::timestamp AS result");
-        assertSelectQuery("SELECT '2012-01-05'::timestamp - '1 hour'::interval AS result");
-        assertSelectQuery("SELECT '2010-05-06'::date + interval '1 month 1 day 1 minute' AS result");
-        assertSelectQuery("SELECT '1 hour'::interval / 7 AS result");
-        assertSelectQuery("SELECT interval '1 minute' * 99 AS result");
-        assertSelectQuery("SELECT interval '1 hour' - interval '33 minutes' AS result");
-        assertSelectQuery("SELECT interval '1 hour 27 minutes' + interval '33 minutes' AS result");
-        // Специальные значения времени
-        assertSelectQuery("SELECT 'epoch'::timestamp");
-        assertSelectQuery("SELECT 'infinity'::timestamp");
-        assertSelectQuery("SELECT '-infinity'::timestamp");
-        assertSelectQuery("SELECT 'today'::timestamp, now()::date");
-        assertSelectQuery("SELECT 'now'::timestamp, now()");
-        assertSelectQuery("SELECT 'tomorrow'::timestamp, now()::date");
-        assertSelectQuery("SELECT 'yesterday'::timestamp, now()::date");
-        assertSelectQuery("SELECT 'allballs'::time");
-        assertSelectQuery("SELECT 'allballs'::time");
-        // Полезные функции
-        assertSelectQuery("SELECT (timestamp '2010-06-12 20:11')::date");
-        assertSelectQuery("SELECT date_trunc('month', timestamp '2010-06-12 20:11')");
-        assertSelectQuery("SELECT date_trunc('week', timestamp '2010-06-12 20:11')");
-        assertSelectQuery("SELECT date_trunc('quarter', timestamp '2010-06-12 20:11')");
-        assertSelectQuery("SELECT date_trunc('year', timestamp '2010-06-12 20:11')");
-        // Получение полей времени (года, месяца, недели, дня, часа, минуты, секунды и т. д.)
-        assertSelectQuery("SELECT EXTRACT(year FROM now()), date_part('year', now()), now()::date");
-        assertSelectQuery("SELECT EXTRACT(month FROM now()), date_part('month', now()), now()");
-        assertSelectQuery("SELECT EXTRACT(dow FROM now()), date_part('dow', now()), now()::date");
-    }
-
-    @Test
-    public void testMySqlDateAndTime() {
-        assertSelectQuery("SELECT CONVERT(datetime2(0), '2015-03-29T01:01:00', 126) AT TIME ZONE 'Central European Standard Time'");
-        assertSelectQuery("SELECT SalesOrderID, OrderDate, OrderDate AT TIME ZONE 'Pacific Standard Time' AS OrderDate_TimeZonePST");
-    }
+//    @Test
+//    public void testCommonSqlDateAndTime() {
+//        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC'");
+//        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC'");
+//        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC' AS datetime_alias");
+//        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS datetime_alias");
+    //        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC' AS \"Сейчас\"");
+    //        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS \"Сейчас\"");
+//        assertSelectQuery("SELECT TIME '2004-10-19 10:23:54'");
+//        assertSelectQuery("SELECT TIME '2004-10-19 10:23:54' AS time_alias");
+//        assertSelectQuery("SELECT DATE '2004-10-19 10:23:54'");
+//        assertSelectQuery("SELECT DATE '2004-10-19 10:23:54' AS date_alias");
+//        assertSelectQuery("SELECT TIMESTAMP '2004-10-19 10:23:54'");
+//        assertSelectQuery("SELECT TIMESTAMP '2004-10-19 10:23:54' AS timestamp_alias");
+//    }
+//
+//    @Test
+//    public void testPostgreSqlDateAndTime() {
+    //        // Общие
+//        assertSelectQuery("SELECT TIME '2004-10-19 10:23:54'");
+//        assertSelectQuery("SELECT TIME WITH TIME ZONE '2004-10-19 10:23:54+02'");
+//        assertSelectQuery("SELECT TIMESTAMP '2004-10-19 10:23:54'");
+//        assertSelectQuery("SELECT TIMESTAMP WITH TIME ZONE '2004-10-19 10:23:54+02'");
+    //        //  Временная арифметика
+//        assertSelectQuery("SELECT '2012-01-05'::date - '2012-01-01'::date AS result");
+//        assertSelectQuery("SELECT '2012-01-05'::timestamp - '2012-01-01'::timestamp AS result");
+//        assertSelectQuery("SELECT '2012-01-05'::timestamp - '1 hour'::interval AS result");
+//        assertSelectQuery("SELECT '2010-05-06'::date + interval '1 month 1 day 1 minute' AS result");
+//        assertSelectQuery("SELECT '1 hour'::interval / 7 AS result");
+//        assertSelectQuery("SELECT interval '1 minute' * 99 AS result");
+//        assertSelectQuery("SELECT interval '1 hour' - interval '33 minutes' AS result");
+//        assertSelectQuery("SELECT interval '1 hour 27 minutes' + interval '33 minutes' AS result");
+    //        // Специальные значения времени
+//        assertSelectQuery("SELECT 'epoch'::timestamp");
+//        assertSelectQuery("SELECT 'infinity'::timestamp");
+//        assertSelectQuery("SELECT '-infinity'::timestamp");
+//        assertSelectQuery("SELECT 'today'::timestamp, now()::date");
+//        assertSelectQuery("SELECT 'now'::timestamp, now()");
+//        assertSelectQuery("SELECT 'tomorrow'::timestamp, now()::date");
+//        assertSelectQuery("SELECT 'yesterday'::timestamp, now()::date");
+//        assertSelectQuery("SELECT 'allballs'::time");
+//        assertSelectQuery("SELECT 'allballs'::time");
+    //        // Полезные функции
+//        assertSelectQuery("SELECT (timestamp '2010-06-12 20:11')::date");
+//        assertSelectQuery("SELECT date_trunc('month', timestamp '2010-06-12 20:11')");
+//        assertSelectQuery("SELECT date_trunc('week', timestamp '2010-06-12 20:11')");
+//        assertSelectQuery("SELECT date_trunc('quarter', timestamp '2010-06-12 20:11')");
+//        assertSelectQuery("SELECT date_trunc('year', timestamp '2010-06-12 20:11')");
+    //        // Получение полей времени (года, месяца, недели, дня, часа, минуты, секунды и т. д.)
+//        assertSelectQuery("SELECT EXTRACT(year FROM now()), date_part('year', now()), now()::date");
+//        assertSelectQuery("SELECT EXTRACT(month FROM now()), date_part('month', now()), now()");
+//        assertSelectQuery("SELECT EXTRACT(dow FROM now()), date_part('dow', now()), now()::date");
+//    }
+//
+//    @Test
+//    public void testMySqlDateAndTime() {
+//        assertSelectQuery("SELECT CONVERT(datetime2(0), '2015-03-29T01:01:00', 126) AT TIME ZONE 'Central European Standard Time'");
+//        assertSelectQuery("SELECT SalesOrderID, OrderDate, OrderDate AT TIME ZONE 'Pacific Standard Time' AS OrderDate_TimeZonePST");
+    //    }
 
     @Test
     public void testDoubleArgSelectStatement() {

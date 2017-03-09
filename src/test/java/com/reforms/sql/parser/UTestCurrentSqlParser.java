@@ -22,7 +22,7 @@ public class UTestCurrentSqlParser {
         // assertWhereStatement("id = :id? AND name = :name?");
         // assertOrderByStatement("1 ASC, 2 DESC");
         assertSelectQuery("SELECT age AS bobj1.bobj2.bobj3");
-        assertSelectQuery("SELECT age AS #t_bobj1.bobj2.bobj3");
+        //assertSelectQuery("SELECT age AS #t_bobj1.bobj2.bobj3");
     }
 
     private void assertWhereStatement(String whereStatement) {

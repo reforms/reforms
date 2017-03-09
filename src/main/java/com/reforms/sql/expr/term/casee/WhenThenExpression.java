@@ -8,11 +8,30 @@ import static com.reforms.sql.expr.term.ExpressionType.ET_WHEN_THEN_EXPRESSION;
 import static com.reforms.sql.expr.term.SqlWords.SW_THEN;
 import static com.reforms.sql.expr.term.SqlWords.SW_WHEN;
 
+/**
+ * WHEN ... THEN ...
+ * @author evgenie
+ */
 public class WhenThenExpression extends Expression {
+
+    /** WHEN */
+    private String whenWord = SW_WHEN;
 
     private Expression whenExpr;
 
+    /** THEN */
+    private String thenWord = SW_THEN;
+
     private Expression thenExpr;
+
+    public String getWhenWord() {
+        return whenWord;
+    }
+
+    public void setWhenWord(String whenWord) {
+        this.whenWord = whenWord;
+    }
+
 
     public Expression getWhenExpr() {
         return whenExpr;
@@ -20,6 +39,14 @@ public class WhenThenExpression extends Expression {
 
     public void setWhenExpr(Expression whenExpr) {
         this.whenExpr = whenExpr;
+    }
+
+    public String getThenWord() {
+        return thenWord;
+    }
+
+    public void setThenWord(String thenWord) {
+        this.thenWord = thenWord;
     }
 
     public Expression getThenExpr() {
@@ -38,10 +65,10 @@ public class WhenThenExpression extends Expression {
     @Override
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_WHEN);
+        sqlBuilder.appendWord(whenWord);
         sqlBuilder.appendExpression(whenExpr);
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_THEN);
+        sqlBuilder.appendWord(thenWord);
         sqlBuilder.appendExpression(thenExpr);
     }
 }
