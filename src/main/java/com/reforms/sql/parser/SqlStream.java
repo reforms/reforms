@@ -2,10 +2,7 @@ package com.reforms.sql.parser;
 
 import com.reforms.sql.expr.term.SqlWords;
 
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 /**
  * Поток для работы с sql выражениями
@@ -14,6 +11,10 @@ import java.util.List;
  * @author evgenie
  */
 public class SqlStream extends AbstractSqlStream {
+
+    private static final char TAB_SYMBOL = '\t';
+
+    private static final char R_SYMBOL = '\r';
 
     private static final char EOL = '\n';
 
@@ -233,26 +234,34 @@ public class SqlStream extends AbstractSqlStream {
     @Override
     public boolean checkIsSpecialWordSequents(OptWord ... sequentWords) {
         keepParserState();
-        String word = null;
+        String result = parseSpecialWordSequents(sequentWords);
+        rollbackParserState();
+        return result != null;
+    }
+
+    @Override
+    public String parseSpecialWordSequents(OptWord ... sequentWords) {
+        keepParserState();
+        StringBuilder result = null;
         for (OptWord sequentWord : sequentWords) {
-            if (word == null) {
-                word = parseSpecialWordValue();
-                if (word == null) {
-                    rollbackParserState();
-                    return false;
+            if (checkIsSpecialWordValueSame(sequentWord.getWord())) {
+                String word = parseSpecialWordValue();
+                if (result != null) {
+                    result.append(" ");
+                } else {
+                    result = new StringBuilder();
                 }
-            }
-            if (sequentWord.getWord().equalsIgnoreCase(word)) {
-                word = null;
-                continue;
-            }
-            if (sequentWord.isRequired()) {
+                result.append(word);
+            } else if (sequentWord.isRequired()) {
                 rollbackParserState();
-                return false;
+                return null;
             }
         }
-        rollbackParserState();
-        return true;
+        skipParserState();
+        if (result != null) {
+            return result.toString();
+        }
+        return null;
     }
 
     @Override
@@ -387,11 +396,66 @@ public class SqlStream extends AbstractSqlStream {
         return query.substring(from, cursor);
     }
 
+    //-------------------------- DELIM AND WHITESPACES API ------------------------- \\
     @Override
     public void skipSpaces() {
         while (Character.isWhitespace(getSymbol())) {
             moveCursor();
         }
+    }
+
+    @Override
+    public boolean checkIsFuncArgsDelim() {
+        skipSpaces();
+        char symbol = getSymbol();
+        return FUNC_DELIMS.contains(symbol);
+    }
+
+    @Override
+    public char parseDelim(List<Character> oneOfDelims) {
+        skipSpaces();
+        char symbol = getSymbol();
+        if (oneOfDelims.contains(symbol)) {
+            return symbol;
+        }
+        List<String> chars = new ArrayList<>();
+        for (char expectedDelim : oneOfDelims) {
+            String charName = convertSymbol(expectedDelim);
+            chars.add(charName);
+        }
+        String wasCharName = convertSymbol(symbol);
+        throw createException("Ожидается разделитель один из [" + chars + "], а получен символ [" + wasCharName + "]");
+    }
+
+    @Override
+    public boolean checkIsDelim(char delim, boolean throwMode) {
+        skipSpaces();
+        char symbol = getSymbol();
+        if (delim != symbol) {
+            if (throwMode) {
+                String delimName = convertSymbol(delim);
+                String charName = convertSymbol(symbol);
+                throw createException("Ожидается символ " + delimName + ", а получен " + charName + "'");
+            }
+            return false;
+        }
+        return true;
+    }
+
+    private String convertSymbol(char symbol) {
+        if (EOF == symbol) {
+            return "'конец файла'";
+        }
+        if (EOL == symbol) {
+            return "'конец строки'";
+        }
+        if (R_SYMBOL == symbol) {
+            return "'перевод каретки'";
+        }
+        if (TAB_SYMBOL == symbol) {
+            return "'табуляция'";
+        }
+        return "'" + symbol + "'";
     }
 
     //-------------------------- SYMBOL API ------------------------- \\

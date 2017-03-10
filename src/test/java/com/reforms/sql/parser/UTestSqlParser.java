@@ -188,11 +188,13 @@ public class UTestSqlParser {
                 "FROM (SELECT client_id AS cl1 FROM ibank2.clients) AS cl1, " +
                 "(SELECT client_id AS cl2 FROM ibank2.clients) AS cl2");
 
+        assertSelectQuery("SELECT * FROM ibank2.clients cln CROSS JOIN ibank2.accounts acc WHERE cln.client_id = acc.id");
         assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p LEFT OUTER JOIN ibank2.clients cl ON p.client_id = cl.client_id");
         assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p LEFT JOIN ibank2.clients cl ON p.client_id = cl.client_id");
         assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p INNER JOIN ibank2.clients cl ON p.client_id = cl.client_id");
         assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p RIGHT OUTER JOIN ibank2.clients cl ON p.client_id = cl.client_id");
         assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p RIGHT JOIN ibank2.clients cl ON p.client_id = cl.client_id");
+        assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p FULL OUTER JOIN ibank2.clients cl ON p.client_id = cl.client_id");
         assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p FULL JOIN ibank2.clients cl ON p.client_id = cl.client_id");
         assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p RIGHT OUTER JOIN ibank2.clients cl ON p.client_id = cl.client_id");
         assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p, ibank2.clients cl LEFT OUTER JOIN ibank2.c2accounts c2a ON cl.client_id = c2a.client_id");

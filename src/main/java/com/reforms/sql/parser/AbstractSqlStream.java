@@ -1,5 +1,7 @@
 package com.reforms.sql.parser;
 
+import java.util.Arrays;
+import java.util.List;
 
 
 
@@ -103,6 +105,14 @@ public abstract class AbstractSqlStream {
     public abstract boolean checkIsSpecialWordSequents(OptWord ... sequentWords);
 
     /**
+     * Распарсить последовательность служебных слов
+     * @param sequentWords последовательность служебных слов
+     * @return последовательность служебных слов
+     *         или NULL, если это не последовательность служебных слов
+     */
+    public abstract String parseSpecialWordSequents(OptWord ... sequentWords);
+
+    /**
      * Проверить, что следующий токен одного из указанного значения
      * @param words возможные варианты
      * @return true - следующий токен одного из указанного значения
@@ -192,10 +202,80 @@ public abstract class AbstractSqlStream {
      */
     public abstract String getValueFrom(int from);
 
+    //-------------------------- DELIM AND WHITESPACES API ------------------------- \\
     /**
      * Пропустить все текущие пробелы
      */
     public abstract void skipSpaces();
+
+
+    public static List<Character> FUNC_DELIMS = Arrays.asList(',', ')');
+
+    /**
+     * Проверить текущий символ на открывающуюся скобку
+     * @throws IllegalStateException другой символ
+     */
+    public void checkIsOpenParent() {
+        checkIsOpenParent(true);
+    }
+
+    /**
+     * Проверить текущий символ на открывающуюся скобку
+     * @param throwMode если true кинется ошибка
+     * @throws IllegalStateException другой символ
+     */
+    public boolean checkIsOpenParent(boolean throwMode) {
+        return checkIsDelim('(', throwMode);
+    }
+
+    /**
+     * Проверить текущий символ на закрывающуюся скобку
+     * @throws IllegalStateException другой символ
+     */
+    public boolean checkIsCloseParen() {
+        return checkIsCloseParen(true);
+    }
+
+    /**
+     * Проверить текущий символ на закрывающуюся скобку
+     * @param throwMode если true кинется ошибка
+     * @throws IllegalStateException другой символ
+     */
+    public boolean checkIsCloseParen(boolean throwMode) {
+        return checkIsDelim(')', throwMode);
+    }
+
+    /**
+     * Проверить что разделить: '(', ','.
+     * @return true разделить один из '(', ','.
+     * @throws IllegalStateException разделитель указанного типа не найден
+     */
+    public abstract boolean checkIsFuncArgsDelim();
+
+    /**
+     * Распарсить разделить: '(', ','.
+     * @return один из указанных разделителей
+     * @throws IllegalStateException разделитель указанного типа не найден
+     */
+    public char parseFuncArgsDelim() {
+        return parseDelim(FUNC_DELIMS);
+    }
+
+    /**
+     * Распарсить разделить.
+     * @param oneOfDelims допустимые разделители
+     * @return один из указанных разделителей
+     * @throws IllegalStateException разделитель указанного типа не найден
+     */
+    public abstract char parseDelim(List<Character> oneOfDelims);
+
+    /**
+     * Проверить текущий символ
+     * @param delim     проверяемый символ
+     * @param throwMode если true кинется ошибка
+     * @throws IllegalStateException другой символ
+     */
+    public abstract boolean checkIsDelim(char delim, boolean throwMode);
 
     //-------------------------- SYMBOL API ------------------------- \\
     /**

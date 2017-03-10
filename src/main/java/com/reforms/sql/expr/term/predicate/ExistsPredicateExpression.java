@@ -6,7 +6,6 @@ import com.reforms.sql.expr.viewer.SqlBuilder;
 
 import static com.reforms.sql.expr.term.ExpressionType.ET_EXISTS_PREDICATE_EXPRESSION;
 import static com.reforms.sql.expr.term.SqlWords.SW_EXISTS;
-import static com.reforms.sql.expr.term.SqlWords.SW_NOT;
 
 /**
  *
@@ -14,16 +13,26 @@ import static com.reforms.sql.expr.term.SqlWords.SW_NOT;
  */
 public class ExistsPredicateExpression extends PredicateExpression {
 
-    private boolean useNotWord;
+    private String notWord;
+
+    private String existsWord = SW_EXISTS;
 
     private SelectQuery selectQuery;
 
-    public boolean isUseNotWord() {
-        return useNotWord;
+    public String getNotWord() {
+        return notWord;
     }
 
-    public void setUseNotWord(boolean useNotWord) {
-        this.useNotWord = useNotWord;
+    public void setNotWord(String notWord) {
+        this.notWord = notWord;
+    }
+
+    public String getExistsWord() {
+        return existsWord;
+    }
+
+    public void setExistsWord(String existsWord) {
+        this.existsWord = existsWord;
     }
 
     public SelectQuery getSelectQuery() {
@@ -41,12 +50,12 @@ public class ExistsPredicateExpression extends PredicateExpression {
 
     @Override
     public void view(SqlBuilder sqlBuilder) {
-        if (isUseNotWord()) {
+        if (notWord != null) {
             sqlBuilder.appendSpace();
-            sqlBuilder.appendWord(SW_NOT);
+            sqlBuilder.appendWord(notWord);
         }
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_EXISTS);
+        sqlBuilder.appendWord(existsWord);
         sqlBuilder.appendExpression(selectQuery);
     }
 }

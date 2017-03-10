@@ -46,6 +46,20 @@ public class SqlWords {
 
     public static String SW_CROSS_JOIN = "CROSS JOIN";
 
+    public static String SW_INNER = "INNER";
+
+    public static String SW_LEFT = "LEFT";
+
+    public static String SW_RIGHT = "RIGHT";
+
+    public static String SW_FULL = "FULL";
+
+    public static String SW_OUTER = "OUTER";
+
+    public static String SW_CROSS = "CROSS";
+
+    public static String SW_JOIN = "JOIN";
+
     public static String SW_NULL = "NULL";
 
     public static String SW_OR = "OR";

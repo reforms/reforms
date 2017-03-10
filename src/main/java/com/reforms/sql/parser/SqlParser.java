@@ -13,7 +13,6 @@ import com.reforms.sql.expr.term.page.OffsetExpression;
 import com.reforms.sql.expr.term.predicate.*;
 import com.reforms.sql.expr.term.value.*;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static com.reforms.sql.expr.term.ConditionFlowType.resolveConditionFlowType;
@@ -44,8 +43,6 @@ import static com.reforms.sql.parser.OptWords.*;
  *
  */
 public class SqlParser {
-
-    private static final char EOF = '\0';
 
     private AbstractSqlStream stream;
 
@@ -131,18 +128,14 @@ public class SqlParser {
         }
         while (selectExpr != null) {
             selectStatement.addSelectExpression(selectExpr);
-            char symbol = parseDelim(FUNC_ARGS_DELIMS, false);
-            if (EOF == symbol) {
+            if (!stream.checkIsFuncArgsDelim()) {
                 break;
             }
+            char symbol = stream.parseFuncArgsDelim();
             if (')' == symbol) {
                 break;
             }
-            if (',' == symbol) {
-                stream.moveCursor();
-            } else if (stream.checkIsSpecialWordValue()) {
-                break;
-            }
+            stream.moveCursor();
             selectExpr = parseFullSelectableExpression();
         }
         return selectStatement;
@@ -286,13 +279,11 @@ public class SqlParser {
 
     private boolean checkIsFuncExpr() {
         stream.keepParserState();
-        WordInfo wordInfo = parseWordInfo();
-        boolean funcFlag = wordInfo != null && !wordInfo.isSqlWord() && '(' == wordInfo.getStopSymbol();
+        String id = stream.parseSpecialWordValue();
+        boolean funcFlag = id != null && !isSqlWord(id) && stream.checkIsOpenParent(false);
         stream.rollbackParserState();
         return funcFlag;
     }
-
-    private static final List<Character> FUNC_ARGS_DELIMS = Arrays.asList(',', ')');
 
     private FuncExpression parseFuncExpr() {
         FuncExpression funcExpr = new FuncExpression();
@@ -319,16 +310,17 @@ public class SqlParser {
             SelectableExpression arg = parseSingleSelectExpr();
             while (true) {
                 funcExpr.addArg(arg);
-                char symbol = parseDelim(FUNC_ARGS_DELIMS, true);
+                char symbol = stream.parseFuncArgsDelim();
                 if (')' == symbol) {
                     break;
                 }
-                if (',' != symbol) {
+                if (',' == symbol) {
+                    stream.moveCursor();
+                    from = stream.getCursor();
+                    arg = parseSingleSelectExpr();
+                } else {
                     throw stream.createException("Ожидается разделитель между аргументами функции ',', а получен '" + symbol + "'", from);
                 }
-                stream.moveCursor();
-                from = stream.getCursor();
-                arg = parseSingleSelectExpr();
             }
             stream.skipSpaces();
         }
@@ -588,10 +580,7 @@ public class SqlParser {
     private CastExpression parseCastExpr() {
         String castWord = stream.parseSpecialWordValueAndCheck(SW_CAST);
         int from = stream.getCursor();
-        char parenSymbol = parseDelim(DONT_SQL_WORD_LETTERS, false);
-        if ('(' != parenSymbol) {
-            throw stream.createException("Ожидается начало CAST функции '(', а получен '" + stream.getSymbol() + "'", from);
-        }
+        stream.checkIsOpenParent();
         stream.moveCursor();
         SelectableExpression operandExpr = parseSingleSelectExpr();
         String asWord = stream.parseSpecialWordValueAndCheck(SW_AS);
@@ -608,10 +597,7 @@ public class SqlParser {
             targetExpr.setName(typeName);
         }
         from = stream.getCursor();
-        parenSymbol = parseDelim(DONT_SQL_WORD_LETTERS, false);
-        if (')' != parenSymbol) {
-            throw stream.createException("Ожидается конец CAST функции ')', а получен '" + stream.getSymbol() + "'", from);
-        }
+        stream.checkIsCloseParen();
         stream.moveCursor();
         CastExpression castExpr = new CastExpression();
         castExpr.setCastWord(castWord);
@@ -622,17 +608,12 @@ public class SqlParser {
     }
 
     private boolean checkIsSubSelect() {
-        stream.skipSpaces();
-        boolean subSelectFlag = false;
-        stream.keepParserState();
-        char symbol = stream.getSymbol();
-        if ('(' == symbol) {
+        boolean subSelectFlag = stream.checkIsOpenParent(false);
+        if (subSelectFlag) {
             stream.moveCursor();
-            WordInfo wordInfo = parseWordInfo();
-            subSelectFlag = wordInfo != null && SW_SELECT.equalsIgnoreCase(wordInfo.getWord())
-                    && Character.isWhitespace(wordInfo.getStopSymbol());
+            subSelectFlag = stream.checkIsSpecialWordValueSame(SW_SELECT);
+            stream.moveCursor(-1);
         }
-        stream.rollbackParserState();
         return subSelectFlag;
     }
 
@@ -818,26 +799,11 @@ public class SqlParser {
         return stream.checkIsIdentifierValue(true);
     }
 
-    /*** TODO переписать */
     private TableExpression parseTableExpression() {
+        ColumnExpression columnExpr = parseColumnExpr();
         TableExpression tableExpr = new TableExpression();
-        WordInfo wordInfo = parseWordInfo();
-        String schemaName = null;
-        String tableName = null;
-        if ('.' == wordInfo.getStopSymbol()) {
-            schemaName = wordInfo.getWord();
-            wordInfo = parseWordInfo();
-            if (wordInfo == null) {
-                throw stream.createException("Ожидается логическое имя таблицы", stream.getCursor());
-            }
-            tableName = wordInfo.getWord();
-        } else {
-            tableName = wordInfo.getWord();
-        }
-        // должны остаться на разделителе
-        stream.moveCursor(-1);
-        tableExpr.setSchemeName(schemaName);
-        tableExpr.setTableName(tableName);
+        tableExpr.setSchemeName(columnExpr.getPrefix());
+        tableExpr.setTableName(columnExpr.getColumnName());
         tableExpr.setAsClauseExpr(parseAsClauseExpression(false));
         return tableExpr;
     }
@@ -850,68 +816,29 @@ public class SqlParser {
         tableJoinExpr.setJoinType(joinType);
         tableJoinExpr.setTableRefExpr(parseTableReference(false));
         if (TJT_CROSS_JOIN != joinType) {
-            checkOnWord();
+            String onWord = stream.parseSpecialWordValueAndCheck(SW_ON);
             Expression condExpr = parseOnConditionExpr();
+            tableJoinExpr.setOnWord(onWord);
             tableJoinExpr.setOnConditionExpr(condExpr);
         }
         return tableJoinExpr;
     }
 
-    /*** TODO переписать */
     private String parseJoinWords() {
-        int from = stream.getCursor();
-        String firstWord = stream.parseSpecialWordValue();
-        StringBuilder joinWords = new StringBuilder();
-        joinWords.append(firstWord);
-        if (startFrom(firstWord, SW_CROSS_JOIN, SW_INNER_JOIN)) {
-            from = stream.getCursor();
-            WordInfo lastWordHolder = parseWordInfo();
-            if (lastWordHolder == null) {
-                throw stream.createException("Некорректный синтаксис JOIN связки", from);
-            }
-            String lastWord = lastWordHolder.getWord();
-            if (!"JOIN".equalsIgnoreCase(lastWord)) {
-                throw stream.createException("Ожидается слово 'JOIN' после служебного слова '" + joinWords + "', а получено '" + lastWord + "'", from);
-            }
-            if (!Character.isWhitespace(lastWordHolder.getStopSymbol())) {
-                throw stream.createException("Ожидается пробельный символ после служебного слова '" + joinWords + "', а получен '"
-                        + lastWordHolder.getStopSymbol() +
-                        "'", from);
-            }
-            joinWords.append(" ").append(lastWord);
-            return joinWords.toString();
+        if (stream.checkIsSpecialWordSequents(OW_R_CROSS, OW_R_JOIN)) {
+            return stream.parseSpecialWordSequents(OW_R_CROSS, OW_R_JOIN);
         }
-        if (startFrom(firstWord, SW_LEFT_OUTER_JOIN, SW_RIGHT_OUTER_JOIN, SW_FULL_OUTER_JOIN)) {
-            WordInfo secondWordHolder = parseWordInfo();
-            WordInfo lastWordHolder = secondWordHolder;
-            if (lastWordHolder == null) {
-                throw stream.createException("Некорректный синтаксис JOIN связки", stream.getCursor());
-            }
-            String secondWord = secondWordHolder.getWord();
-            if ("OUTER".equalsIgnoreCase(secondWord)) {
-                if (!Character.isWhitespace(secondWordHolder.getStopSymbol())) {
-                    throw stream.createException("Ожидается пробельный символ после служебного слова '" + firstWord + "', а получен '"
-                            + secondWordHolder
-                                    .getStopSymbol() + "'");
-                }
-                joinWords.append(" ").append(secondWord);
-                lastWordHolder = parseWordInfo();
-                if (lastWordHolder == null) {
-                    throw stream.createException("Некорректный синтаксис JOIN связки", stream.getCursor());
-                }
-            }
-            String lastWord = lastWordHolder.getWord();
-            if (!"JOIN".equalsIgnoreCase(lastWord)) {
-                throw stream.createException("Ожидается слово 'JOIN' после '" + joinWords + "', а получено '" + lastWord + "'", stream
-                        .getCursor());
-            }
-            if (!Character.isWhitespace(lastWordHolder.getStopSymbol())) {
-                throw stream.createException("Ожидается пробельный символ после '" + joinWords + "', а получен '" + lastWordHolder
-                        .getStopSymbol()
-                        + "'");
-            }
-            joinWords.append(" ").append(lastWord);
-            return joinWords.toString();
+        if (stream.checkIsSpecialWordSequents(OW_R_INNER, OW_R_JOIN)) {
+            return stream.parseSpecialWordSequents(OW_R_INNER, OW_R_JOIN);
+        }
+        if (stream.checkIsSpecialWordSequents(OW_R_LEFT, OW_O_OUTER, OW_R_JOIN)) {
+            return stream.parseSpecialWordSequents(OW_R_LEFT, OW_O_OUTER, OW_R_JOIN);
+        }
+        if (stream.checkIsSpecialWordSequents(OW_R_RIGHT, OW_O_OUTER, OW_R_JOIN)) {
+            return stream.parseSpecialWordSequents(OW_R_RIGHT, OW_O_OUTER, OW_R_JOIN);
+        }
+        if (stream.checkIsSpecialWordSequents(OW_R_FULL, OW_O_OUTER, OW_R_JOIN)) {
+            return stream.parseSpecialWordSequents(OW_R_FULL, OW_O_OUTER, OW_R_JOIN);
         }
         throw stream.createException("Некорректный синтаксис JOIN связки", stream.getCursor());
     }
@@ -919,17 +846,9 @@ public class SqlParser {
     private TableJoinTypes resolveJoinType(String joinWords) {
         TableJoinTypes joinType = TableJoinTypes.resolveJoinType(joinWords);
         if (joinType == null) {
-            throw stream.createException("Не удалось определить тип 'JOIN' соединения таблиц по параметру '" + joinWords + "'", stream
-                    .getCursor());
+            throw stream.createException("Не удалось определить тип 'JOIN' соединения таблиц по параметру '" + joinWords + "'", stream.getCursor());
         }
         return joinType;
-    }
-
-    private void checkOnWord() {
-        String onWord = stream.parseSpecialWordValue();
-        if (!SW_ON.equalsIgnoreCase(onWord)) {
-            throw stream.createException("Ожидается слово 'ON' после, а получено '" + onWord + "'", stream.getCursor());
-        }
     }
 
     private Expression parseOnConditionExpr() {
@@ -1084,9 +1003,6 @@ public class SqlParser {
                 ComparisonPredicateExpression valueCompPredicateExpr = completeValuesComparisonPredicateExpression(searchExpr, levels);
                 return valueCompPredicateExpr;
             }
-            // throw
-            // stream.createException("Неизвестное выражение для условия поиска предиката внутри <row value constructor>",
-            // cursor);
             // Примечание: считаем что это одиночное выражение boolean типа
             return searchExpr;
         }
@@ -1225,47 +1141,23 @@ public class SqlParser {
 
     /*** TODO переписать */
     private boolean checkIsExistsPredicateExpr() {
-        stream.keepParserState();
-        WordInfo wordInfo = parseWordInfo();
-        if (wordInfo == null || !wordInfo.isSqlWord()) {
-            stream.rollbackParserState();
-            return false;
-        }
-        if (SW_NOT.equalsIgnoreCase(wordInfo.getWord())) {
-            wordInfo = parseWordInfo();
-            if (wordInfo == null || !wordInfo.isSqlWord()) {
-                stream.rollbackParserState();
-                return false;
-            }
-        }
-        if (!SW_EXISTS.equalsIgnoreCase(wordInfo.getWord())) {
-            stream.rollbackParserState();
-            return false;
-        }
-        stream.rollbackParserState();
-        return true;
+        return stream.checkIsSpecialWordSequents(OW_O_NOT, OW_R_EXISTS);
     }
 
     /*** TODO переписать */
     private ExistsPredicateExpression parseExistsPredicateExpr() {
-        WordInfo wordInfo = parseWordInfo();
-        int from = stream.getCursor();
-        boolean useNotWord = false;
-        if (wordInfo != null && SW_NOT.equalsIgnoreCase(wordInfo.getWord())) {
-            useNotWord = true;
-            from = stream.getCursor();
-            wordInfo = parseWordInfo();
+        String notWord = null;
+        if (checkIsNotWord()) {
+            notWord = stream.parseSpecialWordValueAndCheck(SW_NOT);
         }
-        if (wordInfo == null || !SW_EXISTS.equalsIgnoreCase(wordInfo.getWord())) {
-            throw stream.createException("Ожидается 'EXISTS', а получено '" + (wordInfo == null ? "null" : wordInfo.getWord()) + "'", from);
-        }
-        stream.moveCursor(-1);
+        String existsWord = stream.parseSpecialWordValueAndCheck(SW_EXISTS);
         if (!checkIsSubSelect()) {
             throw stream.createException("Ожидается подзапрос в 'EXISTS' выражении", stream.getCursor());
         }
         SelectQuery subSelectExpr = parseSubSelect();
         ExistsPredicateExpression existsExpr = new ExistsPredicateExpression();
-        existsExpr.setUseNotWord(useNotWord);
+        existsExpr.setNotWord(notWord);
+        existsExpr.setExistsWord(existsWord);
         existsExpr.setSelectQuery(subSelectExpr);
         return existsExpr;
     }
@@ -1378,16 +1270,17 @@ public class SqlParser {
         SelectableExpression valueExpr = parseSingleSelectExpr();
         while (true) {
             inValueExpr.addValueExpr(valueExpr);
-            char symbol = parseDelim(FUNC_ARGS_DELIMS, true);
+            char symbol = stream.parseFuncArgsDelim();
             if (')' == symbol) {
                 break;
             }
-            if (',' != symbol) {
+            if (',' == symbol) {
+                stream.moveCursor();
+                from = stream.getCursor();
+                valueExpr = parseSingleSelectExpr();
+            } else {
                 throw stream.createException("Ожидается разделитель между значениями в блоке ',', а получен '" + symbol + "'", from);
             }
-            stream.moveCursor();
-            from = stream.getCursor();
-            valueExpr = parseSingleSelectExpr();
         }
         stream.skipSpaces();
         from = stream.getCursor();
@@ -1692,47 +1585,5 @@ public class SqlParser {
             throw stream.createException("Ожидается выражение значения в секции 'OFFSET'", from);
         }
         return offsetExpr;
-    }
-
-    private static final List<Character> DONT_SQL_WORD_LETTERS = Arrays.asList(
-            '.', ':', '(', ')', '!', '?', '<', '>', '=', ',', '*', '+', '-', '/', '&', '^', '%', '~', '"', '\'', '\0');
-
-    private WordInfo parseWordInfo() {
-        stream.skipSpaces();
-        int from = stream.getCursor();
-        int afterWordPos = stream.getCursor();
-        while (!DONT_SQL_WORD_LETTERS.contains(stream.getSymbol())) {
-            if (Character.isWhitespace(stream.getSymbol())) {
-                int tempPos = stream.getCursor();
-                stream.skipSpaces();
-                if (DONT_SQL_WORD_LETTERS.contains(stream.getSymbol())) {
-                    break;
-                }
-                stream.changeCursor(tempPos);
-                break;
-            }
-            stream.moveCursor();
-            afterWordPos = stream.getCursor();
-        }
-        String word = null;
-        if (stream.getCursor() != from) {
-            word = stream.getValueFrom(from).trim();
-            char delim = stream.getSymbol();
-            stream.moveCursor();
-            return new WordInfo(word, afterWordPos, delim);
-        }
-        return null;
-    }
-
-    private char parseDelim(List<Character> delims, boolean throwFlag) {
-        stream.skipSpaces();
-        char symbol = stream.getSymbol();
-        if (!delims.contains(symbol)) {
-            if (throwFlag) {
-                throw stream.createException("Ожидается разделитель один из '" + delims + "', а получен символ '" + symbol + "'");
-            }
-            symbol = EOF;
-        }
-        return symbol;
     }
 }

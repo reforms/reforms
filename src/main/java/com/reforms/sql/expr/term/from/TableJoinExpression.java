@@ -19,6 +19,8 @@ public class TableJoinExpression extends TableReferenceExpression {
 
     private TableReferenceExpression tableRefExpr;
 
+    private String onWord = SW_ON;
+
     private Expression onConditionExpr;
 
     public String getJoinWords() {
@@ -45,6 +47,14 @@ public class TableJoinExpression extends TableReferenceExpression {
         this.tableRefExpr = tableRefExpr;
     }
 
+    public String getOnWord() {
+        return onWord;
+    }
+
+    public void setOnWord(String onWord) {
+        this.onWord = onWord;
+    }
+
     public Expression getOnConditionExpr() {
         return onConditionExpr;
     }
@@ -63,8 +73,10 @@ public class TableJoinExpression extends TableReferenceExpression {
         sqlBuilder.appendSpace();
         sqlBuilder.appendWord(joinWords);
         sqlBuilder.appendExpression(tableRefExpr);
-        sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_ON);
-        sqlBuilder.appendExpression(onConditionExpr);
+        if (TableJoinTypes.TJT_CROSS_JOIN != joinType) {
+            sqlBuilder.appendSpace();
+            sqlBuilder.appendWord(onWord);
+            sqlBuilder.appendExpression(onConditionExpr);
+        }
     }
 }
