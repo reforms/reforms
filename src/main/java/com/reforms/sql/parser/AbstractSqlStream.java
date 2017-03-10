@@ -96,6 +96,13 @@ public abstract class AbstractSqlStream {
     public abstract String parseDoubleQuoteValue();
 
     /**
+     * Проверить, что указанная последовательность служебных слов выполняется
+     * @param sequentWords последовательность служебных слов
+     * @return true - указанная последовательность служебных слов выполняется
+     */
+    public abstract boolean checkIsSpecialWordSequents(OptWord ... sequentWords);
+
+    /**
      * Проверить, что следующий токен одного из указанного значения
      * @param words возможные варианты
      * @return true - следующий токен одного из указанного значения

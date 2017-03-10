@@ -9,7 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.reforms.sql.expr.term.ExpressionType.ET_CASE_EXPRESSION;
-import static com.reforms.sql.expr.term.SqlWords.*;
+import static com.reforms.sql.expr.term.SqlWords.SW_CASE;
+import static com.reforms.sql.expr.term.SqlWords.SW_END;
 
 /**
  * ------------------------- V1 ---------------------------------
@@ -31,17 +32,14 @@ public class CaseExpression extends SelectableExpression {
     /** CASE */
     private String caseWord = SW_CASE;
 
-    /** ELSE */
-    private String elseWord = SW_ELSE;
-
     /** END */
     private String endWord = SW_END;
 
     private Expression operandExpr;
 
-    private List<Expression> whenThenExprs = new ArrayList<>();
+    private List<WhenThenExpression> whenThenExprs = new ArrayList<>();
 
-    private Expression elseExpr;
+    private ElseExpression elseExpr;
 
     public String getCaseWord() {
         return caseWord;
@@ -49,14 +47,6 @@ public class CaseExpression extends SelectableExpression {
 
     public void setCaseWord(String caseWord) {
         this.caseWord = caseWord;
-    }
-
-    public String getElseWord() {
-        return elseWord;
-    }
-
-    public void setElseWord(String elseWord) {
-        this.elseWord = elseWord;
     }
 
     public String getEndWord() {
@@ -75,19 +65,19 @@ public class CaseExpression extends SelectableExpression {
         this.operandExpr = operandExpr;
     }
 
-    public List<Expression> getWhenThenExprs() {
+    public List<WhenThenExpression> getWhenThenExprs() {
         return whenThenExprs;
     }
 
-    public boolean addWhenThenExprs(Expression whenThenExpr) {
+    public boolean addWhenThenExprs(WhenThenExpression whenThenExpr) {
         return whenThenExprs.add(whenThenExpr);
     }
 
-    public void setWhenThenExprs(List<Expression> whenThenExprs) {
+    public void setWhenThenExprs(List<WhenThenExpression> whenThenExprs) {
         this.whenThenExprs = whenThenExprs;
     }
 
-    public Expression getElseExpr() {
+    public ElseExpression getElseExpr() {
         return elseExpr;
     }
 
@@ -95,7 +85,7 @@ public class CaseExpression extends SelectableExpression {
         return elseExpr != null;
     }
 
-    public void setElseExpr(Expression elseExpr) {
+    public void setElseExpr(ElseExpression elseExpr) {
         this.elseExpr = elseExpr;
     }
 
@@ -115,11 +105,7 @@ public class CaseExpression extends SelectableExpression {
         for (Expression whenThenExpr : whenThenExprs) {
             sqlBuilder.appendExpression(whenThenExpr);
         }
-        if (elseExpr != null) {
-            sqlBuilder.appendSpace();
-            sqlBuilder.appendWord(elseWord);
-            sqlBuilder.appendExpression(elseExpr);
-        }
+        sqlBuilder.appendExpression(elseExpr);
         sqlBuilder.appendSpace();
         sqlBuilder.appendWord(endWord);
     }

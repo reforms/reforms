@@ -13,7 +13,18 @@ import static com.reforms.sql.expr.term.SqlWords.SW_FROM;
 
 public class FromStatement extends Expression {
 
+    /** FROM */
+    private String fromWord = SW_FROM;
+
     private List<TableReferenceExpression> tableRefExprs = new ArrayList<>();
+
+    public String getFromWord() {
+        return fromWord;
+    }
+
+    public void setFromWord(String fromWord) {
+        this.fromWord = fromWord;
+    }
 
     public List<TableReferenceExpression> getTableRefExprs() {
         return tableRefExprs;
@@ -35,7 +46,7 @@ public class FromStatement extends Expression {
     @Override
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_FROM);
+        sqlBuilder.appendWord(fromWord);
         for (TableReferenceExpression tableRefExpr : tableRefExprs) {
             sqlBuilder.appendExpression(tableRefExpr);
             sqlBuilder.appendWord(tableRefExpr.getSeparator());

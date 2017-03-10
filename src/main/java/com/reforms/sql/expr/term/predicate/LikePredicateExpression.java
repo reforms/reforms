@@ -5,17 +5,35 @@ import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
 import static com.reforms.sql.expr.term.ExpressionType.ET_LIKE_PREDICATE_EXPRESSION;
-import static com.reforms.sql.expr.term.SqlWords.*;
+import static com.reforms.sql.expr.term.SqlWords.SW_LIKE;
 
 public class LikePredicateExpression extends PredicateExpression {
 
     private Expression matchValueExpr;
 
-    private boolean useNotWord;
+    private String notWord;
+
+    private String likeWord = SW_LIKE;
 
     private Expression patternExpr;
 
-    private Expression escapeExpr;
+    private EscapeExpression escapeExpr;
+
+    public String getNotWord() {
+        return notWord;
+    }
+
+    public void setNotWord(String notWord) {
+        this.notWord = notWord;
+    }
+
+    public String getLikeWord() {
+        return likeWord;
+    }
+
+    public void setLikeWord(String likeWord) {
+        this.likeWord = likeWord;
+    }
 
     public Expression getMatchValueExpr() {
         return matchValueExpr;
@@ -23,14 +41,6 @@ public class LikePredicateExpression extends PredicateExpression {
 
     public void setMatchValueExpr(Expression matchValueExpr) {
         this.matchValueExpr = matchValueExpr;
-    }
-
-    public boolean isUseNotWord() {
-        return useNotWord;
-    }
-
-    public void setUseNotWord(boolean useNotWord) {
-        this.useNotWord = useNotWord;
     }
 
     public Expression getPatternExpr() {
@@ -41,11 +51,11 @@ public class LikePredicateExpression extends PredicateExpression {
         this.patternExpr = patternExpr;
     }
 
-    public Expression getEscapeExpr() {
+    public EscapeExpression getEscapeExpr() {
         return escapeExpr;
     }
 
-    public void setEscapeExpr(Expression escapeExpr) {
+    public void setEscapeExpr(EscapeExpression escapeExpr) {
         this.escapeExpr = escapeExpr;
     }
 
@@ -57,17 +67,13 @@ public class LikePredicateExpression extends PredicateExpression {
     @Override
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendExpression(matchValueExpr);
-        if (isUseNotWord()) {
+        if (notWord != null) {
             sqlBuilder.appendSpace();
-            sqlBuilder.appendWord(SW_NOT);
+            sqlBuilder.appendWord(notWord);
         }
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_LIKE);
+        sqlBuilder.appendWord(likeWord);
         sqlBuilder.appendExpression(patternExpr);
-        if (escapeExpr != null) {
-            sqlBuilder.appendSpace();
-            sqlBuilder.appendWord(SW_ESCAPE);
-            sqlBuilder.appendExpression(escapeExpr);
-        }
+        sqlBuilder.appendExpression(escapeExpr);
     }
 }

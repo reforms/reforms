@@ -9,7 +9,17 @@ import static com.reforms.sql.expr.term.SqlWords.SW_HAVING;
 
 public class HavingStatement extends Expression {
 
+    private String havingWord = SW_HAVING;
+
     private Expression searchExpr;
+
+    public String getHavingWord() {
+        return havingWord;
+    }
+
+    public void setHavingWord(String havingWord) {
+        this.havingWord = havingWord;
+    }
 
     public Expression getSearchExpr() {
         return searchExpr;
@@ -27,7 +37,7 @@ public class HavingStatement extends Expression {
     @Override
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_HAVING);
+        sqlBuilder.appendWord(havingWord);
         sqlBuilder.appendExpression(searchExpr);
     }
 }

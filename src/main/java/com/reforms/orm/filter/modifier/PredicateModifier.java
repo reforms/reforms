@@ -1,17 +1,19 @@
 package com.reforms.orm.filter.modifier;
 
-import static com.reforms.sql.expr.term.ExpressionType.*;
-import static com.reforms.sql.expr.term.predicate.ComparisonOperatorType.*;
-
-import java.util.List;
-
 import com.reforms.orm.tree.SelectQueryTree;
 import com.reforms.sql.expr.statement.WhereStatement;
 import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.SearchGroupExpression;
 import com.reforms.sql.expr.term.casee.CaseExpression;
+import com.reforms.sql.expr.term.casee.ElseExpression;
 import com.reforms.sql.expr.term.casee.WhenThenExpression;
 import com.reforms.sql.expr.term.predicate.*;
+
+import java.util.List;
+
+import static com.reforms.sql.expr.term.ExpressionType.*;
+import static com.reforms.sql.expr.term.SqlWords.SW_NOT;
+import static com.reforms.sql.expr.term.predicate.ComparisonOperatorType.*;
 
 /**
  * TODO доработка - проверить математические операции
@@ -45,7 +47,9 @@ public class PredicateModifier {
             }
             NullablePredicateExpression nullablePredicateExpr = new NullablePredicateExpression();
             nullablePredicateExpr.setExpression(baseExpr);
-            nullablePredicateExpr.setUseNotWord(COT_EQUALS != cmpType);
+            if (COT_EQUALS != cmpType) {
+                nullablePredicateExpr.setNotWord(SW_NOT);
+            }
             Expression predicateOwnerExpr = queryTree.getParentExpressionFor(predicateExpr);
             if (predicateOwnerExpr == null) {
                 throw new IllegalStateException("Не возможно изменить фильтр '" + filterExpr
@@ -169,16 +173,17 @@ public class PredicateModifier {
             throw new IllegalStateException("Не возможно изменить фильтр - не найдено выражение '" + compExpr + "' в '"
                     + whenThenExpr + "' - не найден предок");
         }
-        List<Expression> whenThenExprs = caseExpr.getWhenThenExprs();
+        List<WhenThenExpression> whenThenExprs = caseExpr.getWhenThenExprs();
         whenThenExprs.remove(whenThenExpr);
         if (whenThenExprs.isEmpty()) {
             if (caseExpr.hasElseExpr()) {
                 Expression caseParentExpr = queryTree.getParentExpressionFor(caseExpr);
-                Expression elseExpr = caseExpr.getElseExpr();
+                ElseExpression elseExpr = caseExpr.getElseExpr();
+                Expression resultExpr = elseExpr.getResultExpr();
                 if (caseExpr.isWrapped()) {
-                    elseExpr.setWrapped(true);
+                    resultExpr.setWrapped(true);
                 }
-                caseParentExpr.changeExpression(caseExpr, elseExpr);
+                caseParentExpr.changeExpression(caseExpr, resultExpr);
             } else {
                 changeDynamicFilter(caseExpr);
             }

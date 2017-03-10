@@ -6,7 +6,6 @@ import com.reforms.sql.expr.viewer.SqlBuilder;
 
 import static com.reforms.sql.expr.term.ExpressionType.ET_IN_PREDICATE_EXPRESSION;
 import static com.reforms.sql.expr.term.SqlWords.SW_IN;
-import static com.reforms.sql.expr.term.SqlWords.SW_NOT;
 
 /**
  *
@@ -15,11 +14,29 @@ import static com.reforms.sql.expr.term.SqlWords.SW_NOT;
  */
 public class InPredicateExpression extends PredicateExpression {
 
+    private String notWord;
+
+    private String inWord = SW_IN;
+
     private Expression baseExpression;
 
-    private boolean useNotWord;
-
     private Expression predicateValueExpr;
+
+    public String getNotWord() {
+        return notWord;
+    }
+
+    public void setNotWord(String notWord) {
+        this.notWord = notWord;
+    }
+
+    public String getInWord() {
+        return inWord;
+    }
+
+    public void setInWord(String inWord) {
+        this.inWord = inWord;
+    }
 
     public Expression getBaseExpression() {
         return baseExpression;
@@ -27,14 +44,6 @@ public class InPredicateExpression extends PredicateExpression {
 
     public void setBaseExpression(Expression baseExpression) {
         this.baseExpression = baseExpression;
-    }
-
-    public boolean isUseNotWord() {
-        return useNotWord;
-    }
-
-    public void setUseNotWord(boolean useNotWord) {
-        this.useNotWord = useNotWord;
     }
 
     public Expression getPredicateValueExpr() {
@@ -53,12 +62,12 @@ public class InPredicateExpression extends PredicateExpression {
     @Override
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendExpression(baseExpression);
-        if (isUseNotWord()) {
+        if (notWord != null) {
             sqlBuilder.appendSpace();
-            sqlBuilder.appendWord(SW_NOT);
+            sqlBuilder.appendWord(notWord);
         }
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_IN);
+        sqlBuilder.appendWord(inWord);
         sqlBuilder.appendExpression(predicateValueExpr);
     }
 }

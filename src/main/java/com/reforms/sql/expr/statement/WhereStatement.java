@@ -9,7 +9,17 @@ import static com.reforms.sql.expr.term.SqlWords.SW_WHERE;
 
 public class WhereStatement extends Expression {
 
+    private String whereWord = SW_WHERE;
+
     private Expression searchExpr;
+
+    public String getWhereWord() {
+        return whereWord;
+    }
+
+    public void setWhereWord(String whereWord) {
+        this.whereWord = whereWord;
+    }
 
     public Expression getSearchExpr() {
         return searchExpr;
@@ -27,7 +37,7 @@ public class WhereStatement extends Expression {
     @Override
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_WHERE);
+        sqlBuilder.appendWord(whereWord);
         sqlBuilder.appendExpression(searchExpr);
     }
 }

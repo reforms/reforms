@@ -8,9 +8,21 @@ import static com.reforms.sql.expr.term.SqlWords.SW_CAST;
 
 public class CastExpression extends SelectableExpression {
 
+    private String castWord = SW_CAST;
+
     private Expression operandExpr;
 
+    private String asWord = SW_AS;
+
     private Expression targetExpr;
+
+    public String getCastWord() {
+        return castWord;
+    }
+
+    public void setCastWord(String castWord) {
+        this.castWord = castWord;
+    }
 
     public Expression getOperandExpr() {
         return operandExpr;
@@ -18,6 +30,14 @@ public class CastExpression extends SelectableExpression {
 
     public void setOperandExpr(Expression operandExpr) {
         this.operandExpr = operandExpr;
+    }
+
+    public String getAsWord() {
+        return asWord;
+    }
+
+    public void setAsWord(String asWord) {
+        this.asWord = asWord;
     }
 
     public Expression getTargetExpr() {
@@ -35,11 +55,11 @@ public class CastExpression extends SelectableExpression {
 
     @Override
     public void view(SqlBuilder sqlBuilder) {
-        sqlBuilder.appendWord(SW_CAST);
+        sqlBuilder.appendWord(castWord);
         sqlBuilder.append("(");
         sqlBuilder.appendExpression(operandExpr);
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_AS);
+        sqlBuilder.appendWord(asWord);
         sqlBuilder.appendExpression(targetExpr);
         sqlBuilder.append(")");
     }

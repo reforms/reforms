@@ -231,6 +231,31 @@ public class SqlStream extends AbstractSqlStream {
     }
 
     @Override
+    public boolean checkIsSpecialWordSequents(OptWord ... sequentWords) {
+        keepParserState();
+        String word = null;
+        for (OptWord sequentWord : sequentWords) {
+            if (word == null) {
+                word = parseSpecialWordValue();
+                if (word == null) {
+                    rollbackParserState();
+                    return false;
+                }
+            }
+            if (sequentWord.getWord().equalsIgnoreCase(word)) {
+                word = null;
+                continue;
+            }
+            if (sequentWord.isRequired()) {
+                rollbackParserState();
+                return false;
+            }
+        }
+        rollbackParserState();
+        return true;
+    }
+
+    @Override
     public boolean checkIsSpecialWordValueOneOf(String ... checkedWords) {
         keepParserState();
         String specialWordValue = parseSpecialWordValue();

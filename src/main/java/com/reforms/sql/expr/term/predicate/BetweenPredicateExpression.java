@@ -5,7 +5,8 @@ import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
 import static com.reforms.sql.expr.term.ExpressionType.ET_BETWEEN_PREDICATE_EXPRESSION;
-import static com.reforms.sql.expr.term.SqlWords.*;
+import static com.reforms.sql.expr.term.SqlWords.SW_AND;
+import static com.reforms.sql.expr.term.SqlWords.SW_BETWEEN;
 
 /**
  *
@@ -13,21 +14,17 @@ import static com.reforms.sql.expr.term.SqlWords.*;
  */
 public class BetweenPredicateExpression extends PredicateExpression {
 
-    private boolean useNotWord;
-
     private Expression baseExpression;
+
+    private String notWord;
+
+    private String betweenWord = SW_BETWEEN;
 
     private Expression leftExpression;
 
+    private String andWord = SW_AND;
+
     private Expression rightExpression;
-
-    public boolean isUseNotWord() {
-        return useNotWord;
-    }
-
-    public void setUseNotWord(boolean useNotWord) {
-        this.useNotWord = useNotWord;
-    }
 
     public Expression getBaseExpression() {
         return baseExpression;
@@ -37,12 +34,36 @@ public class BetweenPredicateExpression extends PredicateExpression {
         this.baseExpression = baseExpression;
     }
 
+    public String getNotWord() {
+        return notWord;
+    }
+
+    public void setNotWord(String notWord) {
+        this.notWord = notWord;
+    }
+
+    public String getBetweenWord() {
+        return betweenWord;
+    }
+
+    public void setBetweenWord(String betweenWord) {
+        this.betweenWord = betweenWord;
+    }
+
     public Expression getLeftExpression() {
         return leftExpression;
     }
 
     public void setLeftExpression(Expression leftExpression) {
         this.leftExpression = leftExpression;
+    }
+
+    public String getAndWord() {
+        return andWord;
+    }
+
+    public void setAndWord(String andWord) {
+        this.andWord = andWord;
     }
 
     public Expression getRightExpression() {
@@ -62,15 +83,15 @@ public class BetweenPredicateExpression extends PredicateExpression {
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendSpace();
         sqlBuilder.appendExpression(baseExpression);
-        if (isUseNotWord()) {
+        if (notWord != null) {
             sqlBuilder.appendSpace();
-            sqlBuilder.appendWord(SW_NOT);
+            sqlBuilder.appendWord(notWord);
         }
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_BETWEEN);
+        sqlBuilder.appendWord(betweenWord);
         sqlBuilder.appendExpression(leftExpression);
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_AND);
+        sqlBuilder.appendWord(andWord);
         sqlBuilder.appendExpression(rightExpression);
     }
 }

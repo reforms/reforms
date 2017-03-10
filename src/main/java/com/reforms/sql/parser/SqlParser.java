@@ -5,6 +5,7 @@ import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.statement.*;
 import com.reforms.sql.expr.term.*;
 import com.reforms.sql.expr.term.casee.CaseExpression;
+import com.reforms.sql.expr.term.casee.ElseExpression;
 import com.reforms.sql.expr.term.casee.WhenThenExpression;
 import com.reforms.sql.expr.term.from.*;
 import com.reforms.sql.expr.term.page.LimitExpression;
@@ -20,6 +21,7 @@ import static com.reforms.sql.expr.term.MathOperator.resolveMathOperator;
 import static com.reforms.sql.expr.term.SqlWords.*;
 import static com.reforms.sql.expr.term.from.TableJoinTypes.TJT_CROSS_JOIN;
 import static com.reforms.sql.expr.term.predicate.ComparisonOperatorType.resolveComparisonOperatorType;
+import static com.reforms.sql.parser.OptWords.*;
 
 /**
  * 1. ORACLE: SELECT selection_fields FROM (SELECT selection_fields,ROWNUM RN FROM (SELECT selection_fields FROM schemaName.tableName WHERE conditions ORDER BY orderFields)) WHERE RN > ? AND RN <= ?
@@ -509,7 +511,7 @@ public class SqlParser {
         }
         // TODO: добавить ElseExpression
         if (checkIsElseExpr()) {
-            Expression elseExpr = parseElseExpr();
+            ElseExpression elseExpr = parseElseExpr();
             caseExpr.setElseExpr(elseExpr);
         }
         String endWord = stream.parseSpecialWordValueAndCheck(SW_END);
@@ -570,48 +572,29 @@ public class SqlParser {
         return stream.checkIsSpecialWordValueSame(SW_ELSE);
     }
 
-    private Expression parseElseExpr() {
-        int from = stream.getCursor();
-        String elseWord = stream.parseSpecialWordValue();
-        if (!SW_ELSE.equalsIgnoreCase(elseWord)) {
-            throw stream.createException("Ожидается служебное слово 'ELSE', а получено '" + elseWord + "'", from);
-        }
-        Expression elseExpr = parseSingleSelectExpr();
+    private ElseExpression parseElseExpr() {
+        String elseWord = stream.parseSpecialWordValueAndCheck(SW_ELSE);
+        Expression resultExpr = parseSingleSelectExpr();
+        ElseExpression elseExpr = new ElseExpression();
+        elseExpr.setElseWord(elseWord);
+        elseExpr.setResultExpr(resultExpr);
         return elseExpr;
     }
 
-    //    private void checkEndWord() {
-    //        String endWord = stream.parseSpecialWordValue();
-    //        if (!SW_END.equalsIgnoreCase(endWord)) {
-    //            throw stream.createException("Ожидается слово 'END', а получено '" + endWord + "'", stream.getCursor());
-    //        }
-    //    }
-
     private boolean checkIsCastExpr() {
-        stream.keepParserState();
-        String word = stream.parseSpecialWordValue();
-        stream.rollbackParserState();
-        return SW_CAST.equalsIgnoreCase(word);
+        return stream.checkIsSpecialWordValueSame(SW_CAST);
     }
 
     private CastExpression parseCastExpr() {
+        String castWord = stream.parseSpecialWordValueAndCheck(SW_CAST);
         int from = stream.getCursor();
-        String castWord = stream.parseSpecialWordValue();
-        if (!SW_CAST.equalsIgnoreCase(castWord)) {
-            throw stream.createException("Ожидается служебное слово 'CAST', а получено '" + castWord + "'", from);
-        }
-        from = stream.getCursor();
         char parenSymbol = parseDelim(DONT_SQL_WORD_LETTERS, false);
         if ('(' != parenSymbol) {
             throw stream.createException("Ожидается начало CAST функции '(', а получен '" + stream.getSymbol() + "'", from);
         }
         stream.moveCursor();
-        from = stream.getCursor();
         SelectableExpression operandExpr = parseSingleSelectExpr();
-        String asWord = stream.parseSpecialWordValue();
-        if (!SW_AS.equalsIgnoreCase(asWord)) {
-            throw stream.createException("Ожидается служебное слово 'AS' для CAST функции, а получено '" + asWord + "'", from);
-        }
+        String asWord = stream.parseSpecialWordValueAndCheck(SW_AS);
         from = stream.getCursor();
         FuncExpression targetExpr = null;
         if (checkIsFuncExpr()) {
@@ -631,7 +614,9 @@ public class SqlParser {
         }
         stream.moveCursor();
         CastExpression castExpr = new CastExpression();
+        castExpr.setCastWord(castWord);
         castExpr.setOperandExpr(operandExpr);
+        castExpr.setAsWord(asWord);
         castExpr.setTargetExpr(targetExpr);
         return castExpr;
     }
@@ -674,39 +659,31 @@ public class SqlParser {
     }
 
     private ColumnExpression parseColumnExpr() {
-        stream.skipSpaces();
-        int from = stream.getCursor();
-        while (EOF != stream.getSymbol() && Character.isJavaIdentifierPart(stream.getSymbol())) {
-            stream.moveCursor();
-        }
-        if (from == stream.getCursor()) {
-            throw stream.createException("Не является колонкой", from);
-        }
-        ColumnExpression columnExpr = new ColumnExpression();
         String prefix = null;
         String columnName = null;
-        String value = stream.getValueFrom(from);
+        int from = stream.getCursor();
+        String value = stream.parseIdentifierValue();
+        if (value == null) {
+            throw stream.createException("Не является именем колонки", from);
+        }
         char symbol = stream.getSymbol();
         if ('.' == symbol) {
-            stream.moveCursor();
             prefix = value;
-            from = stream.getCursor();
-            char asteriskSymbol = stream.getSymbol();
-            if ('*' == asteriskSymbol) {
-                columnName = "*";
+            stream.moveCursor();
+            if (stream.checkIsAsteriskValue()) {
                 stream.moveCursor();
+                columnName = stream.getValueFrom(stream.getCursor() - 1);
             } else {
-                while (EOF != stream.getSymbol() && Character.isJavaIdentifierPart(stream.getSymbol())) {
-                    stream.moveCursor();
-                }
-                if (from == stream.getCursor()) {
+                from = stream.getCursor();
+                columnName = stream.parseIdentifierValue();
+                if (columnName == null) {
                     throw stream.createException("Не является именем колонки", from);
                 }
-                columnName = stream.getValueFrom(from);
             }
         } else {
             columnName = value;
         }
+        ColumnExpression columnExpr = new ColumnExpression();
         columnExpr.setPrefix(prefix);
         columnExpr.setColumnName(columnName);
         return columnExpr;
@@ -714,11 +691,9 @@ public class SqlParser {
 
     private FromStatement parseFromStatement() {
         if (stream.checkIsSpecialWordValue()) {
-            String word = stream.parseSpecialWordValue();
-            if (!SW_FROM.equalsIgnoreCase(word)) {
-                throw stream.createException("Ожидается секция 'FROM', а имеем '" + word + "'", stream.getCursor());
-            }
+            String fromWord = stream.parseSpecialWordValueAndCheck(SW_FROM);
             FromStatement fromStatement = new FromStatement();
+            fromStatement.setFromWord(fromWord);
             List<TableReferenceExpression> tableRefExprs = fromStatement.getTableRefExprs();
             while (checkIsTableReference(!tableRefExprs.isEmpty())) {
                 TableReferenceExpression tableRefExpr = parseTableReference(!tableRefExprs.isEmpty());
@@ -803,12 +778,9 @@ public class SqlParser {
             throw stream.createException("Ожидается начало секции '(VALUES', а получен '" + stream.getSymbol() + "'", from);
         }
         stream.moveCursor();
-        from = stream.getCursor();
-        String word = stream.parseSpecialWordValue();
-        if (!SW_VALUES.equalsIgnoreCase(word)) {
-            throw stream.createException("Ожидается секция 'VALUES', а имеем '" + word + "'", from);
-        }
+        String valuesWord = stream.parseSpecialWordValueAndCheck(SW_VALUES);
         TableValuesExpression tableValuesExpr = new TableValuesExpression();
+        tableValuesExpr.setValuesWord(valuesWord);
         from = stream.getCursor();
         ValueListExpression valueExpr = parseValueListExpression();
         tableValuesExpr.addValuesExpr(valueExpr);
@@ -824,21 +796,13 @@ public class SqlParser {
             throw stream.createException("Ожидается конец секции VALUES ')', а получен '" + stream.getSymbol() + "'", from);
         }
         stream.moveCursor();
-        from = stream.getCursor();
-        stream.keepParserState();
-        boolean asWordFlag = false;
-        String asWord = stream.parseSpecialWordValue();
-        if (!SW_AS.equalsIgnoreCase(asWord)) {
-            stream.rollbackParserState();
-        } else {
-            asWordFlag = true;
-            stream.skipParserState();
-        }
-        from = stream.getCursor();
+        String asWord = stream.parseSpecialWordValueVariants(SW_AS);
+        tableValuesExpr.setAsWord(asWord);
         FuncExpression templateExpr = null;
         if (checkIsFuncExpr()) {
             templateExpr = parseFuncExpr();
         } else {
+            from = stream.getCursor();
             String templateName = stream.parseSpecialWordValue(false);
             if (templateName == null) {
                 throw stream.createException("Ожидается имя шаблона для VALUES выражения", from);
@@ -846,8 +810,6 @@ public class SqlParser {
             templateExpr = new FuncExpression();
             templateExpr.setName(templateName);
         }
-        from = stream.getCursor();
-        tableValuesExpr.setAsWord(asWordFlag);
         tableValuesExpr.setTemplateExpr(templateExpr);
         return tableValuesExpr;
     }
@@ -856,6 +818,7 @@ public class SqlParser {
         return stream.checkIsIdentifierValue(true);
     }
 
+    /*** TODO переписать */
     private TableExpression parseTableExpression() {
         TableExpression tableExpr = new TableExpression();
         WordInfo wordInfo = parseWordInfo();
@@ -894,24 +857,26 @@ public class SqlParser {
         return tableJoinExpr;
     }
 
+    /*** TODO переписать */
     private String parseJoinWords() {
+        int from = stream.getCursor();
         String firstWord = stream.parseSpecialWordValue();
         StringBuilder joinWords = new StringBuilder();
         joinWords.append(firstWord);
         if (startFrom(firstWord, SW_CROSS_JOIN, SW_INNER_JOIN)) {
+            from = stream.getCursor();
             WordInfo lastWordHolder = parseWordInfo();
             if (lastWordHolder == null) {
-                throw stream.createException("Некорректный синтаксис JOIN связки", stream.getCursor());
+                throw stream.createException("Некорректный синтаксис JOIN связки", from);
             }
             String lastWord = lastWordHolder.getWord();
             if (!"JOIN".equalsIgnoreCase(lastWord)) {
-                throw stream
-                        .createException("Ожидается слово 'JOIN' после служебного слова '" + joinWords + "', а получено '" + lastWord + "'");
+                throw stream.createException("Ожидается слово 'JOIN' после служебного слова '" + joinWords + "', а получено '" + lastWord + "'", from);
             }
             if (!Character.isWhitespace(lastWordHolder.getStopSymbol())) {
                 throw stream.createException("Ожидается пробельный символ после служебного слова '" + joinWords + "', а получен '"
                         + lastWordHolder.getStopSymbol() +
-                        "'", stream.getCursor());
+                        "'", from);
             }
             joinWords.append(" ").append(lastWord);
             return joinWords.toString();
@@ -972,20 +937,15 @@ public class SqlParser {
     }
 
     private boolean checkIsWhereStatement() {
-        stream.keepParserState();
-        String word = stream.parseSpecialWordValue();
-        stream.rollbackParserState();
-        return SW_WHERE.equalsIgnoreCase(word);
+        return stream.checkIsSpecialWordValueSame(SW_WHERE);
     }
 
     private WhereStatement parseWhereStatement() {
         if (checkIsWhereStatement()) {
-            String word = stream.parseSpecialWordValue();
-            if (!SW_WHERE.equalsIgnoreCase(word)) {
-                throw stream.createException("Ожидается секция 'WHERE', а имеем '" + word + "'", stream.getCursor());
-            }
+            String whereWord = stream.parseSpecialWordValueAndCheck(SW_WHERE);
             Expression searchExpr = parseFullSearchConditionsExpr();
             WhereStatement whereStatementExpr = new WhereStatement();
+            whereStatementExpr.setWhereWord(whereWord);
             whereStatementExpr.setSearchExpr(searchExpr);
             return whereStatementExpr;
         }
@@ -996,6 +956,7 @@ public class SqlParser {
         return parseSearchConditionsExpr();
     }
 
+    /** TODO: проработать вопрос со скобками */
     private Expression parseSearchConditionsExpr() {
         int from = stream.getCursor();
         boolean expressionState = true;
@@ -1041,8 +1002,7 @@ public class SqlParser {
             if (expressionState) {
                 from = stream.getCursor();
                 if (checkIsNotWord()) {
-                    skipNotWord();
-                    NotExpression notExpr = new NotExpression();
+                    NotExpression notExpr = parseNotExpr();
                     ParenLevel currentLevel = levels.peek();
                     currentLevel.add(notExpr);
                     continue;
@@ -1093,9 +1053,6 @@ public class SqlParser {
         return ')' == symbol;
     }
 
-    /**
-     * @return
-     */
     private Expression parseSearchConditionExpr(ParenLevels levels) {
         if (checkIsRowValueConstructorExpr()) {
             Expression searchExpr = parseSingleRowValueConstructorExpr(levels);
@@ -1153,11 +1110,7 @@ public class SqlParser {
         return expr;
     }
 
-    /**
-     *
-     * @param depthWas
-     * @return
-     */
+    /*** TODO переписать */
     private Expression parseSingleRowValueConstructorExpr(ParenLevels levels) {
         int from = stream.getCursor();
         boolean expressionState = true;
@@ -1238,18 +1191,14 @@ public class SqlParser {
     }
 
     private boolean checkIsNotWord() {
-        stream.keepParserState();
-        String word = stream.parseSpecialWordValue();
-        stream.rollbackParserState();
-        return SW_NOT.equalsIgnoreCase(word);
+        return stream.checkIsSpecialWordValueSame(SW_NOT);
     }
 
-    private void skipNotWord() {
-        int from = stream.getCursor();
-        String word = stream.parseSpecialWordValue();
-        if (!SW_NOT.equalsIgnoreCase(word)) {
-            throw stream.createException("Ожидается служебное слово 'NOT', а получено '" + word + "'", from);
-        }
+    private NotExpression parseNotExpr() {
+        String notWord = stream.parseSpecialWordValueAndCheck(SW_NOT);
+        NotExpression notExpr = new NotExpression();
+        notExpr.setNotWord(notWord);
+        return notExpr;
     }
 
     private Expression parseRowValueConstructorExpr() {
@@ -1274,6 +1223,7 @@ public class SqlParser {
         throw stream.createException("Неизвестное выражение для условия поиска <row value constructor>", stream.getCursor());
     }
 
+    /*** TODO переписать */
     private boolean checkIsExistsPredicateExpr() {
         stream.keepParserState();
         WordInfo wordInfo = parseWordInfo();
@@ -1296,6 +1246,7 @@ public class SqlParser {
         return true;
     }
 
+    /*** TODO переписать */
     private ExistsPredicateExpression parseExistsPredicateExpr() {
         WordInfo wordInfo = parseWordInfo();
         int from = stream.getCursor();
@@ -1320,19 +1271,14 @@ public class SqlParser {
     }
 
     private boolean checkIsUniquePredicateExpression() {
-        stream.keepParserState();
-        String word = stream.parseSpecialWordValue();
-        stream.rollbackParserState();
-        return SW_UNIQUE.equalsIgnoreCase(word);
+        return stream.checkIsSpecialWordValueSame(SW_UNIQUE);
     }
 
     private UniquePredicateExpression parseUniquePredicateExpression() {
-        String word = stream.parseSpecialWordValue();
-        if (!SW_UNIQUE.equalsIgnoreCase(word)) {
-            throw stream.createException("Ожидается служебное слово 'UNIQUE', а получено '" + word + "'", stream.getCursor());
-        }
+        String uniqueWord = stream.parseSpecialWordValueAndCheck(SW_UNIQUE);
         SelectQuery subSelectExpr = parseSubSelect();
         UniquePredicateExpression uniquePredicateExpr = new UniquePredicateExpression();
+        uniquePredicateExpr.setUniqueWord(uniqueWord);
         uniquePredicateExpr.setSubQuery(subSelectExpr);
         return uniquePredicateExpr;
     }
@@ -1350,13 +1296,7 @@ public class SqlParser {
 
     private QuantifiedComparisonPredicateExpression completeQuantifiedComparisonPredicateExpression(Expression expression) {
         ComparisonOperatorType comparisonOperationType = parseComparisonOperatorType();
-        int from = stream.getCursor();
-        String quantifierWord = stream.parseSpecialWordValue();
-        if (!(SW_ANY.equalsIgnoreCase(quantifierWord) || SW_SOME.equalsIgnoreCase(quantifierWord) || SW_ALL
-                .equalsIgnoreCase(quantifierWord))) {
-            throw stream
-                    .createException("Ожидается одно из служебных слов 'ANY', 'ALL', 'SOME', а получено '" + quantifierWord + "'", from);
-        }
+        String quantifierWord = stream.parseSpecialWordValueAndCheckOneOf(SW_ANY, SW_SOME, SW_ALL);
         SelectQuery subSelectQuery = parseSubSelect();
         QuantifiedComparisonPredicateExpression quanCompPredicateExpr = new QuantifiedComparisonPredicateExpression();
         quanCompPredicateExpr.setBaseExpr(expression);
@@ -1381,65 +1321,38 @@ public class SqlParser {
     }
 
     private boolean checkIsNullablePredicateExpression() {
-        stream.skipSpaces();
-        stream.keepParserState();
-        WordInfo wordInfo = parseWordInfo();
-        stream.rollbackParserState();
-        return wordInfo != null && SW_IS.equalsIgnoreCase(wordInfo.getWord());
+        return stream.checkIsSpecialWordValueSame(SW_IS);
     }
 
     private NullablePredicateExpression completeNullablePredicateExpression(Expression expression) {
         NullablePredicateExpression nullPredicateExpr = new NullablePredicateExpression();
         nullPredicateExpr.setExpression(expression);
-        int from = stream.getCursor();
-        WordInfo wordInfo = parseWordInfo();
-        if (wordInfo == null || !SW_IS.equalsIgnoreCase(wordInfo.getWord())) {
-            throw stream.createException("Ожидается служебное слово 'IS'", from);
+        String isWord = stream.parseSpecialWordValueAndCheck(SW_IS);
+        nullPredicateExpr.setIsWord(isWord);
+        if (checkIsNotWord()) {
+            String notWord = stream.parseSpecialWordValueAndCheck(SW_NOT);
+            nullPredicateExpr.setNotWord(notWord);
         }
-        boolean useNotWord = false;
-        wordInfo = parseWordInfo();
-        if (wordInfo != null && SW_NOT.equalsIgnoreCase(wordInfo.getWord())) {
-            useNotWord = true;
-            from = stream.getCursor();
-            wordInfo = parseWordInfo();
-        }
-        if (wordInfo == null || !SW_NULL.equalsIgnoreCase(wordInfo.getWord())) {
-            throw stream.createException("Ожидается служебное слово 'NULL'", from);
-        }
-        nullPredicateExpr.setUseNotWord(useNotWord);
-        if (EOF != stream.getSymbol()) {
-            stream.moveCursor(-1);
-        }
+        String nullWord = stream.parseSpecialWordValueAndCheck(SW_NULL);
+        nullPredicateExpr.setNullWord(nullWord);
         return nullPredicateExpr;
     }
 
     private boolean checkIsInPredicateExpression() {
-        stream.keepParserState();
-        String word = stream.parseSpecialWordValue();
-        if (SW_NOT.equalsIgnoreCase(word)) {
-            word = stream.parseSpecialWordValue();
-        }
-        boolean inPredicateExprFlag = SW_IN.equalsIgnoreCase(word);
-        stream.rollbackParserState();
-        return inPredicateExprFlag;
+        return stream.checkIsSpecialWordSequents(OW_O_NOT, OW_R_IN);
     }
 
     private InPredicateExpression completeInPredicateExpression(Expression baseExpression) {
-        int from = stream.getCursor();
-        boolean useNotWord = false;
-        String word = stream.parseSpecialWordValue();
-        if (SW_NOT.equalsIgnoreCase(word)) {
-            useNotWord = true;
-            from = stream.getCursor();
-            word = stream.parseSpecialWordValue();
+        String notWord = null;
+        if (checkIsNotWord()) {
+            notWord = stream.parseSpecialWordValueAndCheck(SW_NOT);
         }
-        if (!SW_IN.equalsIgnoreCase(word)) {
-            throw stream.createException("Ожидается служебное слово 'IN'", from);
-        }
+        String inWord = stream.parseSpecialWordValueAndCheck(SW_IN);
         Expression predicateValueExpr = parsePredicateValueExpression();
         InPredicateExpression inPredicateExpr = new InPredicateExpression();
+        inPredicateExpr.setNotWord(notWord);
+        inPredicateExpr.setInWord(inWord);
         inPredicateExpr.setBaseExpression(baseExpression);
-        inPredicateExpr.setUseNotWord(useNotWord);
         inPredicateExpr.setPredicateValueExpr(predicateValueExpr);
         return inPredicateExpr;
     }
@@ -1451,6 +1364,7 @@ public class SqlParser {
         return parseValueListExpression();
     }
 
+    /*** TODO переписать */
     private ValueListExpression parseValueListExpression() {
         stream.skipSpaces();
         int from = stream.getCursor();
@@ -1485,106 +1399,61 @@ public class SqlParser {
     }
 
     private boolean checkIsLikePredicateExpression() {
-        stream.keepParserState();
-        String word = stream.parseSpecialWordValue();
-        if (SW_NOT.equalsIgnoreCase(word)) {
-            word = stream.parseSpecialWordValue();
-        }
-        boolean likePredicateExprFlag = SW_LIKE.equalsIgnoreCase(word);
-        stream.rollbackParserState();
-        return likePredicateExprFlag;
+        return stream.checkIsSpecialWordSequents(OW_O_NOT, OW_R_LIKE);
     }
 
     private LikePredicateExpression completeLikePredicateExpression(Expression baseExpression) {
-        int from = stream.getCursor();
-        boolean useNotWord = false;
-        String word = stream.parseSpecialWordValue();
-        if (SW_NOT.equalsIgnoreCase(word)) {
-            useNotWord = true;
-            from = stream.getCursor();
-            word = stream.parseSpecialWordValue();
+        String notWord = null;
+        if (checkIsNotWord()) {
+            notWord = stream.parseSpecialWordValueAndCheck(SW_NOT);
         }
-        if (!SW_LIKE.equalsIgnoreCase(word)) {
-            throw stream.createException("Ожидается служебное слово 'LIKE'", from);
-        }
+        String likeWord = stream.parseSpecialWordValueAndCheck(SW_LIKE);
         SelectableExpression patternExpr = parseSingleSelectExpr();
-        Expression escapeExpr = null;
+        EscapeExpression escapeExpr = null;
         if (checkIsEscapeWord()) {
             escapeExpr = parseEscapeExpression();
         }
         LikePredicateExpression likeExpr = new LikePredicateExpression();
         likeExpr.setMatchValueExpr(baseExpression);
-        likeExpr.setUseNotWord(useNotWord);
+        likeExpr.setNotWord(notWord);
+        likeExpr.setLikeWord(likeWord);
         likeExpr.setPatternExpr(patternExpr);
         likeExpr.setEscapeExpr(escapeExpr);
         return likeExpr;
     }
 
     private boolean checkIsEscapeWord() {
-        stream.keepParserState();
-        String word = stream.parseSpecialWordValue();
-        stream.rollbackParserState();
-        return SW_ESCAPE.equalsIgnoreCase(word);
+        return stream.checkIsSpecialWordValueSame(SW_ESCAPE);
     }
 
-    private Expression parseEscapeExpression() {
-        int from = stream.getCursor();
-        String word = stream.parseSpecialWordValue();
-        if (!SW_ESCAPE.equalsIgnoreCase(word)) {
-            throw stream.createException("Ожидается служебное слово 'ESCAPE', а получено '" + word + "'", from);
-        }
-        return parseSingleSelectExpr();
+    private EscapeExpression parseEscapeExpression() {
+        String escapeWord = stream.parseSpecialWordValueAndCheck(SW_ESCAPE);
+        Expression escapeValueExpr = parseSingleSelectExpr();
+        EscapeExpression escapeExpr = new EscapeExpression();
+        escapeExpr.setEscapeWord(escapeWord);
+        escapeExpr.setEscapeValueExpr(escapeValueExpr);
+        return escapeExpr;
     }
 
     private boolean checkIsBetweenPredicateExpression() {
-        stream.keepParserState();
-        WordInfo wordInfo = parseWordInfo();
-        if (wordInfo == null || !wordInfo.isSqlWord()) {
-            stream.rollbackParserState();
-            return false;
-        }
-        if (SW_NOT.equalsIgnoreCase(wordInfo.getWord())) {
-            wordInfo = parseWordInfo();
-            if (wordInfo == null || !wordInfo.isSqlWord()) {
-                stream.rollbackParserState();
-                return false;
-            }
-        }
-        if (!SW_BETWEEN.equalsIgnoreCase(wordInfo.getWord())) {
-            stream.rollbackParserState();
-            return false;
-        }
-        stream.rollbackParserState();
-        return true;
+        return stream.checkIsSpecialWordSequents(OW_O_NOT, OW_R_BETWEEN);
     }
 
     private BetweenPredicateExpression completeBetweenPredicateExpression(Expression baseExpression) {
-        WordInfo wordInfo = parseWordInfo();
-        int from = stream.getCursor();
-        boolean useNotWord = false;
-        if (wordInfo != null && SW_NOT.equalsIgnoreCase(wordInfo.getWord())) {
-            useNotWord = true;
-            from = stream.getCursor();
-            wordInfo = parseWordInfo();
+        String notWord = null;
+        if (checkIsNotWord()) {
+            notWord = stream.parseSpecialWordValueAndCheck(SW_NOT);
         }
-        if (wordInfo == null || !SW_BETWEEN.equalsIgnoreCase(wordInfo.getWord())) {
-            throw stream
-                    .createException("Ожидается 'BETWEEN', а получено '" + (wordInfo == null ? "null" : wordInfo.getWord()) + "'", from);
-        }
-        stream.moveCursor(-1);
+        String betweenWord = stream.parseSpecialWordValueAndCheck(SW_BETWEEN);
+        Expression leftExpr = parseFullSingleRowValueConstructorExpr();
+        String andWord = stream.parseSpecialWordValueAndCheck(SW_AND);
+        Expression rightExpr = parseFullSingleRowValueConstructorExpr();
         BetweenPredicateExpression betweenPredicateExpr = new BetweenPredicateExpression();
         betweenPredicateExpr.setBaseExpression(baseExpression);
-        betweenPredicateExpr.setUseNotWord(useNotWord);
-        Expression leftExpr = parseFullSingleRowValueConstructorExpr();
+        betweenPredicateExpr.setNotWord(notWord);
+        betweenPredicateExpr.setBetweenWord(betweenWord);
         betweenPredicateExpr.setLeftExpression(leftExpr);
-        from = stream.getCursor();
-        ConditionFlowType conditionFlowType = parseConditionFlowType();
-        if (ConditionFlowType.CFT_AND != conditionFlowType) {
-            throw stream.createException("Ожидается 'AND', а получено '" + (conditionFlowType == null ? "null" : conditionFlowType
-                    .getCondition())
-                    + "'", from);
-        }
-        Expression rightExpr = parseFullSingleRowValueConstructorExpr();
+        betweenPredicateExpr.setAndWord(andWord);
         betweenPredicateExpr.setRightExpression(rightExpr);
         return betweenPredicateExpr;
     }
@@ -1600,23 +1469,8 @@ public class SqlParser {
     }
 
     private ConditionFlowType parseConditionFlowType() {
-        stream.skipSpaces();
-        stream.keepParserState();
-        WordInfo wordInfo = parseWordInfo();
-        if (wordInfo == null) {
-            stream.rollbackParserState();
-            return null;
-        }
-        if (EOF != wordInfo.getStopSymbol()) {
-            stream.moveCursor(-1);
-        }
-        String conditionWord = wordInfo.getWord();
+        String conditionWord = stream.parseSpecialWordValueVariants(SW_AND, SW_OR);
         ConditionFlowType condType = resolveConditionFlowType(conditionWord);
-        if (condType == null) {
-            stream.rollbackParserState();
-        } else {
-            stream.skipParserState();
-        }
         return condType;
     }
 
@@ -1625,6 +1479,7 @@ public class SqlParser {
         return ',' == stream.getSymbol();
     }
 
+    /*** TODO переписать */
     private ComparisonPredicateExpression completeValuesComparisonPredicateExpression(Expression firstExpr, ParenLevels levels) {
         int from = stream.getCursor();
         if (levels.isEmpty()) {
@@ -1661,22 +1516,16 @@ public class SqlParser {
     }
 
     private boolean checkIsGroupByStatement() {
-        stream.keepParserState();
-        String firstWord = stream.parseSpecialWordValue();
-        String secondWord = stream.parseSpecialWordValue();
-        stream.rollbackParserState();
-        return SW_GROUP.equalsIgnoreCase(firstWord) && SW_BY.equalsIgnoreCase(secondWord);
+        return stream.checkIsSpecialWordSequents(OW_R_GROUP, OW_R_BY);
     }
 
     private GroupByStatement parseGroupByStatement() {
         if (checkIsGroupByStatement()) {
-            String firstWord = stream.parseSpecialWordValue();
-            String secondWord = stream.parseSpecialWordValue();
-            if (!SW_GROUP.equalsIgnoreCase(firstWord) || !SW_BY.equalsIgnoreCase(secondWord)) {
-                throw stream.createException("Ожидается секция 'GROUP BY', а имеем '" + firstWord + " " + secondWord + "'", stream
-                        .getCursor());
-            }
+            String groupWord = stream.parseSpecialWordValueAndCheck(SW_GROUP);
+            String byWord = stream.parseSpecialWordValueAndCheck(SW_BY);
             GroupByStatement groupByStatement = new GroupByStatement();
+            groupByStatement.setGroupWord(groupWord);
+            groupByStatement.setByWord(byWord);
             GroupingColumnReferenceExpression firstRefColumnExpr = parseGroupingColumnReferenceExpression();
             groupByStatement.addGroupByExpr(firstRefColumnExpr);
             stream.skipSpaces();
@@ -1699,50 +1548,42 @@ public class SqlParser {
     }
 
     private boolean checkIsHavingStatement() {
-        stream.keepParserState();
-        String word = stream.parseSpecialWordValue();
-        stream.rollbackParserState();
-        return SW_HAVING.equalsIgnoreCase(word);
+        return stream.checkIsSpecialWordValueSame(SW_HAVING);
     }
 
     private HavingStatement parseHavingStatement() {
         if (checkIsHavingStatement()) {
-            String word = stream.parseSpecialWordValue();
-            if (!SW_HAVING.equalsIgnoreCase(word)) {
-                throw stream.createException("Ожидается секция 'HAVING', а имеем '" + word + "'", stream.getCursor());
-            }
+            String havingWord = stream.parseSpecialWordValueAndCheck(SW_HAVING);
             Expression searchExpr = parseFullSearchConditionsExpr();
             HavingStatement havingStatementExpr = new HavingStatement();
+            havingStatementExpr.setHavingWord(havingWord);
             havingStatementExpr.setSearchExpr(searchExpr);
             return havingStatementExpr;
         }
         return null;
     }
 
-    private OrderByStatement parseOrderByStatement() {
-        stream.keepParserState();
-        String orderWord = stream.parseSpecialWordValue();
-        if (!"ORDER".equalsIgnoreCase(orderWord)) {
-            stream.rollbackParserState();
-            return null;
-        }
-        stream.skipParserState();
-        int from = stream.getCursor();
-        String byWord = stream.parseSpecialWordValue();
-        if (!SW_BY.equalsIgnoreCase(byWord)) {
-            throw stream.createException("Ожидается секция 'ORDER BY', а имеем 'ORDER " + byWord + "'", from);
-        }
-        from = stream.getCursor();
-        OrderByStatement orderByStatement = new OrderByStatement();
-        SortKeyExpression firstSortKeyExpr = parseSortKeyExpression();
-        orderByStatement.addSortKeyExpr(firstSortKeyExpr);
-        while (',' == stream.getSymbol()) {
-            stream.moveCursor();
-            SortKeyExpression nextSortKeyExpr = parseSortKeyExpression();
-            orderByStatement.addSortKeyExpr(nextSortKeyExpr);
-        }
+    private boolean checkIsOrderByStatement() {
+        return stream.checkIsSpecialWordSequents(OW_R_ORDER, OW_R_BY);
+    }
 
-        return orderByStatement;
+    private OrderByStatement parseOrderByStatement() {
+        if (checkIsOrderByStatement()) {
+            String orderWord = stream.parseSpecialWordValueAndCheck(SW_ORDER);
+            String byWord = stream.parseSpecialWordValueAndCheck(SW_BY);
+            OrderByStatement orderByStatement = new OrderByStatement();
+            orderByStatement.setOrderWord(orderWord);
+            orderByStatement.setByWord(byWord);
+            SortKeyExpression firstSortKeyExpr = parseSortKeyExpression();
+            orderByStatement.addSortKeyExpr(firstSortKeyExpr);
+            while (',' == stream.getSymbol()) {
+                stream.moveCursor();
+                SortKeyExpression nextSortKeyExpr = parseSortKeyExpression();
+                orderByStatement.addSortKeyExpr(nextSortKeyExpr);
+            }
+            return orderByStatement;
+        }
+        return null;
     }
 
     private SortKeyExpression parseSortKeyExpression() {
@@ -1772,39 +1613,24 @@ public class SqlParser {
     }
 
     private boolean checkIsCollateWord() {
-        stream.keepParserState();
-        String word = stream.parseSpecialWordValue();
-        stream.rollbackParserState();
-        return SW_COLLATE.equalsIgnoreCase(word);
+        return stream.checkIsSpecialWordValueSame(SW_COLLATE);
     }
 
     private CollateExpression parseCollateExpression() {
-        int from = stream.getCursor();
-        String word = stream.parseSpecialWordValue();
-        if (!SW_COLLATE.equalsIgnoreCase(word)) {
-            throw stream.createException("Ожидается секция 'COLLATE', а имеем '" + word + "'", from);
-        }
+        String collateWord = stream.parseSpecialWordValueAndCheck(SW_COLLATE);
         Expression collationNameExpr = parseColumnExpr();
         CollateExpression collateExpr = new CollateExpression();
+        collateExpr.setCollateWord(collateWord);
         collateExpr.setCollationNameExpr(collationNameExpr);
-
         return collateExpr;
     }
 
     private boolean checkIsOrderingSpecification() {
-        stream.keepParserState();
-        String word = stream.parseSpecialWordValue();
-        stream.rollbackParserState();
-        return SW_ASC.equalsIgnoreCase(word) || SW_DESC.equalsIgnoreCase(word);
+        return stream.checkIsSpecialWordValueOneOf(SW_ASC, SW_DESC);
     }
 
     private String parseOrderingSpecification() {
-        int from = stream.getCursor();
-        String word = stream.parseSpecialWordValue();
-        if (!(SW_ASC.equalsIgnoreCase(word) || SW_DESC.equalsIgnoreCase(word))) {
-            throw stream.createException("Ожидается служебное слово 'ASC' или 'DESC', а имеем '" + word + "'", from);
-        }
-        return word;
+        return stream.parseSpecialWordValueAndCheckOneOf(SW_ASC, SW_DESC);
     }
 
     private PageStatement parsePageStatement() {
@@ -1822,44 +1648,48 @@ public class SqlParser {
         return pageStatement;
     }
 
+    private boolean checkIsLimitExpression() {
+        return stream.checkIsSpecialWordValueSame(SW_LIMIT);
+    }
+
     private LimitExpression parseLimitExpression() {
-        stream.keepParserState();
-        String limitWord = stream.parseSpecialWordValue();
-        if (!SW_LIMIT.equalsIgnoreCase(limitWord)) {
-            stream.rollbackParserState();
+        if (!checkIsLimitExpression()) {
             return null;
         }
-        stream.skipParserState();
+        String limitWord = stream.parseSpecialWordValueAndCheck(SW_LIMIT);
         LimitExpression limitExpr = new LimitExpression();
         limitExpr.setLimitWord(limitWord);
+        int from = stream.getCursor();
         if (checkIsValueExpr()) {
             ValueExpression valueExpr = parseValueExpr();
             limitExpr.setLimitExpr(valueExpr);
         } else if (checkIsAllWord()) {
-            String allWord = stream.parseSpecialWordValue();
+            String allWord = stream.parseSpecialWordValueAndCheck(SW_ALL);
             KeyWordExpression kwAllExpr = new KeyWordExpression(allWord);
             limitExpr.setLimitExpr(kwAllExpr);
         } else {
-            throw stream.createException("Ожидается служебное слово 'ALL' или выражение значения в секции 'LIMIT'", stream.getCursor());
+            throw stream.createException("Ожидается служебное слово 'ALL' или выражение значения в секции 'LIMIT'", from);
         }
         return limitExpr;
     }
 
+    private boolean checkIsOffsetExpression() {
+        return stream.checkIsSpecialWordValueSame(SW_OFFSET);
+    }
+
     private OffsetExpression parseOffsetExpression() {
-        stream.keepParserState();
-        String limitWord = stream.parseSpecialWordValue();
-        if (!SW_OFFSET.equalsIgnoreCase(limitWord)) {
-            stream.rollbackParserState();
+        if (!checkIsOffsetExpression()) {
             return null;
         }
-        stream.skipParserState();
+        String offsetWord = stream.parseSpecialWordValueAndCheck(SW_OFFSET);
         OffsetExpression offsetExpr = new OffsetExpression();
-        offsetExpr.setOffsetWord(limitWord);
+        offsetExpr.setOffsetWord(offsetWord);
+        int from = stream.getCursor();
         if (checkIsValueExpr()) {
             ValueExpression valueExpr = parseValueExpr();
             offsetExpr.setOffsetExpr(valueExpr);
         } else {
-            throw stream.createException("Ожидается выражение значения в секции 'OFFSET'", stream.getCursor());
+            throw stream.createException("Ожидается выражение значения в секции 'OFFSET'", from);
         }
         return offsetExpr;
     }

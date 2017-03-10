@@ -11,7 +11,17 @@ import static com.reforms.sql.expr.term.SqlWords.SW_NOT;
  */
 public class NotExpression extends Expression {
 
+    private String notWord = SW_NOT;
+
     private Expression primaryExpr;
+
+    public String getNotWord() {
+        return notWord;
+    }
+
+    public void setNotWord(String notWord) {
+        this.notWord = notWord;
+    }
 
     public Expression getPrimaryExpr() {
         return primaryExpr;
@@ -29,7 +39,7 @@ public class NotExpression extends Expression {
     @Override
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_NOT);
+        sqlBuilder.appendWord(notWord);
         sqlBuilder.appendExpression(primaryExpr);
     }
 }

@@ -24,6 +24,8 @@ public class SqlWords {
 
     public static String SW_HAVING = "HAVING";
 
+    public static String SW_ORDER = "ORDER";
+
     public static String SW_ORDER_BY = "ORDER BY";
 
     public static String SW_ALL = "ALL";

@@ -9,7 +9,17 @@ import static com.reforms.sql.expr.term.SqlWords.SW_UNIQUE;
 
 public class UniquePredicateExpression extends PredicateExpression {
 
+    private String uniqueWord = SW_UNIQUE;
+
     private SelectQuery subQuery;
+
+    public String getUniqueWord() {
+        return uniqueWord;
+    }
+
+    public void setUniqueWord(String uniqueWord) {
+        this.uniqueWord = uniqueWord;
+    }
 
     public SelectQuery getSubQuery() {
         return subQuery;
@@ -27,7 +37,7 @@ public class UniquePredicateExpression extends PredicateExpression {
     @Override
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(SW_UNIQUE);
+        sqlBuilder.appendWord(uniqueWord);
         sqlBuilder.appendExpression(subQuery);
     }
 }
