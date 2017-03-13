@@ -8,7 +8,7 @@ import java.util.*;
  *      лучше так: check = parse != null;
  * @author evgenie
  */
-public class SqlStream extends AbstractSqlStream {
+public class SqlStream {
 
     private static final char TAB_SYMBOL = '\t';
 
@@ -31,7 +31,10 @@ public class SqlStream extends AbstractSqlStream {
     }
 
     //-------------------------- OPERATOR API ------------------------- \\
-    @Override
+    /**
+     * Проверить, является ли значение математическим операторами
+     * @return true - значение является математическим оператором
+     */
     public boolean checkIsMathOperatorValue() {
         keepParserState();
         String mathOperatorValue = parseMathOperatorValue();
@@ -41,7 +44,11 @@ public class SqlStream extends AbstractSqlStream {
 
     private static final List<Character> MATH_OPERAND = Arrays.asList('+', '-', '*', '/', '|');
 
-    @Override
+    /**
+     * Распарсить значение математического оператора
+     * @return значение математического оператора
+     *         или NULL, если это не оператор сравнения
+     */
     public String parseMathOperatorValue() {
         skipSpaces();
         char symbol = getSymbol();
@@ -59,7 +66,10 @@ public class SqlStream extends AbstractSqlStream {
         return null;
     }
 
-    @Override
+    /**
+     * Распарсить значение оператора сравнения
+     * @return true - значение является оператором сравнения
+     */
     public boolean checkIsComparisonOperatorValue() {
         keepParserState();
         String operatorValue = parseComparisonOperatorValue();
@@ -67,7 +77,11 @@ public class SqlStream extends AbstractSqlStream {
         return operatorValue != null;
     }
 
-    @Override
+    /**
+     * Распарсить значение оператора сравнения
+     * @return значение оператора сравнения
+     *         или NULL, если это не оператор сравнения
+     */
     public String parseComparisonOperatorValue() {
         skipSpaces();
         char firstSymbol = getSymbol();
@@ -103,37 +117,83 @@ public class SqlStream extends AbstractSqlStream {
     }
 
     //-------------------------- TOKEN API ------------------------- \\
-    @Override
+    /**
+     * Проверить, является ли значение фильтром для вставки значения
+     * @return true - значение является  фильтром для вставки значения
+     */
     public boolean checkIsFilterValue() {
         skipSpaces();
         return ':' == getSymbol();
     }
 
-    @Override
+    /**
+     * Распарсить фильтр для вставки значения
+     * @return фильтр для вставки значения
+     *         или NULL, если это не числовое значение
+     */
     public String parseFilterValue() {
         return parseIdentifierValue(DONT_SQL_FILTER_IDENTIFIER_CHARS);
     }
 
-    @Override
+    /**
+     * Проверить, является ли значение '?'
+     * @return true - значение '?', false иначе
+     */
     public boolean checkIsQuestionValue() {
         skipSpaces();
         return '?' == getSymbol();
     }
 
-    @Override
+    /**
+     * Распарсить '?'
+     * @return символ '?'
+     * @throws IllegalStateException не является '?'
+     */
+    public char parseQuestionValueAndCheck() {
+        if (!checkIsQuestionValue()) {
+            throw createException("Ожидается '?', а получен символ " + getCharName(getSymbol()));
+        }
+        moveCursor();
+        return '?';
+    }
+
+    /**
+     * Проверить, является ли значение '*'
+     * @return true - значение '*', false иначе
+     */
     public boolean checkIsAsteriskValue() {
         skipSpaces();
         return '*' == getSymbol();
     }
 
-    @Override
+    /**
+     * Распарсить '*'
+     * @return символ '*'
+     * @throws IllegalStateException не является '*'
+     */
+    public char parseAsteriskValueAndCheck() {
+        if (!checkIsAsteriskValue()) {
+            throw createException("Ожидается символ '*', а получен символ " + getCharName(getSymbol()));
+        }
+        moveCursor();
+        return '*';
+    }
+
+    /**
+     * Проверить, является ли следующий токен числовым значением или нет
+     * @return true следующий токен является числовым значением
+     */
     public boolean checkIsNumericValue() {
         skipSpaces();
         char symbol = getSymbol();
         return '-' == symbol || '+' == symbol || Character.isDigit(symbol);
     }
 
-    @Override
+    /**
+     * Распарсить числовое значение
+     * @return числовое значение
+     *         или NULL, если это не числовое значение
+     */
     public String parseNumericValue() {
         if (checkIsNumericValue()) {
             int from = getCursor();
@@ -183,13 +243,20 @@ public class SqlStream extends AbstractSqlStream {
         return null;
     }
 
-    @Override
+    /**
+     * Проверить, является ли следующий токен строковым значением или нет
+     * @return true следующий токен является строковым значением
+     */
     public boolean checkIsStringValue() {
         skipSpaces();
         return '\'' == getSymbol();
     }
 
-    @Override
+    /**
+     * Распарсить строковое значение
+     * @return строковое значение
+     *         или NULL, если это не строковое значение
+     */
     public String parseStringValue() {
         if (checkIsStringValue()) {
             char symbol = getSymbol();
@@ -209,7 +276,11 @@ public class SqlStream extends AbstractSqlStream {
         return null;
     }
 
-    @Override
+    /**
+     * Распарсить значение в двойных кавычках
+     * @return значение в двойных кавычках
+     *         или NULL, если это не значение в двойных кавычках
+     */
     public String parseDoubleQuoteValue() {
         skipSpaces();
         int from = getCursor();
@@ -229,7 +300,11 @@ public class SqlStream extends AbstractSqlStream {
         return doubleQuoteValue;
     }
 
-    @Override
+    /**
+     * Проверить, что указанная последовательность служебных слов выполняется
+     * @param sequentWords последовательность служебных слов
+     * @return true - указанная последовательность служебных слов выполняется
+     */
     public boolean checkIsSpecialWordSequents(OptWord ... sequentWords) {
         keepParserState();
         String result = parseSpecialWordSequents(sequentWords);
@@ -237,7 +312,12 @@ public class SqlStream extends AbstractSqlStream {
         return result != null;
     }
 
-    @Override
+    /**
+     * Распарсить последовательность служебных слов
+     * @param sequentWords последовательность служебных слов
+     * @return последовательность служебных слов
+     *         или NULL, если это не последовательность служебных слов
+     */
     public String parseSpecialWordSequents(OptWord ... sequentWords) {
         keepParserState();
         StringBuilder result = null;
@@ -262,7 +342,11 @@ public class SqlStream extends AbstractSqlStream {
         return null;
     }
 
-    @Override
+    /**
+     * Проверить, что следующий токен одного из указанного значения
+     * @param words возможные варианты
+     * @return true - следующий токен одного из указанного значения
+     */
     public boolean checkIsSpecialWordValueOneOf(String ... checkedWords) {
         keepParserState();
         String specialWordValue = parseSpecialWordValue();
@@ -277,7 +361,12 @@ public class SqlStream extends AbstractSqlStream {
         return false;
     }
 
-    @Override
+    /**
+     * Распарсить логически-значимую часть sql выражения - ключевое слово и проверить, что совпадает с указанным значением
+     * @param checkedWords значения для проверки
+     * @return ключевое слово как есть без изменения регистра букв
+     * @throws IllegalStateException указанное слово не совпадает ни с одним из заданных
+     */
     public String parseSpecialWordValueAndCheckOneOf(String ... checkedWords) {
         int from = getCursor();
         String specialWordValue = parseSpecialWordValueVariants(checkedWords);
@@ -287,7 +376,12 @@ public class SqlStream extends AbstractSqlStream {
         return specialWordValue;
     }
 
-    @Override
+    /**
+     * Распарсить логически-значимую часть sql выражения - ключевое слово и проверить, что совпадает с указанным значением
+     * @param variantWords варианты значений
+     * @return ключевое слово как есть без изменения регистра букв
+     *         или NULL, если это не логически-значимая часть sql выражения
+     */
     public String parseSpecialWordValueVariants(String ... variantWords) {
         keepParserState();
         String specialWordValue = parseSpecialWordValue();
@@ -303,7 +397,11 @@ public class SqlStream extends AbstractSqlStream {
         return null;
     }
 
-    @Override
+    /**
+     * Проверить, что следующий токен указанного значения
+     * @param word токен указанного значения
+     * @return true - следующий токен указанного значения
+     */
     public boolean checkIsSpecialWordValueSame(String word) {
         keepParserState();
         String specialWordValue = parseSpecialWordValue();
@@ -311,7 +409,12 @@ public class SqlStream extends AbstractSqlStream {
         return word != null && specialWordValue != null && word.equalsIgnoreCase(specialWordValue);
     }
 
-    @Override
+    /**
+     * Распарсить логически-значимую часть sql выражения - ключевое слово и проверить, что совпадает с указанным значением
+     * @param checkedWord значение для проверки
+     * @return ключевое слово как есть без изменения регистра букв
+     * @throws IllegalStateException указанное слово не совпадает с заданным
+     */
     public String parseSpecialWordValueAndCheck(String checkedWord) {
         int from = getCursor();
         String word = parseSpecialWordValue();
@@ -321,7 +424,10 @@ public class SqlStream extends AbstractSqlStream {
         return word;
     }
 
-    @Override
+    /**
+     * Проверить является ли значение ключевым словом SQL
+     * @return true - ключевое слово SQL, false - иначе
+     */
     public boolean checkIsSpecialWordValue() {
         keepParserState();
         String specialWordValue = parseSpecialWordValue();
@@ -329,7 +435,22 @@ public class SqlStream extends AbstractSqlStream {
         return SqlWords.isSqlWord(specialWordValue);
     }
 
-    @Override
+    /**
+     * Распарсить логически-значимую часть sql выражения - ключевое слово
+     * @param toUpperCase признак того, что результат нужно приводить к верхнему регистру
+     * @return логически-значимая часть sql выражения
+     *         или NULL, если это не логически-значимая часть sql выражения
+     */
+    public String parseSpecialWordValue() {
+        return parseSpecialWordValue(true);
+    }
+
+    /**
+     * Распарсить логически-значимую часть sql выражения - ключевое слово
+     * @param toUpperCase признак того, что результат нужно приводить к верхнему регистру
+     * @return логически-значимая часть sql выражения
+     *         или NULL, если это не логически-значимая часть sql выражения
+     */
     public String parseSpecialWordValue(boolean toUpperCase) {
         String specialWordValue = parseIdentifierValue();
         if (specialWordValue != null && toUpperCase) {
@@ -338,7 +459,11 @@ public class SqlStream extends AbstractSqlStream {
         return specialWordValue;
     }
 
-    @Override
+    /**
+     * Проверить, является ли это логически-значимой частью sql выражения
+     * @param ignoreSqlSpecialWord признак того, что ключевые слова игнорируются
+     * @return true - это логически-значимой частью sql выражения
+     */
     public boolean checkIsIdentifierValue(boolean ignoreSqlSpecialWord) {
         keepParserState();
         String identifier = parseIdentifierValue();
@@ -360,7 +485,11 @@ public class SqlStream extends AbstractSqlStream {
     private static final List<Character> DONT_SQL_EXT_IDENTIFIER_CHARS = Arrays.asList(
             '?', '(', ')', '!', '<', '>', '=', ',', '*', '+', '-', '/', '&', '^', '%', '~', '"', '\'', '\0', ' ');
 
-    @Override
+    /**
+     * Распарсить логически-значимую часть sql выражения и мета информацию в рамках этого идентификатора (доп символы: '#', '.', ':')
+     * @return логически-значимая часть sql выражения
+     *         или NULL, если это не логически-значимая часть sql выражения
+     */
     public String parseMetaIdentifierValue() {
         return parseIdentifierValue(DONT_SQL_EXT_IDENTIFIER_CHARS);
     }
@@ -371,7 +500,11 @@ public class SqlStream extends AbstractSqlStream {
     private static final List<Character> DONT_SQL_IDENTIFIER_CHARS = Arrays.asList(
             '.', ':', '#', '?', '(', ')', '!', '<', '>', '=', ',', '*', '+', '-', '/', '&', '^', '%', '~', '"', '\'', '\0', ' ');
 
-    @Override
+    /**
+     * Распарсить логически-значимую часть sql выражения
+     * @return логически-значимая часть sql выражения
+     *         или NULL, если это не логически-значимая часть sql выражения
+     */
     public String parseIdentifierValue() {
         return parseIdentifierValue(DONT_SQL_IDENTIFIER_CHARS);
     }
@@ -389,27 +522,87 @@ public class SqlStream extends AbstractSqlStream {
         return word;
     }
 
-    @Override
+    /**
+     * Получить часть query от позиции from до позиции текущего куросра
+     * @param from позиция от
+     * @return часть query от позиции from до позиции текущего куросра
+     */
     public String getValueFrom(int from) {
         return query.substring(from, cursor);
     }
 
     //-------------------------- DELIM AND WHITESPACES API ------------------------- \\
-    @Override
+    /**
+     * Пропустить все текущие пробелы
+     */
     public void skipSpaces() {
         while (Character.isWhitespace(getSymbol())) {
             moveCursor();
         }
     }
 
-    @Override
+    public static List<Character> FUNC_DELIMS = Arrays.asList(',', ')');
+
+    /**
+     * Проверить текущий символ на открывающуюся скобку
+     * @throws IllegalStateException другой символ
+     */
+    public void checkIsOpenParent() {
+        checkIsOpenParent(true);
+    }
+
+    /**
+     * Проверить текущий символ на открывающуюся скобку
+     * @param throwMode если true кинется ошибка
+     * @throws IllegalStateException другой символ
+     */
+    public boolean checkIsOpenParent(boolean throwMode) {
+        return checkIsDelim('(', throwMode);
+    }
+
+    /**
+     * Проверить текущий символ на закрывающуюся скобку
+     * @throws IllegalStateException другой символ
+     */
+    public boolean checkIsCloseParen() {
+        return checkIsCloseParen(true);
+    }
+
+    /**
+     * Проверить текущий символ на закрывающуюся скобку
+     * @param throwMode если true кинется ошибка
+     * @throws IllegalStateException другой символ
+     */
+    public boolean checkIsCloseParen(boolean throwMode) {
+        return checkIsDelim(')', throwMode);
+    }
+
+    /**
+     * Проверить что разделить: '(', ','.
+     * @return true разделить один из '(', ','.
+     * @throws IllegalStateException разделитель указанного типа не найден
+     */
     public boolean checkIsFuncArgsDelim() {
         skipSpaces();
         char symbol = getSymbol();
         return FUNC_DELIMS.contains(symbol);
     }
 
-    @Override
+    /**
+     * Распарсить разделить: '(', ','.
+     * @return один из указанных разделителей
+     * @throws IllegalStateException разделитель указанного типа не найден
+     */
+    public char parseFuncArgsDelim() {
+        return parseDelim(FUNC_DELIMS);
+    }
+
+    /**
+     * Распарсить разделить.
+     * @param oneOfDelims допустимые разделители
+     * @return один из указанных разделителей
+     * @throws IllegalStateException разделитель указанного типа не найден
+     */
     public char parseDelim(List<Character> oneOfDelims) {
         skipSpaces();
         char symbol = getSymbol();
@@ -418,21 +611,26 @@ public class SqlStream extends AbstractSqlStream {
         }
         List<String> chars = new ArrayList<>();
         for (char expectedDelim : oneOfDelims) {
-            String charName = convertSymbol(expectedDelim);
+            String charName = getCharName(expectedDelim);
             chars.add(charName);
         }
-        String wasCharName = convertSymbol(symbol);
+        String wasCharName = getCharName(symbol);
         throw createException("Ожидается разделитель один из [" + chars + "], а получен символ [" + wasCharName + "]");
     }
 
-    @Override
+    /**
+     * Проверить текущий символ
+     * @param delim     проверяемый символ
+     * @param throwMode если true кинется ошибка
+     * @throws IllegalStateException другой символ
+     */
     public boolean checkIsDelim(char delim, boolean throwMode) {
         skipSpaces();
         char symbol = getSymbol();
         if (delim != symbol) {
             if (throwMode) {
-                String delimName = convertSymbol(delim);
-                String charName = convertSymbol(symbol);
+                String delimName = getCharName(delim);
+                String charName = getCharName(symbol);
                 throw createException("Ожидается символ " + delimName + ", а получен " + charName + "'");
             }
             return false;
@@ -440,7 +638,7 @@ public class SqlStream extends AbstractSqlStream {
         return true;
     }
 
-    private String convertSymbol(char symbol) {
+    private String getCharName(char symbol) {
         if (EOF == symbol) {
             return "'конец файла'";
         }
@@ -457,7 +655,19 @@ public class SqlStream extends AbstractSqlStream {
     }
 
     //-------------------------- SYMBOL API ------------------------- \\
-    @Override
+    /**
+     * Получить текущий символ
+     * @return текущий символ
+     */
+    public char getSymbol() {
+        return getSymbol(0);
+    }
+
+    /**
+     * Получить символ со смещением offset
+     * @param offset смещение
+     * @return символ со смещением offset
+     */
     public char getSymbol(int offset) {
         int pos = offset + cursor;
         if (pos < 0 || pos >= query.length()) {
@@ -466,18 +676,25 @@ public class SqlStream extends AbstractSqlStream {
         return query.charAt(pos);
     }
 
-    @Override
+    /**
+     * Получить значение текущего куросора
+     * @return значение текущего куросора
+     */
     public int getCursor() {
         return cursor;
     };
 
-    //TODO удалить - решение временно
-    @Override
-    public void changeCursor(int newPosCursor) {
-        cursor = newPosCursor;
+    /**
+     * Передвинуть курсор на единицу вперед
+     */
+    public void moveCursor() {
+        moveCursor(1);
     }
 
-    @Override
+    /**
+     * Передвинуть курсор на смещение offset
+     * @param offset смещение
+     */
     public void moveCursor(int offset) {
         int pos = cursor + offset;
         if (offset == 1) {
@@ -507,18 +724,25 @@ public class SqlStream extends AbstractSqlStream {
         }
     }
 
-    @Override
+    /**
+     * Проверить, что курсор указывает на конец query
+     * @return true - курсор указывает на конец query, false - иначе
+     */
     public boolean finished() {
         return cursor >= query.length();
     }
 
     //-------------------------- STATE API ------------------------- \\
-    @Override
+    /**
+     * Сохранить текущие параметры потока в стек
+     */
     public void keepParserState() {
         markers.push(new SqlParserState(cursor, lineNumber));
     }
 
-    @Override
+    /**
+     * Выталкнуть из стека параметры потока
+     */
     public void skipParserState() {
         if (markers.isEmpty()) {
             throw new IllegalStateException("Не возможно откатитить состояние парсера");
@@ -526,7 +750,9 @@ public class SqlStream extends AbstractSqlStream {
         markers.pop();
     }
 
-    @Override
+    /**
+     * Выталкнуть из стека параметры потока и применить их к текущему состоянию
+     */
     public void rollbackParserState() {
         if (markers.isEmpty()) {
             throw new IllegalStateException("Не возможно откатитить состояние парсера");
@@ -537,7 +763,25 @@ public class SqlStream extends AbstractSqlStream {
     }
 
     //------------------------ EXCEPTION API ----------------------- \\
-    @Override
+    public IllegalStateException createException(String message) {
+        return createException(message, null);
+    }
+
+    public IllegalStateException createException(String message, Throwable cause) {
+        return createException(message, getCursor(), cause);
+    }
+
+    public IllegalStateException createException(String message, int from) {
+        return createException(message, from, null);
+    }
+
+    /**
+     * Сформировать сообщение об ошибке
+     * @param message сообщение об ошибке
+     * @param from    позиция для отображения доп информации
+     * @param cause   причина или NULL
+     * @return сообщение об ошибке
+     */
     public IllegalStateException createException(String message, int from, Throwable cause) {
         StringBuilder errorText = new StringBuilder();
         errorText.append(message);
