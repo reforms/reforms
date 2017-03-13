@@ -13,14 +13,15 @@ import com.reforms.sql.expr.term.page.OffsetExpression;
 import com.reforms.sql.expr.term.predicate.*;
 import com.reforms.sql.expr.term.value.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.reforms.sql.expr.term.ConditionFlowType.resolveConditionFlowType;
 import static com.reforms.sql.expr.term.MathOperator.resolveMathOperator;
-import static com.reforms.sql.expr.term.SqlWords.*;
 import static com.reforms.sql.expr.term.from.TableJoinTypes.TJT_CROSS_JOIN;
-import static com.reforms.sql.expr.term.predicate.ComparisonOperatorType.resolveComparisonOperatorType;
+import static com.reforms.sql.expr.term.predicate.ComparisonOperator.resolveComparisonOperatorType;
 import static com.reforms.sql.parser.OptWords.*;
+import static com.reforms.sql.parser.SqlWords.*;
 
 /**
  * 1. ORACLE: SELECT selection_fields FROM (SELECT selection_fields,ROWNUM RN FROM (SELECT selection_fields FROM schemaName.tableName WHERE conditions ORDER BY orderFields)) WHERE RN > ? AND RN <= ?
@@ -39,8 +40,10 @@ import static com.reforms.sql.parser.OptWords.*;
  *      - query         (SelectQuery, InsertQuery, UpdateQuery, DeleteQuery)
  *      - statement     (SelectStatement, FromStatement, WhereStatement, ... etc)
  *      - expression    (AliasExpression, AsteriskExpression, ... etc)
- *      - value         (String, Number, NULL, ... etc)
+ *      - word          (ALL, NOT, ... etc, part of some expression, but exclude main word)
+ *      - operator      (MathOperator, ComparisonOperator)
  *
+ * TODO времено код разбит на смысловые части не связанные между собой. Необходимо перегруппировать участки кода так, чтобы было видно общий смысл
  */
 public class SqlParser {
 
@@ -53,74 +56,38 @@ public class SqlParser {
     public SelectQuery parseSelectQuery() {
         SelectQuery directSelectQuery = parseSingleSelectQuery();
         if (!stream.finished()) {
-            throw stream.createException("Не удалось до конца разобрать запрос", stream.getCursor());
+            throw stream.createException("Не удалось до конца разобрать запрос");
         }
         return directSelectQuery;
     }
 
     private SelectQuery parseSingleSelectQuery() {
-        SelectQuery selectQuery = new SelectQuery();
-        fillFullSelectStatement(selectQuery);
+        SelectStatement selectStatement = parseSelectStatement();
         FromStatement fromStatement = parseFromStatement();
-        if (fromStatement != null) {
-            selectQuery.setFromStatement(fromStatement);
-            selectQuery.setWhereStatement(parseWhereStatement());
-            selectQuery.setGroupByStatement(parseGroupByStatement());
-            selectQuery.setHavingStatement(parseHavingStatement());
-        }
-        while (checkIsLinkedWord()) {
-            LinkingSelectQuery linkedSelectExpr = new LinkingSelectQuery();
-            String linkedWord = parseLinkedWord();
-            linkedSelectExpr.setLinkedWord(linkedWord);
-            if (checkIsAllWord()) {
-                String allWord = parseAllWord();
-                linkedSelectExpr.setAllWord(allWord);
-            }
-            SelectQuery linkedSelectQuery = parseSingleSelectQuery();
-            linkedSelectExpr.setLinkedSelectQuery(linkedSelectQuery);
-            selectQuery.addLinkingQuery(linkedSelectExpr);
-        }
+        WhereStatement whereStatement = parseWhereStatement();
+        GroupByStatement groupByStatement = parseGroupByStatement();
+        HavingStatement havingStatement = parseHavingStatement();
+        List<LinkingSelectQuery> linkingSelectQueries = parseLinkingSelectQueries();
         OrderByStatement orderByStatement = parseOrderByStatement();
-        selectQuery.setOrderByStatement(orderByStatement);
         PageStatement pageStatement = parsePageStatement();
+        SelectQuery selectQuery = new SelectQuery();
+        selectQuery.setSelectStatement(selectStatement);
+        selectQuery.setFromStatement(fromStatement);
+        selectQuery.setWhereStatement(whereStatement);
+        selectQuery.setGroupByStatement(groupByStatement);
+        selectQuery.setHavingStatement(havingStatement);
+        selectQuery.setLinkingQueries(linkingSelectQueries);
+        selectQuery.setOrderByStatement(orderByStatement);
         selectQuery.setPageStatement(pageStatement);
         return selectQuery;
     }
 
-    private boolean checkIsLinkedWord() {
-        return stream.checkIsSpecialWordValueOneOf(SW_UNION, SW_EXCEPT, SW_INTERSECT, SW_MINUS);
-    }
-
-    private String parseLinkedWord() {
-        return stream.parseSpecialWordValueAndCheckOneOf(SW_UNION, SW_EXCEPT, SW_INTERSECT, SW_MINUS);
-    }
-
-    private boolean checkIsAllWord() {
-        return stream.checkIsSpecialWordValueSame(SW_ALL);
-    }
-
-    private String parseAllWord() {
-        return stream.parseSpecialWordValueAndCheck(SW_ALL);
-    }
-
-    private void fillFullSelectStatement(SelectQuery selectQuery) {
+    private SelectStatement parseSelectStatement() {
         // 1. SELECT word
         String selectWord = stream.parseSpecialWordValueAndCheck(SW_SELECT);
         // 2. [ALL | DISTINCT] mode word
         String selectModeWord = parseSelectModeWord();
         // 3. SELECT STATEMENT
-        SelectStatement selectStatement = parseSelectStatement();
-        selectStatement.setSelectWord(selectWord);
-        selectStatement.setModeWord(selectModeWord);
-        selectQuery.setSelectStatement(selectStatement);
-    }
-
-    /** @return ALL или DISTINCT или null */
-    private String parseSelectModeWord() {
-        return stream.parseSpecialWordValueVariants(SW_ALL, SW_DISTINCT);
-    }
-
-    private SelectStatement parseSelectStatement() {
         SelectStatement selectStatement = new SelectStatement();
         SelectableExpression selectExpr = parseFullSelectableExpression();
         if (selectExpr == null) {
@@ -138,7 +105,138 @@ public class SqlParser {
             stream.moveCursor();
             selectExpr = parseFullSelectableExpression();
         }
+        selectStatement.setSelectWord(selectWord);
+        selectStatement.setModeWord(selectModeWord);
         return selectStatement;
+    }
+
+    private FromStatement parseFromStatement() {
+        if (stream.checkIsSpecialWordValue()) {
+            String fromWord = stream.parseSpecialWordValueAndCheck(SW_FROM);
+            FromStatement fromStatement = new FromStatement();
+            fromStatement.setFromWord(fromWord);
+            List<TableReferenceExpression> tableRefExprs = fromStatement.getTableRefExprs();
+            while (checkIsTableReferenceExpression(!tableRefExprs.isEmpty())) {
+                TableReferenceExpression tableRefExpr = parseTableReference(!tableRefExprs.isEmpty());
+                fromStatement.addTableRefExpr(tableRefExpr);
+                if (',' == stream.getSymbol()) {
+                    tableRefExpr.setSeparator(", ");
+                    stream.moveCursor();
+                } else if (tableRefExprs.size() > 1) {
+                    int prevIndex = tableRefExprs.size() - 2;
+                    TableReferenceExpression prevTableRefExpr = tableRefExprs.get(prevIndex);
+                    if (prevTableRefExpr.getSeparator() == null) {
+                        prevTableRefExpr.setSeparator(" ");
+                    }
+                }
+            }
+            if (tableRefExprs.isEmpty()) {
+                throw stream.createException("Ожидается в секции 'FROM' блок данных о таблицах", stream.getCursor());
+            }
+            return fromStatement;
+        }
+        return null;
+    }
+
+    private WhereStatement parseWhereStatement() {
+        if (checkIsWhereStatement()) {
+            String whereWord = stream.parseSpecialWordValueAndCheck(SW_WHERE);
+            Expression searchExpr = parseFullSearchConditionsExpr();
+            WhereStatement whereStatementExpr = new WhereStatement();
+            whereStatementExpr.setWhereWord(whereWord);
+            whereStatementExpr.setSearchExpr(searchExpr);
+            return whereStatementExpr;
+        }
+        return null;
+    }
+
+    private GroupByStatement parseGroupByStatement() {
+        if (checkIsGroupByStatement()) {
+            String groupWord = stream.parseSpecialWordValueAndCheck(SW_GROUP);
+            String byWord = stream.parseSpecialWordValueAndCheck(SW_BY);
+            GroupByStatement groupByStatement = new GroupByStatement();
+            groupByStatement.setGroupWord(groupWord);
+            groupByStatement.setByWord(byWord);
+            GroupingColumnReferenceExpression firstRefColumnExpr = parseGroupingColumnReferenceExpression();
+            groupByStatement.addGroupByExpr(firstRefColumnExpr);
+            stream.skipSpaces();
+            while (',' == stream.getSymbol()) {
+                stream.moveCursor();
+                GroupingColumnReferenceExpression refColumnExpr = parseGroupingColumnReferenceExpression();
+                groupByStatement.addGroupByExpr(refColumnExpr);
+                stream.skipSpaces();
+            }
+            return groupByStatement;
+        }
+        return null;
+    }
+
+    private HavingStatement parseHavingStatement() {
+        if (checkIsHavingStatement()) {
+            String havingWord = stream.parseSpecialWordValueAndCheck(SW_HAVING);
+            Expression searchExpr = parseFullSearchConditionsExpr();
+            HavingStatement havingStatementExpr = new HavingStatement();
+            havingStatementExpr.setHavingWord(havingWord);
+            havingStatementExpr.setSearchExpr(searchExpr);
+            return havingStatementExpr;
+        }
+        return null;
+    }
+
+    private List<LinkingSelectQuery> parseLinkingSelectQueries() {
+        List<LinkingSelectQuery> linkingSelectQueries = new ArrayList<>();
+        while (checkIsLinkedWord()) {
+            LinkingSelectQuery linkedSelectExpr = new LinkingSelectQuery();
+            String linkedWord = parseLinkedWord();
+            linkedSelectExpr.setLinkedWord(linkedWord);
+            if (checkIsAllWord()) {
+                String allWord = parseAllWord();
+                linkedSelectExpr.setAllWord(allWord);
+            }
+            SelectQuery linkedSelectQuery = parseSingleSelectQuery();
+            linkedSelectExpr.setLinkedSelectQuery(linkedSelectQuery);
+            linkingSelectQueries.add(linkedSelectExpr);
+        }
+        return linkingSelectQueries;
+    }
+
+    private OrderByStatement parseOrderByStatement() {
+        if (checkIsOrderByStatement()) {
+            String orderWord = stream.parseSpecialWordValueAndCheck(SW_ORDER);
+            String byWord = stream.parseSpecialWordValueAndCheck(SW_BY);
+            OrderByStatement orderByStatement = new OrderByStatement();
+            orderByStatement.setOrderWord(orderWord);
+            orderByStatement.setByWord(byWord);
+            SortKeyExpression firstSortKeyExpr = parseSortKeyExpression();
+            orderByStatement.addSortKeyExpr(firstSortKeyExpr);
+            while (',' == stream.getSymbol()) {
+                stream.moveCursor();
+                SortKeyExpression nextSortKeyExpr = parseSortKeyExpression();
+                orderByStatement.addSortKeyExpr(nextSortKeyExpr);
+            }
+            return orderByStatement;
+        }
+        return null;
+    }
+
+    private PageStatement parsePageStatement() {
+        LimitExpression limitExpr = parseLimitExpression();
+        OffsetExpression offsetExpr = parseOffsetExpression();
+        if (offsetExpr != null && limitExpr == null) {
+            limitExpr = parseLimitExpression();
+        }
+        if (limitExpr == null && offsetExpr == null) {
+            return null;
+        }
+        PageStatement pageStatement = new PageStatement();
+        pageStatement.setLimitExpr(limitExpr);
+        pageStatement.setOffsetExpr(offsetExpr);
+        return pageStatement;
+    }
+
+    /** @return ALL или DISTINCT или null */
+    private String parseSelectModeWord() {
+        return stream.parseSpecialWordValueVariants(SW_ALL, SW_DISTINCT);
     }
 
     private SelectableExpression parseFullSelectableExpression() {
@@ -225,10 +323,6 @@ public class SqlParser {
         return searchExprs;
     }
 
-    private boolean checkIsMathOperator() {
-        return stream.checkIsMathOperatorValue();
-    }
-
     private MathOperator parseMathOperator() {
         int from = stream.getCursor();
         String mathOperatorValue = stream.parseMathOperatorValue();
@@ -241,48 +335,36 @@ public class SqlParser {
 
     private SelectableExpression parseSelectableExpression() {
         stream.skipSpaces();
-        if (checkIsAsteriskExpr()) {
+        if (checkIsAsteriskExpression()) {
             return parseAsteriskExpr();
         }
-        if (checkIsFuncExpr()) {
+        if (checkIsFuncExpression()) {
             return parseFuncExpr();
         }
-        if (checkIsValueExpr()) {
+        if (checkIsValueExpression()) {
             return parseValueExpr();
         }
-        if (checkIsCaseExpr()) {
+        if (checkIsCaseExpression()) {
             return parseCaseExpr();
         }
-        if (checkIsCastExpr()) {
+        if (checkIsCastExpression()) {
             return parseCastExpr();
         }
-        if (checkIsSubSelect()) {
+        if (checkIsSubSelectQuery()) {
             return parseSubSelect();
         }
-        if (checkIsColumnExpr()) {
+        if (checkIsColumnExpression()) {
             return parseColumnExpr();
         }
         throw stream.createException("Неизвестное выражение для выборки", stream.getCursor());
     }
 
-    private boolean checkIsAsteriskExpr() {
-        return stream.checkIsAsteriskValue();
-    }
-
     private AsteriskExpression parseAsteriskExpr() {
-        if (!checkIsAsteriskExpr()) {
+        if (!checkIsAsteriskExpression()) {
             throw stream.createException("Ожидается символ '*'");
         }
         stream.moveCursor();
         return new AsteriskExpression();
-    }
-
-    private boolean checkIsFuncExpr() {
-        stream.keepParserState();
-        String id = stream.parseSpecialWordValue();
-        boolean funcFlag = id != null && !isSqlWord(id) && stream.checkIsOpenParent(false);
-        stream.rollbackParserState();
-        return funcFlag;
     }
 
     private FuncExpression parseFuncExpr() {
@@ -361,35 +443,6 @@ public class SqlParser {
         return null;
     }
 
-    private boolean checkIsValueExpr() {
-        if (checkIsNumericExpr()) {
-            return true;
-        }
-        if (checkIsStringExpr()) {
-            return true;
-        }
-        if (checkIsDateExpr()) {
-            return true;
-        }
-        if (checkIsIntervalExpr()) {
-            return true;
-        }
-        if (checkIsConstExpr()) {
-            return true;
-        }
-        if (checkIsQuestionExpr()) {
-            return true;
-        }
-        if (checkIsFilterExpr()) {
-            return true;
-        }
-        return false;
-    }
-
-    private boolean checkIsNumericExpr() {
-        return stream.checkIsNumericValue();
-    }
-
     private NumericExpression parseNumericExpr() {
         int from = stream.getCursor();
         String numericValue = stream.parseNumericValue();
@@ -397,10 +450,6 @@ public class SqlParser {
             throw stream.createException("Ожидается числовое значение", from);
         }
         return new NumericExpression(numericValue);
-    }
-
-    private boolean checkIsStringExpr() {
-        return stream.checkIsStringValue();
     }
 
     private StringExpression parseStringExpr() {
@@ -412,24 +461,23 @@ public class SqlParser {
         return new StringExpression(stringValue);
     }
 
-    private boolean checkIsDateExpr() {
-        return false;
-    }
-
     private ValueExpression parseDateExpr() {
-        return null;
-    }
-
-    private boolean checkIsIntervalExpr() {
-        return false;
-    }
-
-    private ValueExpression parseIntervalExpr() {
-        return null;
-    }
-
-    private boolean checkIsConstExpr() {
-        return stream.checkIsSpecialWordValueOneOf(SW_NULL, SW_TRUE, SW_FALSE);
+        int from = stream.getCursor();
+        String dateWord = stream.parseSpecialWordValueAndCheckOneOf(SW_TIME, SW_DATE, SW_TIMESTAMP, SW_INTERVAL);
+        StringExpression dateValue = parseStringExpr();
+        if (SW_TIME.equalsIgnoreCase(dateWord)) {
+            return new TimeExpression(dateWord, dateValue.getValue());
+        }
+        if (SW_DATE.equalsIgnoreCase(dateWord)) {
+            return new DateExpression(dateWord, dateValue.getValue());
+        }
+        if (SW_TIMESTAMP.equalsIgnoreCase(dateWord)) {
+            return new TimestampExpression(dateWord, dateValue.getValue());
+        }
+        if (SW_INTERVAL.equalsIgnoreCase(dateWord)) {
+            return new IntervalExpression(dateWord, dateValue.getValue());
+        }
+        throw stream.createException("Не известное выражение типа даты: '" + dateWord + "', value: '" + dateValue.getValue() + "'", from);
     }
 
     private ValueExpression parseConstExpr() {
@@ -447,12 +495,8 @@ public class SqlParser {
         throw stream.createException("Ожидается 'NULL' или 'TRUE' или 'FALSE', а получено '" + word + "'", from);
     }
 
-    private boolean checkIsQuestionExpr() {
-        return stream.checkIsQuestionValue();
-    }
-
     private QuestionExpression parseQuestionExpr() {
-        if (!checkIsQuestionExpr()) {
+        if (!checkIsQuestionExpression()) {
             throw stream.createException("Ожидается '?', а получен символ '" + stream.getSymbol() + "'");
         }
         stream.moveCursor();
@@ -460,49 +504,42 @@ public class SqlParser {
     }
 
     private ValueExpression parseValueExpr() {
-        if (checkIsNumericExpr()) {
+        if (checkIsNumericExpression()) {
             return parseNumericExpr();
         }
-        if (checkIsStringExpr()) {
+        if (checkIsStringExpression()) {
             return parseStringExpr();
         }
-        if (checkIsDateExpr()) {
+        if (checkIsDateExpression()) {
             return parseDateExpr();
         }
-        if (checkIsIntervalExpr()) {
-            return parseIntervalExpr();
-        }
-        if (checkIsConstExpr()) {
+        if (checkIsConstExpression()) {
             return parseConstExpr();
         }
-        if (checkIsQuestionExpr()) {
+        if (checkIsQuestionExpression()) {
             return parseQuestionExpr();
         }
-        if (checkIsFilterExpr()) {
+        if (checkIsFilterExpression()) {
             return parseFilterExpr();
         }
         return null;
-    }
-
-    private boolean checkIsCaseExpr() {
-        return stream.checkIsSpecialWordValueSame(SW_CASE);
     }
 
     private CaseExpression parseCaseExpr() {
         CaseExpression caseExpr = new CaseExpression();
         String caseWord = stream.parseSpecialWordValueAndCheck(SW_CASE);
         caseExpr.setCaseWord(caseWord);
-        boolean searchFlag = checkIsSearchCaseExpr();
+        boolean searchFlag = checkIsWhenThenExpression();
         if (!searchFlag) {
             Expression operandExpr = parseCaseOperandExpr();
             caseExpr.setOperandExpr(operandExpr);
         }
-        while (checkIsWhenThenExpr()) {
+        while (checkIsWhenThenExpression()) {
             WhenThenExpression whenThenExpr = parseWhenThenExpr(searchFlag);
             caseExpr.addWhenThenExprs(whenThenExpr);
         }
         // TODO: добавить ElseExpression
-        if (checkIsElseExpr()) {
+        if (checkIsElseExpression()) {
             ElseExpression elseExpr = parseElseExpr();
             caseExpr.setElseExpr(elseExpr);
         }
@@ -511,17 +548,13 @@ public class SqlParser {
         return caseExpr;
     }
 
-    private boolean checkIsFilterExpr() {
-        return stream.checkIsFilterValue();
-    }
-
     /**
      * TODO: переделать через parseStatementWord(false, FILTER_CHARS);
      * @return
      */
     private FilterExpression parseFilterExpr() {
         int from = stream.getCursor();
-        if (!checkIsFilterExpr()) {
+        if (!checkIsFilterExpression()) {
             throw stream.createException("Ожидается символ ':', а получен '" + stream.getSymbol() + "' в выражении типа фильтр", from);
         }
         String filterValue = stream.parseFilterValue();
@@ -533,14 +566,6 @@ public class SqlParser {
         filterExpr.setFilterName(filterName);
         filterExpr.setQuestionFlag(questionFlag);
         return filterExpr;
-    }
-
-    private boolean checkIsSearchCaseExpr() {
-        return stream.checkIsSpecialWordValueSame(SW_WHEN);
-    }
-
-    private boolean checkIsWhenThenExpr() {
-        return checkIsSearchCaseExpr();
     }
 
     private Expression parseCaseOperandExpr() {
@@ -560,10 +585,6 @@ public class SqlParser {
         return whenThenExpr;
     }
 
-    private boolean checkIsElseExpr() {
-        return stream.checkIsSpecialWordValueSame(SW_ELSE);
-    }
-
     private ElseExpression parseElseExpr() {
         String elseWord = stream.parseSpecialWordValueAndCheck(SW_ELSE);
         Expression resultExpr = parseSingleSelectExpr();
@@ -571,10 +592,6 @@ public class SqlParser {
         elseExpr.setElseWord(elseWord);
         elseExpr.setResultExpr(resultExpr);
         return elseExpr;
-    }
-
-    private boolean checkIsCastExpr() {
-        return stream.checkIsSpecialWordValueSame(SW_CAST);
     }
 
     private CastExpression parseCastExpr() {
@@ -586,7 +603,7 @@ public class SqlParser {
         String asWord = stream.parseSpecialWordValueAndCheck(SW_AS);
         from = stream.getCursor();
         FuncExpression targetExpr = null;
-        if (checkIsFuncExpr()) {
+        if (checkIsFuncExpression()) {
             targetExpr = parseFuncExpr();
         } else {
             String typeName = stream.parseSpecialWordValue(false);
@@ -607,16 +624,6 @@ public class SqlParser {
         return castExpr;
     }
 
-    private boolean checkIsSubSelect() {
-        boolean subSelectFlag = stream.checkIsOpenParent(false);
-        if (subSelectFlag) {
-            stream.moveCursor();
-            subSelectFlag = stream.checkIsSpecialWordValueSame(SW_SELECT);
-            stream.moveCursor(-1);
-        }
-        return subSelectFlag;
-    }
-
     private SelectQuery parseSubSelect() {
         stream.skipSpaces();
         if ('(' != stream.getSymbol()) {
@@ -633,10 +640,6 @@ public class SqlParser {
         stream.moveCursor(); // skip ')'
         subSelectQuery.setWrapped(true);
         return subSelectQuery;
-    }
-
-    private boolean checkIsColumnExpr() {
-        return stream.checkIsIdentifierValue(true);
     }
 
     private ColumnExpression parseColumnExpr() {
@@ -670,58 +673,14 @@ public class SqlParser {
         return columnExpr;
     }
 
-    private FromStatement parseFromStatement() {
-        if (stream.checkIsSpecialWordValue()) {
-            String fromWord = stream.parseSpecialWordValueAndCheck(SW_FROM);
-            FromStatement fromStatement = new FromStatement();
-            fromStatement.setFromWord(fromWord);
-            List<TableReferenceExpression> tableRefExprs = fromStatement.getTableRefExprs();
-            while (checkIsTableReference(!tableRefExprs.isEmpty())) {
-                TableReferenceExpression tableRefExpr = parseTableReference(!tableRefExprs.isEmpty());
-                fromStatement.addTableRefExpr(tableRefExpr);
-                if (',' == stream.getSymbol()) {
-                    tableRefExpr.setSeparator(", ");
-                    stream.moveCursor();
-                } else if (tableRefExprs.size() > 1) {
-                    int prevIndex = tableRefExprs.size() - 2;
-                    TableReferenceExpression prevTableRefExpr = tableRefExprs.get(prevIndex);
-                    if (prevTableRefExpr.getSeparator() == null) {
-                        prevTableRefExpr.setSeparator(" ");
-                    }
-                }
-            }
-            if (tableRefExprs.isEmpty()) {
-                throw stream.createException("Ожидается в секции 'FROM' блок данных о таблицах", stream.getCursor());
-            }
-            return fromStatement;
-        }
-        return null;
-    }
-
-    private boolean checkIsTableReference(boolean useJoin) {
-        if (stream.checkIsSpecialWordValue()) {
-            stream.keepParserState();
-            String word = stream.parseSpecialWordValue();
-            stream.rollbackParserState();
-            return useJoin && startFrom(word, SW_INNER_JOIN, SW_LEFT_OUTER_JOIN, SW_RIGHT_OUTER_JOIN, SW_FULL_OUTER_JOIN, SW_CROSS_JOIN);
-        }
-        if (checkIsSubSelect()) {
-            return true;
-        }
-        if (checkIsTableValuesExpression()) {
-            return true;
-        }
-        return checkIsTable();
-    }
-
     private TableReferenceExpression parseTableReference(boolean useJoin) {
         if (useJoin && stream.checkIsSpecialWordValue()) {
             return parseTableJoinExpression();
         }
-        if (checkIsSubSelect()) {
+        if (checkIsSubSelectQuery()) {
             return parseTableSubQuery();
         }
-        if (checkIsTable()) {
+        if (checkIsTableExpression()) {
             return parseTableExpression();
         }
         if (checkIsTableValuesExpression()) {
@@ -736,20 +695,6 @@ public class SqlParser {
         tableSubQuery.setSubQueryExpr(selectQuery);
         tableSubQuery.setAsClauseExpr(parseAsClauseExpression(false));
         return tableSubQuery;
-    }
-
-    private boolean checkIsTableValuesExpression() {
-        stream.skipSpaces();
-        stream.keepParserState();
-        char symbol = stream.getSymbol();
-        if ('(' != symbol) {
-            stream.rollbackParserState();
-            return false;
-        }
-        stream.moveCursor();
-        String word = stream.parseSpecialWordValue();
-        stream.rollbackParserState();
-        return SW_VALUES.equalsIgnoreCase(word);
     }
 
     private TableValuesExpression parseTableValuesExpression() {
@@ -780,7 +725,7 @@ public class SqlParser {
         String asWord = stream.parseSpecialWordValueVariants(SW_AS);
         tableValuesExpr.setAsWord(asWord);
         FuncExpression templateExpr = null;
-        if (checkIsFuncExpr()) {
+        if (checkIsFuncExpression()) {
             templateExpr = parseFuncExpr();
         } else {
             from = stream.getCursor();
@@ -793,10 +738,6 @@ public class SqlParser {
         }
         tableValuesExpr.setTemplateExpr(templateExpr);
         return tableValuesExpr;
-    }
-
-    private boolean checkIsTable() {
-        return stream.checkIsIdentifierValue(true);
     }
 
     private TableExpression parseTableExpression() {
@@ -853,22 +794,6 @@ public class SqlParser {
 
     private Expression parseOnConditionExpr() {
         return parseFullSearchConditionsExpr();
-    }
-
-    private boolean checkIsWhereStatement() {
-        return stream.checkIsSpecialWordValueSame(SW_WHERE);
-    }
-
-    private WhereStatement parseWhereStatement() {
-        if (checkIsWhereStatement()) {
-            String whereWord = stream.parseSpecialWordValueAndCheck(SW_WHERE);
-            Expression searchExpr = parseFullSearchConditionsExpr();
-            WhereStatement whereStatementExpr = new WhereStatement();
-            whereStatementExpr.setWhereWord(whereWord);
-            whereStatementExpr.setSearchExpr(searchExpr);
-            return whereStatementExpr;
-        }
-        return null;
     }
 
     private Expression parseFullSearchConditionsExpr() {
@@ -928,7 +853,6 @@ public class SqlParser {
                 }
                 from = stream.getCursor();
                 Expression expr = parseSearchConditionExpr(levels);
-
                 ParenLevel currentLevel = levels.peek();
                 if (currentLevel == null) {
                     currentLevel = new ParenLevel(false);
@@ -964,7 +888,7 @@ public class SqlParser {
 
     private boolean isOpenBrace() {
         char symbol = stream.getSymbol();
-        return '(' == symbol && !checkIsSubSelect();
+        return '(' == symbol && !checkIsSubSelectQuery();
     }
 
     private boolean isCloseBrace() {
@@ -973,13 +897,13 @@ public class SqlParser {
     }
 
     private Expression parseSearchConditionExpr(ParenLevels levels) {
-        if (checkIsRowValueConstructorExpr()) {
+        if (checkIsRowValueConstructorExpression()) {
             Expression searchExpr = parseSingleRowValueConstructorExpr(levels);
             if (checkIsQuantifiedComparisonPredicateExpression()) {
                 QuantifiedComparisonPredicateExpression quanifiedComparisonPredicateExpr = completeQuantifiedComparisonPredicateExpression(searchExpr);
                 return quanifiedComparisonPredicateExpr;
             }
-            if (checkIsComparisonOperatorType()) {
+            if (checkIsComparisonOperator()) {
                 Expression compPredicateExpr = completeComparisonPredicateExpr(searchExpr);
                 return compPredicateExpr;
             }
@@ -1006,7 +930,7 @@ public class SqlParser {
             // Примечание: считаем что это одиночное выражение boolean типа
             return searchExpr;
         }
-        if (checkIsExistsPredicateExpr()) {
+        if (checkIsExistsPredicateExpression()) {
             ExistsPredicateExpression existsPredicate = parseExistsPredicateExpr();
             return existsPredicate;
         }
@@ -1087,29 +1011,6 @@ public class SqlParser {
         return searchExprs;
     }
 
-    private boolean checkIsRowValueConstructorExpr() {
-        if (checkIsValueExpr()) {
-            return true;
-        }
-        if (checkIsFuncExpr()) {
-            return true;
-        }
-        if (checkIsCaseExpr()) {
-            return true;
-        }
-        if (checkIsSubSelect()) {
-            return true;
-        }
-        if (checkIsColumnExpr()) {
-            return true;
-        }
-        return false;
-    }
-
-    private boolean checkIsNotWord() {
-        return stream.checkIsSpecialWordValueSame(SW_NOT);
-    }
-
     private NotExpression parseNotExpr() {
         String notWord = stream.parseSpecialWordValueAndCheck(SW_NOT);
         NotExpression notExpr = new NotExpression();
@@ -1118,30 +1019,25 @@ public class SqlParser {
     }
 
     private Expression parseRowValueConstructorExpr() {
-        if (checkIsValueExpr()) {
+        if (checkIsValueExpression()) {
             return parseValueExpr();
         }
-        if (checkIsFuncExpr()) {
+        if (checkIsFuncExpression()) {
             return parseFuncExpr();
         }
-        if (checkIsCaseExpr()) {
+        if (checkIsCaseExpression()) {
             return parseCaseExpr();
         }
-        if (checkIsSubSelect()) {
+        if (checkIsSubSelectQuery()) {
             return parseSubSelect();
         }
-        if (checkIsColumnExpr()) {
+        if (checkIsColumnExpression()) {
             return parseColumnExpr();
         }
-        if (checkIsCaseExpr()) {
+        if (checkIsCaseExpression()) {
             return parseCaseExpr();
         }
         throw stream.createException("Неизвестное выражение для условия поиска <row value constructor>", stream.getCursor());
-    }
-
-    /*** TODO переписать */
-    private boolean checkIsExistsPredicateExpr() {
-        return stream.checkIsSpecialWordSequents(OW_O_NOT, OW_R_EXISTS);
     }
 
     /*** TODO переписать */
@@ -1151,7 +1047,7 @@ public class SqlParser {
             notWord = stream.parseSpecialWordValueAndCheck(SW_NOT);
         }
         String existsWord = stream.parseSpecialWordValueAndCheck(SW_EXISTS);
-        if (!checkIsSubSelect()) {
+        if (!checkIsSubSelectQuery()) {
             throw stream.createException("Ожидается подзапрос в 'EXISTS' выражении", stream.getCursor());
         }
         SelectQuery subSelectExpr = parseSubSelect();
@@ -1160,10 +1056,6 @@ public class SqlParser {
         existsExpr.setExistsWord(existsWord);
         existsExpr.setSelectQuery(subSelectExpr);
         return existsExpr;
-    }
-
-    private boolean checkIsUniquePredicateExpression() {
-        return stream.checkIsSpecialWordValueSame(SW_UNIQUE);
     }
 
     private UniquePredicateExpression parseUniquePredicateExpression() {
@@ -1175,19 +1067,8 @@ public class SqlParser {
         return uniquePredicateExpr;
     }
 
-    private boolean checkIsQuantifiedComparisonPredicateExpression() {
-        if (!checkIsComparisonOperatorType()) {
-            return false;
-        }
-        stream.keepParserState();
-        parseComparisonOperatorType();
-        String word = stream.parseSpecialWordValue();
-        stream.rollbackParserState();
-        return SW_ANY.equalsIgnoreCase(word) || SW_SOME.equalsIgnoreCase(word) || SW_ALL.equalsIgnoreCase(word);
-    }
-
     private QuantifiedComparisonPredicateExpression completeQuantifiedComparisonPredicateExpression(Expression expression) {
-        ComparisonOperatorType comparisonOperationType = parseComparisonOperatorType();
+        ComparisonOperator comparisonOperationType = parseComparisonOperatorType();
         String quantifierWord = stream.parseSpecialWordValueAndCheckOneOf(SW_ANY, SW_SOME, SW_ALL);
         SelectQuery subSelectQuery = parseSubSelect();
         QuantifiedComparisonPredicateExpression quanCompPredicateExpr = new QuantifiedComparisonPredicateExpression();
@@ -1198,22 +1079,14 @@ public class SqlParser {
         return quanCompPredicateExpr;
     }
 
-    private boolean checkIsComparisonOperatorType() {
-        return stream.checkIsComparisonOperatorValue();
-    }
-
-    private ComparisonOperatorType parseComparisonOperatorType() {
+    private ComparisonOperator parseComparisonOperatorType() {
         int from = stream.getCursor();
         String operatorValue = stream.parseComparisonOperatorValue();
-        ComparisonOperatorType operator = resolveComparisonOperatorType(operatorValue);
+        ComparisonOperator operator = resolveComparisonOperatorType(operatorValue);
         if (operator == null) {
             throw stream.createException("Ожидается операция сравнения '=' или '<' или '<=' или '>' или '>=' или '<>' или '!='", from);
         }
         return operator;
-    }
-
-    private boolean checkIsNullablePredicateExpression() {
-        return stream.checkIsSpecialWordValueSame(SW_IS);
     }
 
     private NullablePredicateExpression completeNullablePredicateExpression(Expression expression) {
@@ -1228,10 +1101,6 @@ public class SqlParser {
         String nullWord = stream.parseSpecialWordValueAndCheck(SW_NULL);
         nullPredicateExpr.setNullWord(nullWord);
         return nullPredicateExpr;
-    }
-
-    private boolean checkIsInPredicateExpression() {
-        return stream.checkIsSpecialWordSequents(OW_O_NOT, OW_R_IN);
     }
 
     private InPredicateExpression completeInPredicateExpression(Expression baseExpression) {
@@ -1250,7 +1119,7 @@ public class SqlParser {
     }
 
     private Expression parsePredicateValueExpression() {
-        if (checkIsSubSelect()) {
+        if (checkIsSubSelectQuery()) {
             return parseSubSelect();
         }
         return parseValueListExpression();
@@ -1291,10 +1160,6 @@ public class SqlParser {
         return inValueExpr;
     }
 
-    private boolean checkIsLikePredicateExpression() {
-        return stream.checkIsSpecialWordSequents(OW_O_NOT, OW_R_LIKE);
-    }
-
     private LikePredicateExpression completeLikePredicateExpression(Expression baseExpression) {
         String notWord = null;
         if (checkIsNotWord()) {
@@ -1303,7 +1168,7 @@ public class SqlParser {
         String likeWord = stream.parseSpecialWordValueAndCheck(SW_LIKE);
         SelectableExpression patternExpr = parseSingleSelectExpr();
         EscapeExpression escapeExpr = null;
-        if (checkIsEscapeWord()) {
+        if (checkIsEscapeExpression()) {
             escapeExpr = parseEscapeExpression();
         }
         LikePredicateExpression likeExpr = new LikePredicateExpression();
@@ -1315,10 +1180,6 @@ public class SqlParser {
         return likeExpr;
     }
 
-    private boolean checkIsEscapeWord() {
-        return stream.checkIsSpecialWordValueSame(SW_ESCAPE);
-    }
-
     private EscapeExpression parseEscapeExpression() {
         String escapeWord = stream.parseSpecialWordValueAndCheck(SW_ESCAPE);
         Expression escapeValueExpr = parseSingleSelectExpr();
@@ -1326,10 +1187,6 @@ public class SqlParser {
         escapeExpr.setEscapeWord(escapeWord);
         escapeExpr.setEscapeValueExpr(escapeValueExpr);
         return escapeExpr;
-    }
-
-    private boolean checkIsBetweenPredicateExpression() {
-        return stream.checkIsSpecialWordSequents(OW_O_NOT, OW_R_BETWEEN);
     }
 
     private BetweenPredicateExpression completeBetweenPredicateExpression(Expression baseExpression) {
@@ -1354,7 +1211,7 @@ public class SqlParser {
     private ComparisonPredicateExpression completeComparisonPredicateExpr(Expression leftExpr) {
         ComparisonPredicateExpression cmpExpr = new ComparisonPredicateExpression();
         cmpExpr.setLeftExpr(leftExpr);
-        ComparisonOperatorType operType = parseComparisonOperatorType();
+        ComparisonOperator operType = parseComparisonOperatorType();
         cmpExpr.setCompOperatorType(operType);
         Expression rightExpr = parseFullSingleRowValueConstructorExpr();
         cmpExpr.setRightExpr(rightExpr);
@@ -1365,11 +1222,6 @@ public class SqlParser {
         String conditionWord = stream.parseSpecialWordValueVariants(SW_AND, SW_OR);
         ConditionFlowType condType = resolveConditionFlowType(conditionWord);
         return condType;
-    }
-
-    private boolean checkIsValuesComparisonPredicateExpression() {
-        stream.skipSpaces();
-        return ',' == stream.getSymbol();
     }
 
     /*** TODO переписать */
@@ -1399,38 +1251,13 @@ public class SqlParser {
         }
         levels.decDepth();
         stream.moveCursor();
-        ComparisonOperatorType operType = parseComparisonOperatorType();
+        ComparisonOperator operType = parseComparisonOperatorType();
         ValueListExpression rightExpr = parseValueListExpression();
         ComparisonPredicateExpression compPredicateExpr = new ComparisonPredicateExpression();
         compPredicateExpr.setLeftExpr(leftValuesExpr);
         compPredicateExpr.setCompOperatorType(operType);
         compPredicateExpr.setRightExpr(rightExpr);
         return compPredicateExpr;
-    }
-
-    private boolean checkIsGroupByStatement() {
-        return stream.checkIsSpecialWordSequents(OW_R_GROUP, OW_R_BY);
-    }
-
-    private GroupByStatement parseGroupByStatement() {
-        if (checkIsGroupByStatement()) {
-            String groupWord = stream.parseSpecialWordValueAndCheck(SW_GROUP);
-            String byWord = stream.parseSpecialWordValueAndCheck(SW_BY);
-            GroupByStatement groupByStatement = new GroupByStatement();
-            groupByStatement.setGroupWord(groupWord);
-            groupByStatement.setByWord(byWord);
-            GroupingColumnReferenceExpression firstRefColumnExpr = parseGroupingColumnReferenceExpression();
-            groupByStatement.addGroupByExpr(firstRefColumnExpr);
-            stream.skipSpaces();
-            while (',' == stream.getSymbol()) {
-                stream.moveCursor();
-                GroupingColumnReferenceExpression refColumnExpr = parseGroupingColumnReferenceExpression();
-                groupByStatement.addGroupByExpr(refColumnExpr);
-                stream.skipSpaces();
-            }
-            return groupByStatement;
-        }
-        return null;
     }
 
     private GroupingColumnReferenceExpression parseGroupingColumnReferenceExpression() {
@@ -1440,52 +1267,13 @@ public class SqlParser {
         return refColumnExpr;
     }
 
-    private boolean checkIsHavingStatement() {
-        return stream.checkIsSpecialWordValueSame(SW_HAVING);
-    }
-
-    private HavingStatement parseHavingStatement() {
-        if (checkIsHavingStatement()) {
-            String havingWord = stream.parseSpecialWordValueAndCheck(SW_HAVING);
-            Expression searchExpr = parseFullSearchConditionsExpr();
-            HavingStatement havingStatementExpr = new HavingStatement();
-            havingStatementExpr.setHavingWord(havingWord);
-            havingStatementExpr.setSearchExpr(searchExpr);
-            return havingStatementExpr;
-        }
-        return null;
-    }
-
-    private boolean checkIsOrderByStatement() {
-        return stream.checkIsSpecialWordSequents(OW_R_ORDER, OW_R_BY);
-    }
-
-    private OrderByStatement parseOrderByStatement() {
-        if (checkIsOrderByStatement()) {
-            String orderWord = stream.parseSpecialWordValueAndCheck(SW_ORDER);
-            String byWord = stream.parseSpecialWordValueAndCheck(SW_BY);
-            OrderByStatement orderByStatement = new OrderByStatement();
-            orderByStatement.setOrderWord(orderWord);
-            orderByStatement.setByWord(byWord);
-            SortKeyExpression firstSortKeyExpr = parseSortKeyExpression();
-            orderByStatement.addSortKeyExpr(firstSortKeyExpr);
-            while (',' == stream.getSymbol()) {
-                stream.moveCursor();
-                SortKeyExpression nextSortKeyExpr = parseSortKeyExpression();
-                orderByStatement.addSortKeyExpr(nextSortKeyExpr);
-            }
-            return orderByStatement;
-        }
-        return null;
-    }
-
     private SortKeyExpression parseSortKeyExpression() {
         int from = stream.getCursor();
         Expression sortKeyValueExpr = null;
-        if (checkIsColumnExpr()) {
+        if (checkIsColumnExpression()) {
             sortKeyValueExpr = parseColumnExpr();
             // TODO проверить, что это простая колонка
-        } else if (checkIsNumericExpr()) {
+        } else if (checkIsNumericExpression()) {
             sortKeyValueExpr = parseNumericExpr();
             // TODO проверить, что это число без мантис точек и прочего лишнего
         }
@@ -1494,19 +1282,15 @@ public class SqlParser {
         }
         SortKeyExpression sortKeyExpr = new SortKeyExpression();
         sortKeyExpr.setSortKeyValueExpr(sortKeyValueExpr);
-        if (checkIsCollateWord()) {
+        if (checkIsCollateExpression()) {
             CollateExpression collateExpr = parseCollateExpression();
             sortKeyExpr.setCollateExpr(collateExpr);
         }
-        if (checkIsOrderingSpecification()) {
+        if (checkIsOrderingSpecificationWord()) {
             String orderingSpec = parseOrderingSpecification();
             sortKeyExpr.setOrderingSpec(orderingSpec);
         }
         return sortKeyExpr;
-    }
-
-    private boolean checkIsCollateWord() {
-        return stream.checkIsSpecialWordValueSame(SW_COLLATE);
     }
 
     private CollateExpression parseCollateExpression() {
@@ -1518,31 +1302,8 @@ public class SqlParser {
         return collateExpr;
     }
 
-    private boolean checkIsOrderingSpecification() {
-        return stream.checkIsSpecialWordValueOneOf(SW_ASC, SW_DESC);
-    }
-
     private String parseOrderingSpecification() {
         return stream.parseSpecialWordValueAndCheckOneOf(SW_ASC, SW_DESC);
-    }
-
-    private PageStatement parsePageStatement() {
-        LimitExpression limitExpr = parseLimitExpression();
-        OffsetExpression offsetExpr = parseOffsetExpression();
-        if (offsetExpr != null && limitExpr == null) {
-            limitExpr = parseLimitExpression();
-        }
-        if (limitExpr == null && offsetExpr == null) {
-            return null;
-        }
-        PageStatement pageStatement = new PageStatement();
-        pageStatement.setLimitExpr(limitExpr);
-        pageStatement.setOffsetExpr(offsetExpr);
-        return pageStatement;
-    }
-
-    private boolean checkIsLimitExpression() {
-        return stream.checkIsSpecialWordValueSame(SW_LIMIT);
     }
 
     private LimitExpression parseLimitExpression() {
@@ -1553,7 +1314,7 @@ public class SqlParser {
         LimitExpression limitExpr = new LimitExpression();
         limitExpr.setLimitWord(limitWord);
         int from = stream.getCursor();
-        if (checkIsValueExpr()) {
+        if (checkIsValueExpression()) {
             ValueExpression valueExpr = parseValueExpr();
             limitExpr.setLimitExpr(valueExpr);
         } else if (checkIsAllWord()) {
@@ -1566,10 +1327,6 @@ public class SqlParser {
         return limitExpr;
     }
 
-    private boolean checkIsOffsetExpression() {
-        return stream.checkIsSpecialWordValueSame(SW_OFFSET);
-    }
-
     private OffsetExpression parseOffsetExpression() {
         if (!checkIsOffsetExpression()) {
             return null;
@@ -1578,12 +1335,266 @@ public class SqlParser {
         OffsetExpression offsetExpr = new OffsetExpression();
         offsetExpr.setOffsetWord(offsetWord);
         int from = stream.getCursor();
-        if (checkIsValueExpr()) {
+        if (checkIsValueExpression()) {
             ValueExpression valueExpr = parseValueExpr();
             offsetExpr.setOffsetExpr(valueExpr);
         } else {
             throw stream.createException("Ожидается выражение значения в секции 'OFFSET'", from);
         }
         return offsetExpr;
+    }
+
+    private String parseAllWord() {
+        return stream.parseSpecialWordValueAndCheck(SW_ALL);
+    }
+
+    private String parseLinkedWord() {
+        return stream.parseSpecialWordValueAndCheckOneOf(SW_UNION, SW_EXCEPT, SW_INTERSECT, SW_MINUS);
+    }
+
+    // ----------------------------------------------------------- WORD ----------------------------------------------------------------------------- \\
+    private boolean checkIsAllWord() {
+        return stream.checkIsSpecialWordValueSame(SW_ALL);
+    }
+
+    private boolean checkIsNotWord() {
+        return stream.checkIsSpecialWordValueSame(SW_NOT);
+    }
+
+    private boolean checkIsOrderingSpecificationWord() {
+        return stream.checkIsSpecialWordValueOneOf(SW_ASC, SW_DESC);
+    }
+
+    private boolean checkIsLinkedWord() {
+        return stream.checkIsSpecialWordValueOneOf(SW_UNION, SW_EXCEPT, SW_INTERSECT, SW_MINUS);
+    }
+
+    private boolean checkIsEscapeExpression() {
+        return stream.checkIsSpecialWordValueSame(SW_ESCAPE);
+    }
+
+    private boolean checkIsCollateExpression() {
+        return stream.checkIsSpecialWordValueSame(SW_COLLATE);
+    }
+
+    private boolean checkIsNullablePredicateExpression() {
+        return stream.checkIsSpecialWordValueSame(SW_IS);
+    }
+
+    private boolean checkIsLimitExpression() {
+        return stream.checkIsSpecialWordValueSame(SW_LIMIT);
+    }
+
+    private boolean checkIsOffsetExpression() {
+        return stream.checkIsSpecialWordValueSame(SW_OFFSET);
+    }
+
+    private boolean checkIsCaseExpression() {
+        return stream.checkIsSpecialWordValueSame(SW_CASE);
+    }
+
+    private boolean checkIsWhenThenExpression() {
+        return stream.checkIsSpecialWordValueSame(SW_WHEN);
+    }
+
+    private boolean checkIsElseExpression() {
+        return stream.checkIsSpecialWordValueSame(SW_ELSE);
+    }
+
+    private boolean checkIsCastExpression() {
+        return stream.checkIsSpecialWordValueSame(SW_CAST);
+    }
+
+    private boolean checkIsUniquePredicateExpression() {
+        return stream.checkIsSpecialWordValueSame(SW_UNIQUE);
+    }
+
+    private boolean checkIsConstExpression() {
+        return stream.checkIsSpecialWordValueOneOf(SW_NULL, SW_TRUE, SW_FALSE);
+    }
+
+    private boolean checkIsDateExpression() {
+        return stream.checkIsSpecialWordValueOneOf(SW_TIME, SW_DATE, SW_TIMESTAMP, SW_INTERVAL);
+    }
+
+    private boolean checkIsWhereStatement() {
+        return stream.checkIsSpecialWordValueSame(SW_WHERE);
+    }
+
+    private boolean checkIsHavingStatement() {
+        return stream.checkIsSpecialWordValueSame(SW_HAVING);
+    }
+
+    // ------------------------------------------------------ WORD SEQUENSE ----------------------------------------------------------------------------- \\
+    private boolean checkIsExistsPredicateExpression() {
+        return stream.checkIsSpecialWordSequents(OW_O_NOT, OW_R_EXISTS);
+    }
+
+    private boolean checkIsInPredicateExpression() {
+        return stream.checkIsSpecialWordSequents(OW_O_NOT, OW_R_IN);
+    }
+
+    private boolean checkIsLikePredicateExpression() {
+        return stream.checkIsSpecialWordSequents(OW_O_NOT, OW_R_LIKE);
+    }
+
+    private boolean checkIsBetweenPredicateExpression() {
+        return stream.checkIsSpecialWordSequents(OW_O_NOT, OW_R_BETWEEN);
+    }
+
+    private boolean checkIsGroupByStatement() {
+        return stream.checkIsSpecialWordSequents(OW_R_GROUP, OW_R_BY);
+    }
+
+    private boolean checkIsOrderByStatement() {
+        return stream.checkIsSpecialWordSequents(OW_R_ORDER, OW_R_BY);
+    }
+
+    // -------------------------------------------------------------- SIMPLE ----------------------------------------------------------------------------- \\
+    private boolean checkIsAsteriskExpression() {
+        return stream.checkIsAsteriskValue();
+    }
+
+    private boolean checkIsNumericExpression() {
+        return stream.checkIsNumericValue();
+    }
+
+    private boolean checkIsStringExpression() {
+        return stream.checkIsStringValue();
+    }
+
+    private boolean checkIsQuestionExpression() {
+        return stream.checkIsQuestionValue();
+    }
+
+    private boolean checkIsFilterExpression() {
+        return stream.checkIsFilterValue();
+    }
+
+    private boolean checkIsColumnExpression() {
+        return stream.checkIsIdentifierValue(true);
+    }
+
+    private boolean checkIsValuesComparisonPredicateExpression() {
+        return stream.checkIsDelim(',', false);
+    }
+
+    private boolean checkIsTableExpression() {
+        return stream.checkIsIdentifierValue(true);
+    }
+
+    private boolean checkIsTableJoinExpression(boolean useJoin) {
+        return useJoin && stream.checkIsSpecialWordValueOneOf(SW_INNER, SW_LEFT, SW_RIGHT, SW_FULL, SW_CROSS);
+    }
+
+    // ----------------------------------------------------------- OPERATOR ----------------------------------------------------------------------------- \\
+    private boolean checkIsMathOperator() {
+        return stream.checkIsMathOperatorValue();
+    }
+
+    private boolean checkIsComparisonOperator() {
+        return stream.checkIsComparisonOperatorValue();
+    }
+
+    // ----------------------------------------------------------- COMPOSITE ----------------------------------------------------------------------------- \\
+    private boolean checkIsValueExpression() {
+        if (checkIsNumericExpression()) {
+            return true;
+        }
+        if (checkIsStringExpression()) {
+            return true;
+        }
+        if (checkIsDateExpression()) {
+            return true;
+        }
+        if (checkIsConstExpression()) {
+            return true;
+        }
+        if (checkIsQuestionExpression()) {
+            return true;
+        }
+        if (checkIsFilterExpression()) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkIsRowValueConstructorExpression() {
+        if (checkIsValueExpression()) {
+            return true;
+        }
+        if (checkIsFuncExpression()) {
+            return true;
+        }
+        if (checkIsCaseExpression()) {
+            return true;
+        }
+        if (checkIsSubSelectQuery()) {
+            return true;
+        }
+        if (checkIsColumnExpression()) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkIsTableReferenceExpression(boolean useJoin) {
+        if (checkIsTableJoinExpression(useJoin)) {
+            return true;
+        }
+        if (checkIsSubSelectQuery()) {
+            return true;
+        }
+        if (checkIsTableValuesExpression()) {
+            return true;
+        }
+        if (checkIsTableExpression()) {
+            return true;
+        }
+        return false;
+    }
+
+    // ----------------------------------------------------------- LOGIC ----------------------------------------------------------------------------- \\
+    private boolean checkIsFuncExpression() {
+        stream.keepParserState();
+        String id = stream.parseSpecialWordValue();
+        boolean funcFlag = id != null && !isSqlWord(id) && stream.checkIsOpenParent(false);
+        stream.rollbackParserState();
+        return funcFlag;
+    }
+
+    private boolean checkIsSubSelectQuery() {
+        boolean subSelectFlag = stream.checkIsOpenParent(false);
+        if (subSelectFlag) {
+            stream.moveCursor();
+            subSelectFlag = stream.checkIsSpecialWordValueSame(SW_SELECT);
+            stream.moveCursor(-1);
+        }
+        return subSelectFlag;
+    }
+
+    private boolean checkIsTableValuesExpression() {
+        stream.skipSpaces();
+        stream.keepParserState();
+        char symbol = stream.getSymbol();
+        if ('(' != symbol) {
+            stream.rollbackParserState();
+            return false;
+        }
+        stream.moveCursor();
+        String word = stream.parseSpecialWordValue();
+        stream.rollbackParserState();
+        return SW_VALUES.equalsIgnoreCase(word);
+    }
+
+    private boolean checkIsQuantifiedComparisonPredicateExpression() {
+        if (!checkIsComparisonOperator()) {
+            return false;
+        }
+        stream.keepParserState();
+        parseComparisonOperatorType();
+        String word = stream.parseSpecialWordValue();
+        stream.rollbackParserState();
+        return SW_ANY.equalsIgnoreCase(word) || SW_SOME.equalsIgnoreCase(word) || SW_ALL.equalsIgnoreCase(word);
     }
 }

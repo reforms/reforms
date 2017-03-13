@@ -2,8 +2,9 @@ package com.reforms.sql.expr.term;
 
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
+import static com.reforms.sql.parser.SqlWords.SW_NOT;
+
 import static com.reforms.sql.expr.term.ExpressionType.ET_NOT_EXPRESSION;
-import static com.reforms.sql.expr.term.SqlWords.SW_NOT;
 
 /**
  *

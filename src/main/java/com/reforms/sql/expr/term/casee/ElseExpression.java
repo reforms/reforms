@@ -4,8 +4,9 @@ import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
+import static com.reforms.sql.parser.SqlWords.SW_ELSE;
+
 import static com.reforms.sql.expr.term.ExpressionType.ET_ELSE_EXPRESSION;
-import static com.reforms.sql.expr.term.SqlWords.SW_ELSE;
 
 /**
  * ELSE else_result_expression

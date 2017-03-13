@@ -1,7 +1,5 @@
 package com.reforms.sql.parser;
 
-import com.reforms.sql.expr.term.SqlWords;
-
 import java.util.*;
 
 /**

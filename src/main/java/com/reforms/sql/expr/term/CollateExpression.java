@@ -2,8 +2,9 @@ package com.reforms.sql.expr.term;
 
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
+import static com.reforms.sql.parser.SqlWords.SW_COLLATE;
+
 import static com.reforms.sql.expr.term.ExpressionType.ET_COLLATE_EXPRESSION;
-import static com.reforms.sql.expr.term.SqlWords.SW_COLLATE;
 
 public class CollateExpression extends Expression {
 

@@ -8,8 +8,9 @@ import com.reforms.sql.expr.viewer.SqlBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.reforms.sql.parser.SqlWords.SW_SELECT;
+
 import static com.reforms.sql.expr.term.ExpressionType.ET_SELECT_STATEMENT;
-import static com.reforms.sql.expr.term.SqlWords.SW_SELECT;
 
 public class SelectStatement extends Expression {
 

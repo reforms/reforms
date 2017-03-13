@@ -10,7 +10,7 @@ public class ComparisonPredicateExpression extends PredicateExpression {
 
     private Expression leftExpr;
 
-    private ComparisonOperatorType compOperatorType;
+    private ComparisonOperator compOperatorType;
 
     private Expression rightExpr;
 
@@ -22,11 +22,11 @@ public class ComparisonPredicateExpression extends PredicateExpression {
         this.leftExpr = leftExpr;
     }
 
-    public ComparisonOperatorType getCompOperatorType() {
+    public ComparisonOperator getCompOperatorType() {
         return compOperatorType;
     }
 
-    public void setCompOperatorType(ComparisonOperatorType compOperatorType) {
+    public void setCompOperatorType(ComparisonOperator compOperatorType) {
         this.compOperatorType = compOperatorType;
     }
 

@@ -8,9 +8,10 @@ import com.reforms.sql.expr.viewer.SqlBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.reforms.sql.parser.SqlWords.SW_BY;
+import static com.reforms.sql.parser.SqlWords.SW_GROUP;
+
 import static com.reforms.sql.expr.term.ExpressionType.ET_GROUP_BY_STATEMENT;
-import static com.reforms.sql.expr.term.SqlWords.SW_BY;
-import static com.reforms.sql.expr.term.SqlWords.SW_GROUP;
 
 public class GroupByStatement extends Expression {
 

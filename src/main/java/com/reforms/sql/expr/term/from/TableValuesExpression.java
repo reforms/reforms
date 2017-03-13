@@ -8,8 +8,9 @@ import com.reforms.sql.expr.viewer.SqlBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.reforms.sql.parser.SqlWords.SW_VALUES;
+
 import static com.reforms.sql.expr.term.ExpressionType.ET_TABLE_VALUES_EXPRESSION;
-import static com.reforms.sql.expr.term.SqlWords.SW_VALUES;
 
 public class TableValuesExpression extends TableReferenceExpression {
 

@@ -4,9 +4,10 @@ import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
+import static com.reforms.sql.parser.SqlWords.SW_IS;
+import static com.reforms.sql.parser.SqlWords.SW_NULL;
+
 import static com.reforms.sql.expr.term.ExpressionType.ET_NULLABLE_PREDICATE_EXPRESSION;
-import static com.reforms.sql.expr.term.SqlWords.SW_IS;
-import static com.reforms.sql.expr.term.SqlWords.SW_NULL;
 
 public class NullablePredicateExpression extends PredicateExpression {
 

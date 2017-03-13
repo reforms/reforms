@@ -1,6 +1,6 @@
 package com.reforms.sql.expr.term.from;
 
-import static com.reforms.sql.expr.term.SqlWords.*;
+import static com.reforms.sql.parser.SqlWords.*;
 
 /**
  *

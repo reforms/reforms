@@ -11,7 +11,7 @@ public class QuantifiedComparisonPredicateExpression extends PredicateExpression
 
     private Expression baseExpr;
 
-    private ComparisonOperatorType compOperatorType;
+    private ComparisonOperator compOperatorType;
 
     private String quantifierWord;
 
@@ -25,11 +25,11 @@ public class QuantifiedComparisonPredicateExpression extends PredicateExpression
         this.baseExpr = baseExpr;
     }
 
-    public ComparisonOperatorType getCompOperatorType() {
+    public ComparisonOperator getCompOperatorType() {
         return compOperatorType;
     }
 
-    public void setCompOperatorType(ComparisonOperatorType compOperatorType) {
+    public void setCompOperatorType(ComparisonOperator compOperatorType) {
         this.compOperatorType = compOperatorType;
     }
 

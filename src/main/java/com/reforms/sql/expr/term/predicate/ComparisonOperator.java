@@ -8,7 +8,7 @@ import java.util.Map;
  *
  * @author evgenie
  */
-public enum ComparisonOperatorType {
+public enum ComparisonOperator {
     COT_EQUALS("="),
     COT_NOT_EQUALS("<>"),
     COT_JAVA_NOT_EQUALS("!="),
@@ -17,11 +17,11 @@ public enum ComparisonOperatorType {
     COT_LESS_THAN_OR_EQUALS("<="),
     COT_GREATER_THAN_OR_EQUALS(">=");
 
-    private static final Map<String, ComparisonOperatorType> VALUE2OPERATOR = init();
+    private static final Map<String, ComparisonOperator> VALUE2OPERATOR = init();
 
-    private static Map<String, ComparisonOperatorType> init() {
-        Map<String, ComparisonOperatorType> value2operator = new HashMap<>();
-        for (ComparisonOperatorType operator : values()) {
+    private static Map<String, ComparisonOperator> init() {
+        Map<String, ComparisonOperator> value2operator = new HashMap<>();
+        for (ComparisonOperator operator : values()) {
             value2operator.put(operator.getOperator(), operator);
         }
         return Collections.unmodifiableMap(value2operator);
@@ -29,7 +29,7 @@ public enum ComparisonOperatorType {
 
     private final String operator;
 
-    private ComparisonOperatorType(String operator) {
+    private ComparisonOperator(String operator) {
         this.operator = operator;
     }
 
@@ -37,7 +37,7 @@ public enum ComparisonOperatorType {
         return operator;
     }
 
-    public static ComparisonOperatorType resolveComparisonOperatorType(String value) {
+    public static ComparisonOperator resolveComparisonOperatorType(String value) {
         return VALUE2OPERATOR.get(value);
     }
 }

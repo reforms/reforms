@@ -1,4 +1,4 @@
-package com.reforms.sql.expr.term;
+package com.reforms.sql.parser;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -110,6 +110,14 @@ public class SqlWords {
 
     public static String SW_INTERSECT = "INTERSECT";
 
+    public static String SW_TIME = "TIME";
+
+    public static String SW_DATE = "DATE";
+
+    public static String SW_TIMESTAMP = "TIMESTAMP";
+
+    public static String SW_INTERVAL = "INTERVAL";
+
     // ORACLE
     public static String SW_MINUS = "MINUS";
 
@@ -131,51 +139,48 @@ public class SqlWords {
 
     private static Map<String, Boolean> init() {
         Map<String, Boolean> words = new HashMap<>();
-        addWords(SW_SELECT, words);
-        addWords(SW_FROM, words);
-        addWords(SW_WHERE, words);
-        addWords(SW_GROUP_BY, words);
-        addWords(SW_HAVING, words);
-        addWords(SW_ORDER_BY, words);
-        addWords(SW_ALL, words);
-        addWords(SW_DISTINCT, words);
-        addWords(SW_AS, words);
-        addWords(SW_ON, words);
-        addWords(SW_INNER_JOIN, words);
-        addWords(SW_LEFT_OUTER_JOIN, words);
-        addWords(SW_RIGHT_OUTER_JOIN, words);
-        addWords(SW_FULL_OUTER_JOIN, words);
-        addWords(SW_CROSS_JOIN, words);
-        addWords(SW_NULL, words);
-        addWords(SW_TRUE, words);
-        addWords(SW_FALSE, words);
-        addWords(SW_NOT, words);
-        addWords(SW_IS, words);
-        addWords(SW_EXISTS, words);
-        addWords(SW_BETWEEN, words);
+        addWords(words, SW_SELECT);
+        addWords(words, SW_FROM);
+        addWords(words, SW_WHERE);
+        addWords(words, SW_GROUP_BY);
+        addWords(words, SW_HAVING);
+        addWords(words, SW_ORDER_BY);
+        addWords(words, SW_ALL);
+        addWords(words, SW_DISTINCT);
+        addWords(words, SW_AS);
+        addWords(words, SW_ON);
+        addWords(words, SW_INNER_JOIN);
+        addWords(words, SW_LEFT_OUTER_JOIN);
+        addWords(words, SW_RIGHT_OUTER_JOIN);
+        addWords(words, SW_FULL_OUTER_JOIN);
+        addWords(words, SW_CROSS_JOIN);
+        addWords(words, SW_NULL);
+        addWords(words, SW_TRUE);
+        addWords(words, SW_FALSE);
+        addWords(words, SW_NOT);
+        addWords(words, SW_IS);
+        addWords(words, SW_EXISTS);
+        addWords(words, SW_BETWEEN);
         addWords(words, SW_CASE, SW_WHEN, SW_THEN, SW_ELSE, SW_END);
-        addWords(SW_IN, words);
+        addWords(words, SW_IN);
         addWords(words, SW_ANY, SW_SOME);
-        addWords(SW_UNIQUE, words);
-        addWords(SW_CAST, words);
-        addWords(SW_VALUES, words);
+        addWords(words, SW_UNIQUE);
+        addWords(words, SW_CAST);
+        addWords(words, SW_VALUES);
         addWords(words, SW_UNION, SW_EXCEPT, SW_INTERSECT, SW_MINUS);
-        addWords(SW_CORRESPONDING, words);
+        addWords(words, SW_CORRESPONDING);
         addWords(words, SW_ASC, SW_DESC);
-        addWords(SW_COLLATE, words);
+        addWords(words, SW_COLLATE);
+        addWords(words, SW_TIME, SW_DATE, SW_TIMESTAMP, SW_INTERVAL);
         addWords(words, SW_LIMIT, SW_OFFSET);
         return Collections.unmodifiableMap(words);
     }
 
-    private static void addWords(Map<String, Boolean> words, String... sqlWords) {
+    private static void addWords(Map<String, Boolean> words, String ... sqlWords) {
         for (String sqlWord : sqlWords) {
-            addWords(sqlWord, words);
-        }
-    }
-
-    private static void addWords(String word, Map<String, Boolean> words) {
-        for (String singleWord : word.split("\\s+")) {
-            words.put(singleWord, Boolean.TRUE);
+            for (String singleWord : sqlWord.split("\\s+")) {
+                words.put(singleWord, Boolean.TRUE);
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 package com.reforms.sql.expr.term.value;
 
-import static com.reforms.sql.expr.term.SqlWords.SW_TRUE;
+import static com.reforms.sql.parser.SqlWords.SW_TRUE;
 
 /**
  * TRUE

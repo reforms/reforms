@@ -11,9 +11,10 @@ import com.reforms.sql.expr.term.predicate.*;
 
 import java.util.List;
 
+import static com.reforms.sql.parser.SqlWords.SW_NOT;
+
 import static com.reforms.sql.expr.term.ExpressionType.*;
-import static com.reforms.sql.expr.term.SqlWords.SW_NOT;
-import static com.reforms.sql.expr.term.predicate.ComparisonOperatorType.*;
+import static com.reforms.sql.expr.term.predicate.ComparisonOperator.*;
 
 /**
  * TODO доработка - проверить математические операции
@@ -40,7 +41,7 @@ public class PredicateModifier {
         if (ET_COMPARISON_PREDICATE_EXPRESSION == predicateExpr.getType()) {
             ComparisonPredicateExpression compExpr = (ComparisonPredicateExpression) predicateExpr;
             Expression baseExpr = getBaseExpressionFromCompExpr(filterExpr, compExpr);
-            ComparisonOperatorType cmpType = compExpr.getCompOperatorType();
+            ComparisonOperator cmpType = compExpr.getCompOperatorType();
             if (COT_EQUALS != cmpType && COT_NOT_EQUALS != cmpType && COT_JAVA_NOT_EQUALS != cmpType) {
                 throw new IllegalStateException("Не возможно изменить фильтр '" + filterExpr
                         + "' на NullablePredicate - неподдерживаемый тип операции '" + cmpType + "'");

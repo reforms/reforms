@@ -1,7 +1,7 @@
 package com.reforms.sql.expr.term;
 
-import static com.reforms.sql.expr.term.SqlWords.SW_AND;
-import static com.reforms.sql.expr.term.SqlWords.SW_OR;
+import static com.reforms.sql.parser.SqlWords.SW_AND;
+import static com.reforms.sql.parser.SqlWords.SW_OR;
 
 /**
  *

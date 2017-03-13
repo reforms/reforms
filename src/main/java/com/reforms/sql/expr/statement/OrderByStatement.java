@@ -8,9 +8,10 @@ import com.reforms.sql.expr.viewer.SqlBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.reforms.sql.parser.SqlWords.SW_BY;
+import static com.reforms.sql.parser.SqlWords.SW_ORDER;
+
 import static com.reforms.sql.expr.term.ExpressionType.ET_ORDER_BY_STATEMENT;
-import static com.reforms.sql.expr.term.SqlWords.SW_BY;
-import static com.reforms.sql.expr.term.SqlWords.SW_ORDER;
 
 public class OrderByStatement extends Expression {
 

@@ -79,22 +79,24 @@ public class UTestSqlParser {
         assertSelectQuery("SELECT age AS b3:t#");
     }
 
-//    @Test
-//    public void testCommonSqlDateAndTime() {
+    @Test
+    public void testCommonSqlDateAndTime() {
 //        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC'");
 //        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC'");
 //        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC' AS datetime_alias");
 //        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS datetime_alias");
-    //        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC' AS \"Сейчас\"");
-    //        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS \"Сейчас\"");
-//        assertSelectQuery("SELECT TIME '2004-10-19 10:23:54'");
-//        assertSelectQuery("SELECT TIME '2004-10-19 10:23:54' AS time_alias");
-//        assertSelectQuery("SELECT DATE '2004-10-19 10:23:54'");
-//        assertSelectQuery("SELECT DATE '2004-10-19 10:23:54' AS date_alias");
-//        assertSelectQuery("SELECT TIMESTAMP '2004-10-19 10:23:54'");
-//        assertSelectQuery("SELECT TIMESTAMP '2004-10-19 10:23:54' AS timestamp_alias");
-//    }
-//
+        //        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC' AS \"Сейчас\"");
+        //        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS \"Сейчас\"");
+        assertSelectQuery("SELECT TIME '2004-10-19 10:23:54'");
+        assertSelectQuery("SELECT TIME '2004-10-19 10:23:54' AS time_alias");
+        assertSelectQuery("SELECT DATE '2004-10-19 10:23:54'");
+        assertSelectQuery("SELECT DATE '2004-10-19 10:23:54' AS date_alias");
+        assertSelectQuery("SELECT TIMESTAMP '2004-10-19 10:23:54'");
+        assertSelectQuery("SELECT TIMESTAMP '2004-10-19 10:23:54' AS timestamp_alias");
+        assertSelectQuery("SELECT INTERVAL '1 day'");
+        assertSelectQuery("SELECT INTERVAL '1 day' AS timestamp_alias");
+    }
+
 //    @Test
 //    public void testPostgreSqlDateAndTime() {
     //        // Общие
