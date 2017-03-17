@@ -14,53 +14,128 @@ import static org.junit.Assert.assertEquals;
                 WHERE (client_id, name_cln, addr_cln) = (60, 'архивный юрик', 'moskow');
     2.
     assertWhereStatement("WHERE (1) MATCH (SELECT client_id FROM ibank2.clients)");
+    TODO add new test:
+    (SELECT client_id, 1 as filter FROM ibank2.clients
+             WHERE group_id = 1 AND act_time >= NOW()
+             ORDER BY client_id DESC)
+             UNION ALL
+             (SELECT client_id, 2 as filter FROM ibank2.clients
+             WHERE group_id = 1 AND act_time < NOW()
+             ORDER BY client_id DESC)
+             ORDER BY filter
+
+   TODO add new test: return List<String>
+
+
  * @author evgenie
  */
 public class UTestSqlParser {
 
     @Test
-    public void testSingleArgSelectStatement() {
-        assertSelectQuery("SELECT 2");
-        assertSelectQuery("SELECT t.*");
-        assertSelectQuery("SELECT '2'");
-        assertSelectQuery("SELECT -1.79E+30");
-        assertSelectQuery("SELECT -1.79E-30");
-        assertSelectQuery("SELECT -1E+3");
-        assertSelectQuery("SELECT age");
-        assertSelectQuery("SELECT age AS AGE");
-        assertSelectQuery("SELECT MAX(age)");
-        assertSelectQuery("SELECT MAX(age + 2)");
-        assertSelectQuery("SELECT MAX(age + (lower + 2))");
-        assertSelectQuery("SELECT MAX((age + (lower + 2)))");
-        assertSelectQuery("SELECT MAX('123')");
-        assertSelectQuery("SELECT FUNC(age1, age2)");
-        assertSelectQuery("SELECT 2 + 3");
-        assertSelectQuery("SELECT 2 + 3 AS five");
-        assertSelectQuery("SELECT 2 + 3 * 4 + 12 / 15");
-        assertSelectQuery("SELECT 2 + 3 * 4 + 12 / 15 AS expr");
-        assertSelectQuery("SELECT '2' || '3'");
-        assertSelectQuery("SELECT '2' || '3' AS strFive");
-        assertSelectQuery("SELECT *");
-        assertSelectQuery("SELECT NULL");
-        assertSelectQuery("SELECT TRUE");
-        assertSelectQuery("SELECT FALSE");
-        assertSelectQuery("SELECT ?");
-        assertSelectQuery("SELECT ALL age");
-        assertSelectQuery("SELECT DISTINCT age");
-        assertSelectQuery("SELECT (SELECT name) AS client_name");
-        assertSelectQuery("SELECT ((2 + 3) * 4 - 5) * columnName");
-        assertSelectQuery("SELECT CASE WHEN client_id = 2 THEN 20 WHEN client_id = 3 THEN 30 ELSE 40 END AS client_name FROM ibank2.clients");
-        assertSelectQuery("SELECT (CASE WHEN client_id = 2 THEN 20 WHEN client_id = 3 THEN 30 ELSE 40 END) AS client_name FROM ibank2.clients");
-        assertSelectQuery("SELECT CASE client_id WHEN 2 THEN 20 WHEN 3 THEN 30 ELSE 40 END AS client_name FROM ibank2.clients");
-        assertSelectQuery("SELECT CASE (client_id + 2) WHEN 2 THEN 20 WHEN 3 THEN 30 ELSE 40 END AS client_name FROM ibank2.clients");
-        assertSelectQuery("SELECT CASE (client_id + 2) WHEN (3 + 2) THEN (20 - 4) WHEN (3 * 5) THEN (30 / 10) ELSE (5 - 4) END AS client_name FROM ibank2.clients");
-        assertSelectQuery("SELECT CAST('123' AS VARCHAR(5))");
-        assertSelectQuery("SELECT CAST('123' AS NUMERIC) FROM ibank2.clients cl");
-        assertSelectQuery("SELECT COUNT(DISTINCT soato) FROM ibank2.clients cl");
-        assertSelectQuery("SELECT COUNT(ALL soato) FROM ibank2.clients cl");
-        assertSelectQuery("SELECT name \"Имя\" FROM local.users");
-        assertSelectQuery("SELECT name AS \"Полное Имя\" FROM local.users");
+    public void testNumbersSelectStatement() {
+        assertSelectQueryWithAsClause("SELECT 2");
+        assertSelectQueryWithAsClause("SELECT -1.79E+30");
+        assertSelectQueryWithAsClause("SELECT -1.79E-30");
+        assertSelectQueryWithAsClause("SELECT -1E+3");
+    }
 
+    @Test
+    public void testStringsSelectStatement() {
+        assertSelectQueryWithAsClause("SELECT '2'");
+        // TODO исправить парсер
+        // assertSelectQueryWithAsClause("SELECT '2'''");
+    }
+
+    @Test
+    public void testConstantsSelectStatement() {
+        assertSelectQueryWithAsClause("SELECT NULL");
+        assertSelectQueryWithAsClause("SELECT TRUE");
+        assertSelectQueryWithAsClause("SELECT FALSE");
+    }
+
+    @Test
+    public void testAsterisksSelectStatement() {
+        assertSelectQueryWithAsClause("SELECT t.*");
+        assertSelectQueryWithAsClause("SELECT *");
+    }
+
+    @Test
+    public void testQuestionsSelectStatement() {
+        assertSelectQueryWithAsClause("SELECT ?");
+    }
+
+    @Test
+    public void testColumnsSelectStatement() {
+        assertSelectQueryWithAsClause("SELECT age");
+    }
+
+    @Test
+    public void testFuncsSelectStatement() {
+        assertSelectQueryWithAsClause("SELECT MIN(age)");
+        assertSelectQueryWithAsClause("SELECT SUM(age)");
+        assertSelectQueryWithAsClause("SELECT MAX(age)");
+        assertSelectQueryWithAsClause("SELECT AVG(age)");
+        assertSelectQueryWithAsClause("SELECT COALESCE(age, 0)");
+        assertSelectQueryWithAsClause("SELECT CAST(AVG(reportsto) AS FLOAT)");
+        assertSelectQueryWithAsClause("SELECT MAX(age + 2)");
+        assertSelectQueryWithAsClause("SELECT MAX(age + (lower + 2))");
+        assertSelectQueryWithAsClause("SELECT MAX((age + (lower + 2)))");
+        assertSelectQueryWithAsClause("SELECT MAX('123')");
+        assertSelectQueryWithAsClause("SELECT FUNC(age1, age2)");
+        assertSelectQueryWithAsClause("SELECT CAST('123' AS VARCHAR(5))");
+        assertSelectQueryWithAsClause("SELECT CAST('123' AS NUMERIC)");
+        assertSelectQueryWithAsClause("SELECT COUNT(DISTINCT soato)");
+        assertSelectQueryWithAsClause("SELECT COUNT(ALL soato)");
+        assertSelectQueryWithAsClause("SELECT NULLIF(client_id, 2)");
+        assertSelectQueryWithAsClause("SELECT UPPER('tot')");
+        assertSelectQueryWithAsClause("SELECT LOWER('tot')");
+    }
+
+    @Test
+    public void testCasesSelectStatement() {
+        assertSelectQueryWithAsClause("SELECT CASE WHEN client_id = 2 THEN 20 WHEN client_id = 3 THEN 30 ELSE 40 END");
+        assertSelectQueryWithAsClause("SELECT (CASE WHEN client_id = 2 THEN 20 WHEN client_id = 3 THEN 30 ELSE 40 END)");
+        assertSelectQueryWithAsClause("SELECT CASE client_id WHEN 2 THEN 20 WHEN 3 THEN 30 ELSE 40 END");
+        assertSelectQueryWithAsClause("SELECT CASE (client_id + 2) WHEN 2 THEN 20 WHEN 3 THEN 30 ELSE 40 END");
+        assertSelectQueryWithAsClause("SELECT CASE (client_id + 2) WHEN (3 + 2) THEN (20 - 4) WHEN (3 * 5) THEN (30 / 10) ELSE (5 - 4) END");
+    }
+
+    @Test
+    public void testSelectModeSelectStatement() {
+        assertSelectQueryWithAsClause("SELECT ALL age");
+        assertSelectQueryWithAsClause("SELECT DISTINCT age");
+    }
+
+    @Test
+    public void testSubSelectSelectStatement() {
+        assertSelectQueryWithAsClause("SELECT (SELECT name)");
+    }
+
+    @Test
+    public void testMathSelectStatement() {
+        assertSelectQueryWithAsClause("SELECT 2 + 3");
+        assertSelectQueryWithAsClause("SELECT 2 + 3");
+        assertSelectQueryWithAsClause("SELECT 2 + 3 * 4 + 12 / 15");
+        assertSelectQueryWithAsClause("SELECT 2 + 3 * 4 + 12 / 15");
+        assertSelectQueryWithAsClause("SELECT '2' || '3'");
+        assertSelectQueryWithAsClause("SELECT '2' || '3'");
+        assertSelectQueryWithAsClause("SELECT ((2 + 3) * 4 - 5) * columnName");
+    }
+
+    private void assertSelectQueryWithAsClause(String query) { //AS client_name
+        for (String asClause : new String[] {
+                // TODO исправить парсер
+                // "::date",
+                // "::time",
+                //" AT TIME ZONE 'UTC' AS datetime_alias,
+                //" \"Первая\"\" колонка\"",
+                " firstColumn",
+                " AS firstColumn",
+                " \"Первая колонка\"",
+                " AS \"Первая колонка\"",
+        }) {
+            assertSelectQuery(query + asClause);
+        }
     }
 
     @Test
@@ -87,6 +162,7 @@ public class UTestSqlParser {
 //        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS datetime_alias");
         //        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC' AS \"Сейчас\"");
         //        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS \"Сейчас\"");
+        //{ts '2017-01-01 19:12:01.69'}
         assertSelectQuery("SELECT TIME '2004-10-19 10:23:54'");
         assertSelectQuery("SELECT TIME '2004-10-19 10:23:54' AS time_alias");
         assertSelectQuery("SELECT DATE '2004-10-19 10:23:54'");

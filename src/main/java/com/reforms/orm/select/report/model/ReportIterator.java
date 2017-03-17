@@ -1,19 +1,20 @@
 package com.reforms.orm.select.report.model;
 
+import com.reforms.orm.select.IResultSetReader;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import com.reforms.orm.select.report.ResultSetRecordReader;
 
 public class ReportIterator implements AutoCloseable {
 
     private PreparedStatement ps;
     private ResultSet rs;
-    private ResultSetRecordReader reader;
+
+    private IResultSetReader reader;
     private ReportRecord currentRecord;
 
-    public ReportIterator(PreparedStatement ps, ResultSetRecordReader reader) {
+    public ReportIterator(PreparedStatement ps, IResultSetReader reader) {
         this.ps = ps;
         this.reader = reader;
     }
@@ -23,7 +24,7 @@ public class ReportIterator implements AutoCloseable {
     }
 
     public boolean hasNext() throws Exception {
-        if (currentRecord == null) {
+        if (currentRecord == null && reader.canRead(rs)) {
             currentRecord = reader.read(rs);
         }
         return currentRecord != null;

@@ -6,6 +6,7 @@ import com.reforms.orm.reflex.IEnumReflexor;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import static com.reforms.orm.reflex.ClassUtils.isEnumClass;
 import static com.reforms.orm.reflex.EnumReflexor.createEnumReflexor;
 
 /**
@@ -42,10 +43,7 @@ public class EnumParamSetter implements ParamSetter {
             return false;
         }
         Class<?> clazz = value.getClass();
-        if (clazz.isEnum()) {
-            return true;
-        }
-        if (clazz.isAnonymousClass() && clazz.getSuperclass().isEnum()) {
+        if (isEnumClass(clazz)) {
             return true;
         }
         return false;

@@ -1,13 +1,12 @@
 package com.reforms.orm;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.filter.param.ParamSetterFactory;
 import com.reforms.orm.reflex.LocalCache;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.scheme.SchemeManager;
+import com.reforms.orm.select.IResultSetReaderFactory;
+import com.reforms.orm.select.ResultSetReaderFactory;
 import com.reforms.orm.select.bobj.ColumnToFieldNameConverter;
 import com.reforms.orm.select.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.select.bobj.IResultSetValueAdapter;
@@ -17,6 +16,9 @@ import com.reforms.orm.select.report.ColumnToRecordNameConverter;
 import com.reforms.orm.select.report.IColumnToRecordNameConverter;
 import com.reforms.orm.select.report.converter.ColumnValueConverterFactory;
 import com.reforms.sql.db.DbType;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class OrmConfigurator {
 
@@ -39,6 +41,7 @@ public class OrmConfigurator {
         putInstance(ParamRsReaderFactory.class, new ParamRsReaderFactory().configure().sealed());
         putInstance(IResultSetValueAdapter.class, new ResultSetValueAdapter());
         putInstance(IColumnToFieldNameConverter.class, new ColumnToFieldNameConverter());
+        putInstance(IResultSetReaderFactory.class, new ResultSetReaderFactory());
         putInstance(LocalCache.class, new LocalCache());
         SchemeManager schemeManager = new SchemeManager();
         schemeManager.setDefaultDbType(DbType.MIX);

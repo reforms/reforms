@@ -1,12 +1,13 @@
 package com.reforms.orm.reflex;
 
-import static com.reforms.orm.OrmConfigurator.getInstance;
+import com.reforms.ann.TargetField;
+import com.reforms.ann.TargetMethod;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import com.reforms.ann.TargetField;
-import com.reforms.ann.TargetMethod;
+import static com.reforms.orm.OrmConfigurator.getInstance;
+import static com.reforms.orm.reflex.ClassUtils.isEnumClass;
 
 /**
  * Реализация контракта
@@ -117,10 +118,7 @@ public class EnumReflexor implements IEnumReflexor {
         Class<?>[] params = method.getParameterTypes();
         if (params.length == 1) {
             Class<?> paramClass = params[0];
-            if (paramClass.isEnum()) {
-                return true;
-            }
-            if (paramClass.isAnonymousClass() && paramClass.getSuperclass().isEnum()) {
+            if (isEnumClass(paramClass)) {
                 return true;
             }
         }
@@ -136,10 +134,7 @@ public class EnumReflexor implements IEnumReflexor {
             return false;
         }
         Class<?> returnClass = method.getReturnType();
-        if (returnClass.isEnum()) {
-            return true;
-        }
-        if (returnClass.isAnonymousClass() && returnClass.getSuperclass().isEnum()) {
+        if (isEnumClass(returnClass)) {
             return true;
         }
         return false;

@@ -1,21 +1,22 @@
 package com.reforms.orm.select.report;
 
-import static com.reforms.orm.OrmConfigurator.getInstance;
-
-import java.sql.ResultSet;
-import java.util.List;
-
 import com.reforms.orm.select.ColumnAlias;
+import com.reforms.orm.select.IResultSetReader;
 import com.reforms.orm.select.SelectedColumn;
 import com.reforms.orm.select.report.converter.ColumnValueConverterFactory;
 import com.reforms.orm.select.report.converter.IColumnValueConverter;
 import com.reforms.orm.select.report.model.ReportRecord;
 
+import java.sql.ResultSet;
+import java.util.List;
+
+import static com.reforms.orm.OrmConfigurator.getInstance;
+
 /**
  *
  * @author evgenie
  */
-public class ResultSetRecordReader {
+public class ResultSetRecordReader implements IResultSetReader {
 
     private List<SelectedColumn> columns;
     private ColumnValueConverterFactory converterFactory;
@@ -23,14 +24,18 @@ public class ResultSetRecordReader {
 
     public ResultSetRecordReader(List<SelectedColumn> columns) {
         this.columns = columns;
-        this.converterFactory = getInstance(ColumnValueConverterFactory.class);
-        this.columnToRecordNameConverter = getInstance(IColumnToRecordNameConverter.class);
+        converterFactory = getInstance(ColumnValueConverterFactory.class);
+        columnToRecordNameConverter = getInstance(IColumnToRecordNameConverter.class);
     }
 
+    @Override
+    public boolean canRead(ResultSet rs) throws Exception {
+        return rs.next();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
     public ReportRecord read(ResultSet rs) throws Exception {
-        if (!rs.next()) {
-            return null;
-        }
         ReportRecord reportRecord = new ReportRecord();
         for (SelectedColumn column : columns) {
             ColumnAlias cAlias = column.getColumnAlias();

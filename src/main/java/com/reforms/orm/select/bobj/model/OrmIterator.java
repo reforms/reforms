@@ -1,20 +1,21 @@
 package com.reforms.orm.select.bobj.model;
 
+import com.reforms.orm.select.IResultSetReader;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import com.reforms.orm.select.bobj.ResultSetOrmReader;
 
 public class OrmIterator<OrmType> implements AutoCloseable {
 
 
     private PreparedStatement ps;
     private ResultSet rs;
-    private ResultSetOrmReader reader;
+
+    private IResultSetReader reader;
     private OrmType currentRecord;
 
-    public OrmIterator(PreparedStatement ps, ResultSetOrmReader reader) {
+    public OrmIterator(PreparedStatement ps, IResultSetReader reader) {
         this.ps = ps;
         this.reader = reader;
     }
@@ -24,8 +25,8 @@ public class OrmIterator<OrmType> implements AutoCloseable {
     }
 
     public boolean hasNext() throws Exception {
-        if (currentRecord == null) {
-            currentRecord = (OrmType) reader.read(rs);
+        if (currentRecord == null && reader.canRead(rs)) {
+            currentRecord = reader.read(rs);
         }
         return currentRecord != null;
     }

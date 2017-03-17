@@ -1,19 +1,21 @@
 package com.reforms.orm.select.bobj;
 
-import static com.reforms.orm.OrmConfigurator.getInstance;
-import static com.reforms.orm.reflex.Reflexor.createReflexor;
-
-import java.sql.ResultSet;
-import java.util.List;
-
 import com.reforms.orm.reflex.IInstanceBuilder;
 import com.reforms.orm.reflex.IReflexor;
 import com.reforms.orm.select.ColumnAlias;
+import com.reforms.orm.select.IResultSetReader;
 import com.reforms.orm.select.SelectedColumn;
 import com.reforms.orm.select.bobj.reader.IParamRsReader;
 import com.reforms.orm.select.bobj.reader.ParamRsReaderFactory;
 
-public class ResultSetOrmReader {
+import java.sql.ResultSet;
+import java.util.List;
+
+import static com.reforms.orm.OrmConfigurator.getInstance;
+import static com.reforms.orm.reflex.ClassUtils.isEnumClass;
+import static com.reforms.orm.reflex.Reflexor.createReflexor;
+
+public class ResultSetOrmReader implements IResultSetReader {
 
     private List<SelectedColumn> columns;
     private IReflexor reflexor;
@@ -23,16 +25,20 @@ public class ResultSetOrmReader {
 
     public ResultSetOrmReader(Class<?> ormClass, List<SelectedColumn> columns) {
         this.columns = columns;
-        this.reflexor = createReflexor(ormClass);
-        this.paramRsReaderFactory = getInstance(ParamRsReaderFactory.class);
-        this.valueAdapter = getInstance(IResultSetValueAdapter.class);
-        this.ormInstanceBuilder = reflexor.createInstanceBuilder();
+        reflexor = createReflexor(ormClass);
+        paramRsReaderFactory = getInstance(ParamRsReaderFactory.class);
+        valueAdapter = getInstance(IResultSetValueAdapter.class);
+        ormInstanceBuilder = reflexor.createInstanceBuilder();
     }
 
+    @Override
+    public boolean canRead(ResultSet rs) throws Exception {
+        return rs.next();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
     public Object read(ResultSet rs) throws Exception {
-        if (!rs.next()) {
-            return null;
-        }
         ormInstanceBuilder.prepare();
         for (SelectedColumn column : columns) {
             ColumnAlias cAlias = column.getColumnAlias();
@@ -41,7 +47,7 @@ public class ResultSetOrmReader {
             Object paramKey = clazz;
             if (cAlias.hasType()) {
                 paramKey = cAlias.getAliasPrefix();
-            } else if (clazz != null && (clazz.isEnum() || (clazz.isAnonymousClass() && clazz.getSuperclass().isEnum()))) {
+            } else if (isEnumClass(clazz)) {
                 paramKey = Enum.class;
             }
             IParamRsReader<?> paramReader = paramRsReaderFactory.getParamRsReader(paramKey);
