@@ -1,11 +1,9 @@
 package com.reforms.orm;
 
-import static com.reforms.orm.OrmConfigurator.getInstance;
-import static com.reforms.orm.OrmConfigurator.putInstance;
-
 import com.reforms.orm.filter.param.ParamSetter;
 import com.reforms.orm.filter.param.ParamSetterFactory;
 import com.reforms.orm.scheme.ISchemeManager;
+import com.reforms.orm.select.IResultSetReaderFactory;
 import com.reforms.orm.select.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.select.bobj.IResultSetValueAdapter;
 import com.reforms.orm.select.bobj.reader.IParamRsReader;
@@ -13,6 +11,9 @@ import com.reforms.orm.select.bobj.reader.ParamRsReaderFactory;
 import com.reforms.orm.select.report.IColumnToRecordNameConverter;
 import com.reforms.orm.select.report.converter.ColumnValueConverterFactory;
 import com.reforms.orm.select.report.converter.IColumnValueConverter;
+
+import static com.reforms.orm.OrmConfigurator.getInstance;
+import static com.reforms.orm.OrmConfigurator.putInstance;
 
 /**
  * Реализация контракта на изменение апи по работе с REFORMS
@@ -106,6 +107,20 @@ class OrmContext implements IOrmContext {
     @Override
     public void setSchemeManager(ISchemeManager newSchemeManager) {
         putInstance(ISchemeManager.class, newSchemeManager);
+    }
+
+    @Override
+    public void changeResultSetReaderFactory(CreateNewInstance<IResultSetReaderFactory> resulSetReaderFactoryCreator) {
+        IResultSetReaderFactory currentResulSetReaderFactory = getInstance(IResultSetReaderFactory.class);
+        IResultSetReaderFactory newResulSetReaderFactoryCreator = resulSetReaderFactoryCreator.createNew(currentResulSetReaderFactory);
+        if (newResulSetReaderFactoryCreator != null) {
+            putInstance(IResultSetReaderFactory.class, newResulSetReaderFactoryCreator);
+        }
+    }
+
+    @Override
+    public void setResultSetReaderFactory(IResultSetReaderFactory resultSetReaderFactory) {
+        putInstance(IResultSetReaderFactory.class, resultSetReaderFactory);
     }
 
     @Override

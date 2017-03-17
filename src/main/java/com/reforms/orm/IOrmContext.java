@@ -2,6 +2,7 @@ package com.reforms.orm;
 
 import com.reforms.orm.filter.param.ParamSetter;
 import com.reforms.orm.scheme.ISchemeManager;
+import com.reforms.orm.select.IResultSetReaderFactory;
 import com.reforms.orm.select.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.select.bobj.IResultSetValueAdapter;
 import com.reforms.orm.select.bobj.reader.IParamRsReader;
@@ -39,6 +40,10 @@ public interface IOrmContext {
     public void changeSchemeManager(CreateNewInstance<ISchemeManager> creator);
 
     public void setSchemeManager(ISchemeManager newSchemeManager);
+
+    public void changeResultSetReaderFactory(CreateNewInstance<IResultSetReaderFactory> creator);
+
+    public void setResultSetReaderFactory(IResultSetReaderFactory resultSetReaderFactory);
 
     public void sealed();
 }
