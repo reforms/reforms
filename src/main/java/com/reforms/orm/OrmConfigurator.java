@@ -4,20 +4,20 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.reforms.ann.ThreadSafe;
-import com.reforms.orm.filter.param.ParamSetterFactory;
+import com.reforms.orm.dao.IResultSetReaderFactory;
+import com.reforms.orm.dao.ResultSetReaderFactory;
+import com.reforms.orm.dao.bobj.ColumnToFieldNameConverter;
+import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
+import com.reforms.orm.dao.bobj.IResultSetValueAdapter;
+import com.reforms.orm.dao.bobj.ResultSetValueAdapter;
+import com.reforms.orm.dao.bobj.reader.ResultSetValueReaderFactory;
+import com.reforms.orm.dao.filter.param.setter.ParamSetterFactory;
+import com.reforms.orm.dao.report.ColumnToRecordNameConverter;
+import com.reforms.orm.dao.report.IColumnToRecordNameConverter;
+import com.reforms.orm.dao.report.converter.ColumnValueConverterFactory;
 import com.reforms.orm.reflex.LocalCache;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.scheme.SchemeManager;
-import com.reforms.orm.select.IResultSetReaderFactory;
-import com.reforms.orm.select.ResultSetReaderFactory;
-import com.reforms.orm.select.bobj.ColumnToFieldNameConverter;
-import com.reforms.orm.select.bobj.IColumnToFieldNameConverter;
-import com.reforms.orm.select.bobj.IResultSetValueAdapter;
-import com.reforms.orm.select.bobj.ResultSetValueAdapter;
-import com.reforms.orm.select.bobj.reader.ResultSetValueReaderFactory;
-import com.reforms.orm.select.report.ColumnToRecordNameConverter;
-import com.reforms.orm.select.report.IColumnToRecordNameConverter;
-import com.reforms.orm.select.report.converter.ColumnValueConverterFactory;
 import com.reforms.sql.db.DbType;
 
 public class OrmConfigurator {

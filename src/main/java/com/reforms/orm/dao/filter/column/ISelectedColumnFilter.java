@@ -1,0 +1,17 @@
+package com.reforms.orm.dao.filter.column;
+
+import com.reforms.orm.dao.column.SelectedColumn;
+
+/**
+ * Фильтр на ограничение выбираемых колонок
+ * @author evgenie
+ */
+public interface ISelectedColumnFilter {
+
+    /**
+     * Проверить, необходимо ли выбирать колонку указанного типа
+     * @param selectedColumn конкретная колонка
+     * @return true - выбирать необходимо, false -  иначе
+     */
+    public boolean acceptSelectedColumn(SelectedColumn selectedColumn);
+}

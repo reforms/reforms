@@ -1,6 +1,6 @@
 package com.reforms.orm.filter;
 
-import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
+import static com.reforms.orm.dao.filter.param.FilterMap.EMPTY_FILTER_MAP;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
@@ -9,8 +9,8 @@ import java.util.Iterator;
 import org.junit.Test;
 
 import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.filter.FilterMap;
-import com.reforms.orm.filter.SelectQueryPreparer;
+import com.reforms.orm.dao.filter.SelectQueryPreparer;
+import com.reforms.orm.dao.filter.param.FilterMap;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
 

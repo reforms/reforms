@@ -1,6 +1,6 @@
 package com.reforms.orm.dao.adapter;
 
-import com.reforms.orm.selectable.ISelectedColumnFilter;
+import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 
 /**
  * Контракт на формирование фильтра колонок, для выборки

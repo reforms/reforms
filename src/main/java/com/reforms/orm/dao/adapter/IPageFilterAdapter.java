@@ -1,6 +1,6 @@
 package com.reforms.orm.dao.adapter;
 
-import com.reforms.orm.filter.IPageFilter;
+import com.reforms.orm.dao.filter.page.IPageFilter;
 
 /**
  * Контракт на добавление параметров постраничной разбивки

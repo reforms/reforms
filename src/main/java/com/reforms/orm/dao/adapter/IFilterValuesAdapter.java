@@ -2,7 +2,7 @@ package com.reforms.orm.dao.adapter;
 
 import java.util.Map;
 
-import com.reforms.orm.filter.IFilterValues;
+import com.reforms.orm.dao.filter.param.IFilterValues;
 
 /**
  * Контракт на формирование фильтра значений

@@ -10,13 +10,13 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.reforms.orm.dao.OrmHandler;
-import com.reforms.orm.dao.OrmIterator;
 import com.reforms.orm.dao.ReportRecordHandler;
-import com.reforms.orm.filter.FilterMap;
-import com.reforms.orm.filter.FilterSequence;
-import com.reforms.orm.filter.IFilterValues;
-import com.reforms.orm.select.report.model.ReportRecord;
+import com.reforms.orm.dao.bobj.model.OrmHandler;
+import com.reforms.orm.dao.bobj.model.OrmIterator;
+import com.reforms.orm.dao.filter.param.FilterMap;
+import com.reforms.orm.dao.filter.param.FilterSequence;
+import com.reforms.orm.dao.filter.param.IFilterValues;
+import com.reforms.orm.dao.report.model.ReportRecord;
 
 public class UTestOrmDao extends GoodsDbTest {
 

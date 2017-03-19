@@ -1,13 +1,13 @@
 package com.reforms.orm;
 
-import com.reforms.orm.filter.param.ParamSetter;
+import com.reforms.orm.dao.IResultSetReaderFactory;
+import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
+import com.reforms.orm.dao.bobj.IResultSetValueAdapter;
+import com.reforms.orm.dao.bobj.reader.IResultSetValueReader;
+import com.reforms.orm.dao.filter.param.setter.ParamSetter;
+import com.reforms.orm.dao.report.IColumnToRecordNameConverter;
+import com.reforms.orm.dao.report.converter.IColumnValueConverter;
 import com.reforms.orm.scheme.ISchemeManager;
-import com.reforms.orm.select.IResultSetReaderFactory;
-import com.reforms.orm.select.bobj.IColumnToFieldNameConverter;
-import com.reforms.orm.select.bobj.IResultSetValueAdapter;
-import com.reforms.orm.select.bobj.reader.IResultSetValueReader;
-import com.reforms.orm.select.report.IColumnToRecordNameConverter;
-import com.reforms.orm.select.report.converter.IColumnValueConverter;
 
 /**
  * Фасад, для взаимодействия с framework REFORMS

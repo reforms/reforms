@@ -1,7 +1,7 @@
 package com.reforms.orm.dao;
 
-import com.reforms.orm.filter.IFilterValues;
-import com.reforms.orm.selectable.ISelectedColumnFilter;
+import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
+import com.reforms.orm.dao.filter.param.IFilterValues;
 
 /**
  * Контекст данных для совершения определенной операции

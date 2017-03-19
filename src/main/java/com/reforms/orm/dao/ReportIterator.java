@@ -1,7 +1,6 @@
 package com.reforms.orm.dao;
 
-import com.reforms.orm.select.IResultSetObjectReader;
-import com.reforms.orm.select.report.model.ReportRecord;
+import com.reforms.orm.dao.report.model.ReportRecord;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

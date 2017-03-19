@@ -11,12 +11,12 @@ import java.util.List;
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.IConnectionHolder;
 import com.reforms.orm.OrmConfigurator;
+import com.reforms.orm.dao.bobj.model.OrmHandler;
+import com.reforms.orm.dao.bobj.model.OrmIterator;
+import com.reforms.orm.dao.column.SelectedColumn;
+import com.reforms.orm.dao.filter.SelectQueryPreparer;
+import com.reforms.orm.dao.filter.param.FilterPrepareStatementSetter;
 import com.reforms.orm.extractor.OrmSelectColumnExtractorAndAliasModifier;
-import com.reforms.orm.filter.FilterPrepareStatementSetter;
-import com.reforms.orm.filter.SelectQueryPreparer;
-import com.reforms.orm.select.IResultSetObjectReader;
-import com.reforms.orm.select.IResultSetReaderFactory;
-import com.reforms.orm.select.SelectedColumn;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
 

@@ -2,11 +2,11 @@ package com.reforms.orm.extractor;
 
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.select.ColumnAlias;
-import com.reforms.orm.select.ColumnAliasParser;
-import com.reforms.orm.select.SelectedColumn;
-import com.reforms.orm.selectable.AllSelectedColumnFilter;
-import com.reforms.orm.selectable.ISelectedColumnFilter;
+import com.reforms.orm.dao.column.ColumnAlias;
+import com.reforms.orm.dao.column.ColumnAliasParser;
+import com.reforms.orm.dao.column.SelectedColumn;
+import com.reforms.orm.dao.filter.column.AllSelectedColumnFilter;
+import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.statement.SelectStatement;
 import com.reforms.sql.expr.term.*;
@@ -16,7 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.reforms.orm.OrmConfigurator.getInstance;
-import static com.reforms.orm.select.ColumnAliasType.CAT_S_STRING;
+import static com.reforms.orm.dao.column.ColumnAliasType.CAT_S_STRING;
 import static com.reforms.sql.expr.term.ExpressionType.ET_ALIAS_EXPRESSION;
 import static com.reforms.sql.expr.term.ExpressionType.ET_COLUMN_EXPRESSION;
 

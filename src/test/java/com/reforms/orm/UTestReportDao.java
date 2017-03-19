@@ -6,8 +6,8 @@ import org.junit.Test;
 
 import com.reforms.orm.dao.ReportIterator;
 import com.reforms.orm.dao.ReportRecordHandler;
-import com.reforms.orm.select.report.model.Report;
-import com.reforms.orm.select.report.model.ReportRecord;
+import com.reforms.orm.dao.report.model.Report;
+import com.reforms.orm.dao.report.model.ReportRecord;
 
 public class UTestReportDao extends GoodsDbTest {
 

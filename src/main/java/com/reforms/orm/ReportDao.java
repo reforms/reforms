@@ -1,16 +1,16 @@
 package com.reforms.orm;
 
-import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
-import static com.reforms.orm.selectable.AllSelectedColumnFilter.ALL_COLUMNS_FILTER;
+import static com.reforms.orm.dao.filter.column.AllSelectedColumnFilter.ALL_COLUMNS_FILTER;
+import static com.reforms.orm.dao.filter.param.FilterMap.EMPTY_FILTER_MAP;
 
 import com.reforms.orm.dao.ReportDaoAdapter;
 import com.reforms.orm.dao.ReportIterator;
 import com.reforms.orm.dao.ReportRecordHandler;
-import com.reforms.orm.filter.FilterObject;
-import com.reforms.orm.filter.FilterSequence;
-import com.reforms.orm.filter.IFilterValues;
-import com.reforms.orm.select.report.model.Report;
-import com.reforms.orm.selectable.ISelectedColumnFilter;
+import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
+import com.reforms.orm.dao.filter.param.FilterObject;
+import com.reforms.orm.dao.filter.param.FilterSequence;
+import com.reforms.orm.dao.filter.param.IFilterValues;
+import com.reforms.orm.dao.report.model.Report;
 
 /**
  * TODO фитчи - проработать вопрос:

@@ -2,6 +2,9 @@ package com.reforms.orm.dao;
 
 import java.util.List;
 
+import com.reforms.orm.dao.bobj.model.OrmHandler;
+import com.reforms.orm.dao.bobj.model.OrmIterator;
+
 /**
  * Контракт на совершение базовых операций к БД
  * @author evgenie

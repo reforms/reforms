@@ -4,17 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.reforms.orm.dao.adapter.IDaoAdapter;
-import com.reforms.orm.filter.*;
-import com.reforms.orm.selectable.CompositeSelectedColumnFilter;
-import com.reforms.orm.selectable.ISelectedColumnFilter;
-import com.reforms.orm.selectable.IndexSelectFilter;
+import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
+import com.reforms.orm.dao.bobj.model.OrmHandler;
+import com.reforms.orm.dao.bobj.model.OrmIterator;
+import com.reforms.orm.dao.filter.column.CompositeSelectedColumnFilter;
+import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
+import com.reforms.orm.dao.filter.column.IndexSelectFilter;
+import com.reforms.orm.dao.filter.page.IPageFilter;
+import com.reforms.orm.dao.filter.page.PageFilter;
+import com.reforms.orm.dao.filter.param.*;
 
 /**
  * Адаптер к dao
  * @author evgenie
  */
-public class OrmDaoAdapter implements IDaoAdapter {
+public class OrmDaoAdapter implements IOrmDaoAdapter {
 
     private final Object connectionHolder;
     private final String query;
@@ -37,13 +41,13 @@ public class OrmDaoAdapter implements IDaoAdapter {
     }
 
     @Override
-    public IDaoAdapter addSelectableIndex(int toBeSelectedIndexColumn) {
+    public IOrmDaoAdapter addSelectableIndex(int toBeSelectedIndexColumn) {
         addIndex(toBeSelectedIndexColumn);
         return this;
     }
 
     @Override
-    public IDaoAdapter addSelectableIndexes(int... toBeSelectedIndexColumns) {
+    public IOrmDaoAdapter addSelectableIndexes(int... toBeSelectedIndexColumns) {
         for (int toBeSelectedIndexColumn : toBeSelectedIndexColumns) {
             addIndex(toBeSelectedIndexColumn);
         }
@@ -60,19 +64,19 @@ public class OrmDaoAdapter implements IDaoAdapter {
     }
 
     @Override
-    public IDaoAdapter setSelectedColumnFilter(ISelectedColumnFilter filter) {
+    public IOrmDaoAdapter setSelectedColumnFilter(ISelectedColumnFilter filter) {
         selectedColumnFilter = filter;
         return this;
     }
 
     @Override
-    public IDaoAdapter addSimpleFilterValue(Object value) {
+    public IOrmDaoAdapter addSimpleFilterValue(Object value) {
         addFilterValue(value);
         return this;
     }
 
     @Override
-    public IDaoAdapter addSimpleFilterValues(Object... values) {
+    public IOrmDaoAdapter addSimpleFilterValues(Object... values) {
         for (Object value : values) {
             addFilterValue(value);
         }
@@ -87,13 +91,13 @@ public class OrmDaoAdapter implements IDaoAdapter {
     }
 
     @Override
-    public IDaoAdapter setFilterObject(Object filterBobj) {
+    public IOrmDaoAdapter setFilterObject(Object filterBobj) {
         this.filterBobj = filterBobj;
         return this;
     }
 
     @Override
-    public IDaoAdapter addFilterPair(String paramName, Object paramValue) {
+    public IOrmDaoAdapter addFilterPair(String paramName, Object paramValue) {
         if (filterMap == null) {
             filterMap = new FilterMap();
         }
@@ -102,7 +106,7 @@ public class OrmDaoAdapter implements IDaoAdapter {
     }
 
     @Override
-    public IDaoAdapter addFilterPairs(Map<String, Object> filterValues) {
+    public IOrmDaoAdapter addFilterPairs(Map<String, Object> filterValues) {
         if (filterMap == null) {
             filterMap = new FilterMap();
         }
@@ -111,25 +115,25 @@ public class OrmDaoAdapter implements IDaoAdapter {
     }
 
     @Override
-    public IDaoAdapter setFilterValue(IFilterValues filter) {
+    public IOrmDaoAdapter setFilterValue(IFilterValues filter) {
         this.filter = filter;
         return this;
     }
 
     @Override
-    public IDaoAdapter setPageLimit(int pageLimit) {
+    public IOrmDaoAdapter setPageLimit(int pageLimit) {
         this.pageLimit = pageLimit;
         return this;
     }
 
     @Override
-    public IDaoAdapter setPageOffset(int pageOffset) {
+    public IOrmDaoAdapter setPageOffset(int pageOffset) {
         this.pageOffset = pageOffset;
         return this;
     }
 
     @Override
-    public IDaoAdapter setPageOffset(IPageFilter pageFilter) {
+    public IOrmDaoAdapter setPageOffset(IPageFilter pageFilter) {
         this.pageFilter = pageFilter;
         return this;
     }

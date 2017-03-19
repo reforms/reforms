@@ -6,7 +6,8 @@ import java.math.BigDecimal;
 
 import org.junit.Test;
 
-import com.reforms.orm.filter.FilterSequence;
+import com.reforms.orm.dao.filter.page.PageFilter;
+import com.reforms.orm.dao.filter.param.FilterSequence;
 
 public class UTestFilterSequence {
 

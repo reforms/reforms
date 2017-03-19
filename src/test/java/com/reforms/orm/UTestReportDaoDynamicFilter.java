@@ -1,17 +1,17 @@
 package com.reforms.orm;
 
-import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
+import static com.reforms.orm.dao.filter.param.FilterMap.EMPTY_FILTER_MAP;
 import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 
 import org.junit.Test;
 
-import com.reforms.orm.filter.FilterMap;
-import com.reforms.orm.filter.FilterObject;
-import com.reforms.orm.filter.IFilterValues;
-import com.reforms.orm.select.report.model.Report;
-import com.reforms.orm.select.report.model.ReportRecord;
+import com.reforms.orm.dao.filter.param.FilterMap;
+import com.reforms.orm.dao.filter.param.FilterObject;
+import com.reforms.orm.dao.filter.param.IFilterValues;
+import com.reforms.orm.dao.report.model.Report;
+import com.reforms.orm.dao.report.model.ReportRecord;
 
 /**
  * TODO доработка - добавить тесты на is null/ is not null

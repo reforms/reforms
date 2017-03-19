@@ -3,8 +3,8 @@ package com.reforms.orm.extractor;
 import static com.reforms.orm.OrmConfigurator.getInstance;
 
 import com.reforms.ann.ThreadSafe;
-import com.reforms.orm.select.SelectedColumn;
-import com.reforms.orm.select.bobj.IColumnToFieldNameConverter;
+import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
+import com.reforms.orm.dao.column.SelectedColumn;
 import com.reforms.sql.expr.term.AliasExpression;
 import com.reforms.sql.expr.term.ColumnExpression;
 

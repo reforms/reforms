@@ -10,10 +10,10 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.reforms.orm.filter.FilterMap;
-import com.reforms.orm.filter.FilterSequence;
-import com.reforms.orm.filter.IFilterValues;
-import com.reforms.orm.filter.PageFilter;
+import com.reforms.orm.dao.filter.page.PageFilter;
+import com.reforms.orm.dao.filter.param.FilterMap;
+import com.reforms.orm.dao.filter.param.FilterSequence;
+import com.reforms.orm.dao.filter.param.IFilterValues;
 
 public class UTestPageFilterOrmDao extends GoodsDbTest {
 

@@ -1,7 +1,7 @@
 package com.reforms.orm.filter;
 
 import static com.reforms.orm.OrmConfigurator.getInstance;
-import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
+import static com.reforms.orm.dao.filter.param.FilterMap.EMPTY_FILTER_MAP;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -9,6 +9,7 @@ import org.junit.Test;
 import com.reforms.orm.CreateNewInstance;
 import com.reforms.orm.IOrmContext;
 import com.reforms.orm.OrmConfigurator;
+import com.reforms.orm.dao.filter.SelectQueryPreparer;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.scheme.SchemeManager;
 import com.reforms.sql.expr.query.SelectQuery;

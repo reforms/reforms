@@ -6,8 +6,8 @@ import java.math.BigDecimal;
 
 import org.junit.Test;
 
-import com.reforms.orm.select.report.model.Report;
-import com.reforms.orm.select.report.model.ReportRecord;
+import com.reforms.orm.dao.report.model.Report;
+import com.reforms.orm.dao.report.model.ReportRecord;
 
 /**
  * TODO доработка - добавить тесты на is null/ is not null

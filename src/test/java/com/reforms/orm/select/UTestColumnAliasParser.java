@@ -1,13 +1,13 @@
 package com.reforms.orm.select;
 
-import static com.reforms.orm.select.ColumnAliasType.*;
+import static com.reforms.orm.dao.column.ColumnAliasType.*;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import com.reforms.orm.select.ColumnAlias;
-import com.reforms.orm.select.ColumnAliasParser;
-import com.reforms.orm.select.ColumnAliasType;
+import com.reforms.orm.dao.column.ColumnAlias;
+import com.reforms.orm.dao.column.ColumnAliasParser;
+import com.reforms.orm.dao.column.ColumnAliasType;
 
 /**
  * Тесты парсера
