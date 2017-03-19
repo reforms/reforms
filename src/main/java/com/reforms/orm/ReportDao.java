@@ -1,24 +1,16 @@
 package com.reforms.orm;
 
+import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
+import static com.reforms.orm.selectable.AllSelectedColumnFilter.ALL_COLUMNS_FILTER;
+
+import com.reforms.orm.dao.ReportDaoAdapter;
 import com.reforms.orm.dao.ReportIterator;
 import com.reforms.orm.dao.ReportRecordHandler;
-import com.reforms.orm.extractor.ReportSelectColumnExtractorAndAliasModifier;
-import com.reforms.orm.filter.*;
-import com.reforms.orm.select.IResultSetObjectReader;
-import com.reforms.orm.select.IResultSetReaderFactory;
-import com.reforms.orm.select.SelectedColumn;
+import com.reforms.orm.filter.FilterObject;
+import com.reforms.orm.filter.FilterSequence;
+import com.reforms.orm.filter.IFilterValues;
 import com.reforms.orm.select.report.model.Report;
-import com.reforms.orm.select.report.model.ReportRecord;
-import com.reforms.sql.expr.query.SelectQuery;
-import com.reforms.sql.parser.SqlParser;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.List;
-
-import static com.reforms.orm.OrmConfigurator.getInstance;
-import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
+import com.reforms.orm.selectable.ISelectedColumnFilter;
 
 /**
  * TODO фитчи - проработать вопрос:
@@ -30,12 +22,26 @@ import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
  */
 public class ReportDao {
 
-    public Report loadReport(Object connectionHolder, String sqlQuery) throws Exception {
-        return loadReport(connectionHolder, sqlQuery, EMPTY_FILTER_MAP);
+    private Object connectionHolder;
+
+    public ReportDao(Object connectionHolder) {
+        this.connectionHolder = connectionHolder;
     }
 
-    public Report loadReport(Object connectionHolder, String sqlQuery, Object filterBobj) throws Exception {
-        return loadReport(connectionHolder, sqlQuery, new FilterObject(filterBobj));
+    public Report loadReport(String sqlQuery) throws Exception {
+        return loadReport(sqlQuery, ALL_COLUMNS_FILTER, EMPTY_FILTER_MAP);
+    }
+
+    public Report loadReport(String sqlQuery, ISelectedColumnFilter solumnFilter) throws Exception {
+        return loadReport(sqlQuery, solumnFilter, EMPTY_FILTER_MAP);
+    }
+
+    public Report loadReport(String sqlQuery, Object filterBobj) throws Exception {
+        return loadReport(sqlQuery, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
+    }
+
+    public Report loadReport(String sqlQuery, IFilterValues filter) throws Exception {
+        return loadReport(sqlQuery, ALL_COLUMNS_FILTER, filter);
     }
 
     /**
@@ -46,113 +52,83 @@ public class ReportDao {
      * @return
      * @throws Exception
      */
-    public Report loadSimpleReport(Object connectionHolder, String sqlQuery, Object... filters) throws Exception {
-        return loadReport(connectionHolder, sqlQuery, new FilterSequence(filters));
+    public Report loadSimpleReport(String sqlQuery, Object... filters) throws Exception {
+        return loadReport(sqlQuery, ALL_COLUMNS_FILTER, new FilterSequence(filters));
     }
 
-    public Report loadReport(Object connectionHolder, String sqlQuery, IFilterValues filters) throws Exception {
-        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
-        Connection connection = cHolder.getConnection(connectionHolder);
-        SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        ReportSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(ReportSelectColumnExtractorAndAliasModifier.class);
-        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
-        IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetObjectReader reportReader = rsrFactory.resolveReader(ReportRecord.class, selectedColumns);
-        Report report = new Report();
-        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
-        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
-        String preparedSqlQuery = selectQuery.toString();
-        try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
-            paramSetterEngine.setParamsTo(ps);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (reportReader.canRead(rs)) {
-                    ReportRecord reportRecord = reportReader.read(rs);
-                    report.add(reportRecord);
-                }
-            }
-        }
-        return report;
+    public Report loadSimpleReport(String sqlQuery, ISelectedColumnFilter solumnFilter, Object... filters) throws Exception {
+        return loadReport(sqlQuery, solumnFilter, new FilterSequence(filters));
     }
 
-    public void handleReport(Object connectionHolder, String sqlQuery, ReportRecordHandler handler) throws Exception {
-        handleReport(connectionHolder, sqlQuery, handler, EMPTY_FILTER_MAP);
+    public Report loadReport(String sqlQuery, ISelectedColumnFilter solumnFilter, IFilterValues filters) throws Exception {
+        ReportDaoAdapter reportAdapter = new ReportDaoAdapter(connectionHolder, sqlQuery);
+        return reportAdapter.setSelectedColumnFilter(solumnFilter).setFilterValue(filters).loadReport();
     }
 
-    public void handleReport(Object connectionHolder, String sqlQuery, ReportRecordHandler handler, Object filterBobj) throws Exception {
-        handleReport(connectionHolder, sqlQuery, handler, new FilterObject(filterBobj));
+    public void handleReport(String sqlQuery, ReportRecordHandler handler) throws Exception {
+        handleReport(sqlQuery, handler, ALL_COLUMNS_FILTER, EMPTY_FILTER_MAP);
     }
 
-    public void handleSimpleReport(Object connectionHolder, String sqlQuery, ReportRecordHandler handler, Object... filters)
-            throws Exception {
-        handleReport(connectionHolder, sqlQuery, handler, new FilterSequence(filters));
+    public void handleReport(String sqlQuery, ReportRecordHandler handler, ISelectedColumnFilter solumnFilter) throws Exception {
+        handleReport(sqlQuery, handler, solumnFilter, EMPTY_FILTER_MAP);
     }
 
-    public void handleReport(Object connectionHolder, String sqlQuery, ReportRecordHandler handler, IFilterValues filters) throws Exception {
-        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
-        Connection connection = cHolder.getConnection(connectionHolder);
-        SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        ReportSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(ReportSelectColumnExtractorAndAliasModifier.class);
-        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
-        IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetObjectReader reportReader = rsrFactory.resolveReader(ReportRecord.class, selectedColumns);
-        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
-        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
-        String preparedSqlQuery = selectQuery.toString();
-        try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
-            paramSetterEngine.setParamsTo(ps);
-            try (ResultSet rs = ps.executeQuery()) {
-                handler.startHandle();
-                while (reportReader.canRead(rs)) {
-                    ReportRecord reportRecord = reportReader.read(rs);
-                    handler.handleReportRecord(reportRecord);
-                }
-                handler.endHandle();
-            }
-        }
+    public void handleReport(String sqlQuery, ReportRecordHandler handler, Object filterBobj) throws Exception {
+        handleReport(sqlQuery, handler, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
     }
 
-    public ReportIterator loadReportIterator(Object connectionHolder, String sqlQuery) throws Exception {
-        return loadReportIterator(connectionHolder, sqlQuery, EMPTY_FILTER_MAP);
+    public void handleReport(String sqlQuery, ReportRecordHandler handler, IFilterValues filter) throws Exception {
+        handleReport(sqlQuery, handler, ALL_COLUMNS_FILTER, filter);
     }
 
-    public ReportIterator loadReportIterator(Object connectionHolder, String sqlQuery, Object filterBobj) throws Exception {
-        return loadReportIterator(connectionHolder, sqlQuery, new FilterObject(filterBobj));
+    public void handleReport(String sqlQuery, ReportRecordHandler handler, ISelectedColumnFilter solumnFilter, Object filterBobj) throws Exception {
+        handleReport(sqlQuery, handler, solumnFilter, new FilterObject(filterBobj));
     }
 
-    public ReportIterator loadSimpleReportIterator(Object connectionHolder, String sqlQuery, Object... filters) throws Exception {
-        return loadReportIterator(connectionHolder, sqlQuery, new FilterSequence(filters));
+    public void handleSimpleReport(String sqlQuery, ReportRecordHandler handler, Object... filters) throws Exception {
+        handleReport(sqlQuery, handler, ALL_COLUMNS_FILTER, new FilterSequence(filters));
     }
 
-    public ReportIterator loadReportIterator(Object connectionHolder, String sqlQuery, IFilterValues filters) throws Exception {
-        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
-        Connection connection = cHolder.getConnection(connectionHolder);
-        SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        ReportSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(ReportSelectColumnExtractorAndAliasModifier.class);
-        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
-        IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetObjectReader reportReader = rsrFactory.resolveReader(ReportRecord.class, selectedColumns);
-        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
-        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
-        String preparedSqlQuery = selectQuery.toString();
-        PreparedStatement ps = null;
-        try {
-            ps = connection.prepareStatement(preparedSqlQuery);
-            paramSetterEngine.setParamsTo(ps);
-            ReportIterator reportIterator = new ReportIterator(ps, reportReader);
-            reportIterator.prepare();
-            return reportIterator;
-        } catch (Exception ex) {
-            if (ps != null) {
-                ps.close();
-            }
-            throw ex;
-        }
+    public void handleSimpleReport(String sqlQuery, ReportRecordHandler handler, ISelectedColumnFilter solumnFilter, Object... filters) throws Exception {
+        handleReport(sqlQuery, handler, solumnFilter, new FilterSequence(filters));
     }
 
-    private SelectQuery parseSqlQuery(String sqlQuery) {
-        SqlParser sqlParser = new SqlParser(sqlQuery);
-        SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        return selectQuery;
+    public void handleReport(String sqlQuery, ReportRecordHandler handler, ISelectedColumnFilter solumnFilter, IFilterValues filters) throws Exception {
+        ReportDaoAdapter reportAdapter = new ReportDaoAdapter(connectionHolder, sqlQuery);
+        reportAdapter.setSelectedColumnFilter(solumnFilter).setFilterValue(filters).handle(handler);
+    }
+
+    public ReportIterator loadReportIterator(String sqlQuery) throws Exception {
+        return loadReportIterator(sqlQuery, ALL_COLUMNS_FILTER, EMPTY_FILTER_MAP);
+    }
+
+    public ReportIterator loadReportIterator(String sqlQuery, ISelectedColumnFilter solumnFilter) throws Exception {
+        return loadReportIterator(sqlQuery, solumnFilter, EMPTY_FILTER_MAP);
+    }
+
+    public ReportIterator loadReportIterator(String sqlQuery, Object filterBobj) throws Exception {
+        return loadReportIterator(sqlQuery, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
+    }
+
+    public ReportIterator loadReportIterator(String sqlQuery, IFilterValues filter) throws Exception {
+        return loadReportIterator(sqlQuery, ALL_COLUMNS_FILTER, filter);
+    }
+
+    public ReportIterator loadReportIterator(String sqlQuery, ISelectedColumnFilter solumnFilter, Object filterBobj) throws Exception {
+        return loadReportIterator(sqlQuery, solumnFilter, new FilterObject(filterBobj));
+    }
+
+    public ReportIterator loadSimpleReportIterator(String sqlQuery, Object... filters) throws Exception {
+        return loadReportIterator(sqlQuery, ALL_COLUMNS_FILTER, new FilterSequence(filters));
+    }
+
+    public ReportIterator loadSimpleReportIterator(String sqlQuery, ISelectedColumnFilter solumnFilter, Object... filters) throws Exception {
+        return loadReportIterator(sqlQuery, solumnFilter, new FilterSequence(filters));
+    }
+
+    public ReportIterator loadReportIterator(String sqlQuery, ISelectedColumnFilter solumnFilter, IFilterValues filters) throws Exception {
+        ReportDaoAdapter reportAdapter = new ReportDaoAdapter(connectionHolder, sqlQuery);
+        return reportAdapter.setSelectedColumnFilter(solumnFilter).setFilterValue(filters).iterate();
     }
 
 }

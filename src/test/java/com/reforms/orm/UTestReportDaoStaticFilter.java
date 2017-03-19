@@ -9,7 +9,6 @@ import java.util.Date;
 
 import org.junit.Test;
 
-import com.reforms.orm.ReportDao;
 import com.reforms.orm.dao.ReportIterator;
 import com.reforms.orm.dao.ReportRecordHandler;
 import com.reforms.orm.filter.FilterMap;
@@ -94,7 +93,7 @@ public class UTestReportDaoStaticFilter extends GoodsDbTest {
 
     @Test
     public void runTestReportDaoStaticFilter_loadReportIterator() throws Exception {
-        ReportDao reportDao = new ReportDao();
+        ReportDao reportDao = new ReportDao(h2ds);
         FilterMap filters = new FilterMap();
         filters.putValue("id", 2L);
         filters.putValue("name", "Подушки");
@@ -104,7 +103,7 @@ public class UTestReportDaoStaticFilter extends GoodsDbTest {
         Date actTimeBefore = sdf.parse("02.01.2017 19:13:01.691");
         filters.putValue("act_time_after", actTimeAfter);
         filters.putValue("act_time_before", actTimeBefore);
-        try (ReportIterator reportIterator = reportDao.loadReportIterator(h2ds, SELECT_GOODS_FULL_QUERY, filters)) {
+        try (ReportIterator reportIterator = reportDao.loadReportIterator(SELECT_GOODS_FULL_QUERY, filters)) {
             assertTrue(reportIterator.hasNext());
             assertReportRecord(reportIterator.next(), "2", "Подушки", "Белые", "200.00", "PR-75", "02.01.2017 19:13:01.690");
             assertFalse(reportIterator.hasNext());
@@ -113,7 +112,7 @@ public class UTestReportDaoStaticFilter extends GoodsDbTest {
 
     @Test
     public void runTestReportDaoStaticFilter_handleReport() throws Exception {
-        ReportDao reportDao = new ReportDao();
+        ReportDao reportDao = new ReportDao(h2ds);
         FilterMap filters = new FilterMap();
         filters.putValue("id", 3L);
         filters.putValue("name", "Одеяло");
@@ -123,7 +122,7 @@ public class UTestReportDaoStaticFilter extends GoodsDbTest {
         Date actTimeBefore = sdf.parse("03.01.2017 19:14:01.691");
         filters.putValue("act_time_after", actTimeAfter);
         filters.putValue("act_time_before", actTimeBefore);
-        reportDao.handleReport(h2ds, SELECT_GOODS_FULL_QUERY, new ReportRecordHandler() {
+        reportDao.handleReport(SELECT_GOODS_FULL_QUERY, new ReportRecordHandler() {
             int index = 0;
 
             @Override
@@ -180,23 +179,23 @@ public class UTestReportDaoStaticFilter extends GoodsDbTest {
     }
 
     private void assertFullReport(String query, FilterMap filters) throws Exception {
-        ReportDao reportDao = new ReportDao();
-        Report report = reportDao.loadReport(h2ds, query, filters);
+        ReportDao reportDao = new ReportDao(h2ds);
+        Report report = reportDao.loadReport(query, filters);
         assertReportRecord(report.get(0), "1", "Тапочки", "Мягкие", "100.00", "TR-75", "01.01.2017 19:12:01.690");
         assertReportRecord(report.get(1), "2", "Подушки", "Белые", "200.00", "PR-75", "02.01.2017 19:13:01.690");
         assertReportRecord(report.get(2), "3", "Одеяло", "Пуховое", "300.00", "ZR-75", "03.01.2017 19:14:01.690");
     }
 
     private void assertReport(String query, IFilterValues filters) throws Exception {
-        ReportDao reportDao = new ReportDao();
-        Report report = reportDao.loadReport(h2ds, query, filters);
+        ReportDao reportDao = new ReportDao(h2ds);
+        Report report = reportDao.loadReport(query, filters);
         assertEquals("Ожижается 1 запись", 1, report.size());
         assertReportRecord(report.get(0), "1", "Тапочки", "Мягкие", "100.00", "TR-75", "01.01.2017 19:12:01.690");
     }
 
     private void assertSimpleReport(String query, Object... filters) throws Exception {
-        ReportDao reportDao = new ReportDao();
-        Report report = reportDao.loadSimpleReport(h2ds, query, filters);
+        ReportDao reportDao = new ReportDao(h2ds);
+        Report report = reportDao.loadSimpleReport(query, filters);
         assertEquals("Ожижается 1 запись", 1, report.size());
         assertReportRecord(report.get(0), "1", "Тапочки", "Мягкие", "100.00", "TR-75", "01.01.2017 19:12:01.690");
     }

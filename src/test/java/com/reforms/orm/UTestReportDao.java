@@ -44,8 +44,8 @@ public class UTestReportDao extends GoodsDbTest {
 
     @Test
     public void runTestReportDao_loadReportIterator() throws Exception {
-        ReportDao reportDao = new ReportDao();
-        try (ReportIterator reportIterator = reportDao.loadReportIterator(h2ds, SELECT_GOODS_FULL_QUERY)) {
+        ReportDao reportDao = new ReportDao(h2ds);
+        try (ReportIterator reportIterator = reportDao.loadReportIterator(SELECT_GOODS_FULL_QUERY)) {
             assertTrue(reportIterator.hasNext());
             assertReportRecord(reportIterator.next(), "1", "Тапочки", "Мягкие", "100.00", "TR-75", "01.01.2017 19:12:01.690");
             assertTrue(reportIterator.hasNext());
@@ -58,8 +58,8 @@ public class UTestReportDao extends GoodsDbTest {
 
     @Test
     public void runTestReportDao_handleReport() throws Exception {
-        ReportDao reportDao = new ReportDao();
-        reportDao.handleReport(h2ds, SELECT_GOODS_FULL_QUERY, new ReportRecordHandler() {
+        ReportDao reportDao = new ReportDao(h2ds);
+        reportDao.handleReport(SELECT_GOODS_FULL_QUERY, new ReportRecordHandler() {
             int index = 0;
 
             @Override
@@ -90,8 +90,8 @@ public class UTestReportDao extends GoodsDbTest {
     }
 
     private void assertReport(String query) throws Exception {
-        ReportDao reportDao = new ReportDao();
-        Report report = reportDao.loadReport(h2ds, query);
+        ReportDao reportDao = new ReportDao(h2ds);
+        Report report = reportDao.loadReport(query);
         assertReportRecord(report.get(0), "1", "Тапочки", "Мягкие", "100.00", "TR-75", "01.01.2017 19:12:01.690");
         assertReportRecord(report.get(1), "2", "Подушки", "Белые", "200.00", "PR-75", "02.01.2017 19:13:01.690");
         assertReportRecord(report.get(2), "3", "Одеяло", "Пуховое", "300.00", "ZR-75", "03.01.2017 19:14:01.690");

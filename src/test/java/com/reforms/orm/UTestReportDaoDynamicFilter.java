@@ -67,31 +67,31 @@ public class UTestReportDaoDynamicFilter extends GoodsDbTest {
     }
 
     private void assertFullReport(String query, IFilterValues filters) throws Exception {
-        ReportDao reportDao = new ReportDao();
-        Report report = reportDao.loadReport(h2ds, query, filters);
+        ReportDao reportDao = new ReportDao(h2ds);
+        Report report = reportDao.loadReport(query, filters);
         assertReportRecord(report.get(0), "1", "Тапочки", "Мягкие", "100.00", "TR-75", "01.01.2017 19:12:01.690");
         assertReportRecord(report.get(1), "2", "Подушки", "Белые", "200.00", "PR-75", "02.01.2017 19:13:01.690");
         assertReportRecord(report.get(2), "3", "Одеяло", "Пуховое", "300.00", "ZR-75", "03.01.2017 19:14:01.690");
     }
 
     private void assertFullSimpleReport(String query, Object... filters) throws Exception {
-        ReportDao reportDao = new ReportDao();
-        Report report = reportDao.loadSimpleReport(h2ds, query, filters);
+        ReportDao reportDao = new ReportDao(h2ds);
+        Report report = reportDao.loadSimpleReport(query, filters);
         assertReportRecord(report.get(0), "1", "Тапочки", "Мягкие", "100.00", "TR-75", "01.01.2017 19:12:01.690");
         assertReportRecord(report.get(1), "2", "Подушки", "Белые", "200.00", "PR-75", "02.01.2017 19:13:01.690");
         assertReportRecord(report.get(2), "3", "Одеяло", "Пуховое", "300.00", "ZR-75", "03.01.2017 19:14:01.690");
     }
 
     private void assertReport(String query, IFilterValues filters) throws Exception {
-        ReportDao reportDao = new ReportDao();
-        Report report = reportDao.loadReport(h2ds, query, filters);
+        ReportDao reportDao = new ReportDao(h2ds);
+        Report report = reportDao.loadReport(query, filters);
         assertEquals("Ожижается 1 запись", 1, report.size());
         assertReportRecord(report.get(0), "1", "Тапочки", "Мягкие", "100.00", "TR-75", "01.01.2017 19:12:01.690");
     }
 
     private void assertSimpleReport(String query, Object... filters) throws Exception {
-        ReportDao reportDao = new ReportDao();
-        Report report = reportDao.loadSimpleReport(h2ds, query, filters);
+        ReportDao reportDao = new ReportDao(h2ds);
+        Report report = reportDao.loadSimpleReport(query, filters);
         assertEquals("Ожижается 1 запись", 1, report.size());
         assertReportRecord(report.get(0), "1", "Тапочки", "Мягкие", "100.00", "TR-75", "01.01.2017 19:12:01.690");
     }

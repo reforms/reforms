@@ -29,8 +29,8 @@ public class UTestReportDaoQuestionFilter extends GoodsDbTest {
     }
 
     private void assertSimpleReport(String query, Object... filters) throws Exception {
-        ReportDao reportDao = new ReportDao();
-        Report report = reportDao.loadSimpleReport(h2ds, query, filters);
+        ReportDao reportDao = new ReportDao(h2ds);
+        Report report = reportDao.loadSimpleReport(query, filters);
         assertEquals("Ожижается 1 запись", 1, report.size());
         assertReportRecord(report.get(0), "1", "Тапочки", "Мягкие", "100.00", "TR-75", "01.01.2017 19:12:01.690");
     }
