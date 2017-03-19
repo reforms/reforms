@@ -11,6 +11,7 @@ public class FilterObject implements IFilterValues {
 
     private Object filter;
     private IReflexor reflexor;
+    private IPageFilter pageFilter;
 
     public FilterObject(Object filter) {
         this.filter = filter;
@@ -35,6 +36,9 @@ public class FilterObject implements IFilterValues {
 
     @Override
     public Integer getPageLimit() {
+        if (pageFilter != null && pageFilter.hasPageFilter() && pageFilter.getPageLimit() != null) {
+            return pageFilter.getPageLimit();
+        }
         if (reflexor.hasKey("pageLimit")) {
             Object pageLimit = reflexor.getValue(filter, "pageLimit");
             if (pageLimit instanceof Integer) {
@@ -46,6 +50,9 @@ public class FilterObject implements IFilterValues {
 
     @Override
     public Integer getPageOffset() {
+        if (pageFilter != null && pageFilter.hasPageFilter() && pageFilter.getPageOffset() != null) {
+            return pageFilter.getPageOffset();
+        }
         if (reflexor.hasKey("pageOffset")) {
             Object pageOffset = reflexor.getValue(filter, "pageOffset");
             if (pageOffset instanceof Integer) {
@@ -53,6 +60,11 @@ public class FilterObject implements IFilterValues {
             }
         }
         return null;
+    }
+
+    @Override
+    public void applyPageFilter(IPageFilter newPageFiler) {
+        this.pageFilter = newPageFiler;
     }
 
 }

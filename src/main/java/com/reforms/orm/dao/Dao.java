@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.IConnectionHolder;
 import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.extractor.OrmSelectColumnExtractorAndAliasModifier;
@@ -23,6 +24,7 @@ import com.reforms.sql.parser.SqlParser;
  *
  * @author evgenie
  */
+@ThreadSafe
 public class Dao implements IDao {
 
     @Override

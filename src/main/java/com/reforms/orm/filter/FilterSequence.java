@@ -10,7 +10,7 @@ import java.util.Map;
 public class FilterSequence implements IFilterValues {
 
     private int pageIndex;
-    private PageFilter pageFilter;
+    private IPageFilter pageFilter;
     private Object[] sequenses;
 
     private Map<String, Integer> filterNames = new HashMap<>();
@@ -20,8 +20,8 @@ public class FilterSequence implements IFilterValues {
         pageIndex = -1;
         for (int index = 0; index < sequenses.length; index++) {
             Object value = sequenses[index];
-            if (value instanceof PageFilter) {
-                pageFilter = (PageFilter) value;
+            if (value instanceof IPageFilter) {
+                pageFilter = (IPageFilter) value;
                 pageIndex = index;
             }
         }
@@ -61,6 +61,16 @@ public class FilterSequence implements IFilterValues {
     @Override
     public Integer getPageOffset() {
         return pageFilter.getPageOffset();
+    }
+
+    @Override
+    public void applyPageFilter(IPageFilter newPageFiler) {
+        if (pageIndex != -1) {
+            this.pageFilter = newPageFiler;
+        } else {
+            pageIndex = sequenses.length;
+            pageFilter = newPageFiler;
+        }
     }
 
 }

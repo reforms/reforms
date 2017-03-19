@@ -1,6 +1,8 @@
 package com.reforms.orm;
 
 import com.reforms.ann.ThreadSafe;
+import com.reforms.orm.dao.Dao;
+import com.reforms.orm.dao.IDao;
 import com.reforms.orm.filter.param.ParamSetterFactory;
 import com.reforms.orm.reflex.LocalCache;
 import com.reforms.orm.scheme.ISchemeManager;
@@ -43,6 +45,7 @@ public class OrmConfigurator {
         putInstance(IColumnToFieldNameConverter.class, new ColumnToFieldNameConverter());
         putInstance(IResultSetReaderFactory.class, new ResultSetReaderFactory());
         putInstance(LocalCache.class, new LocalCache());
+        putInstance(IDao.class, new Dao());
         SchemeManager schemeManager = new SchemeManager();
         schemeManager.setDefaultDbType(DbType.MIX);
         putInstance(ISchemeManager.class, schemeManager);

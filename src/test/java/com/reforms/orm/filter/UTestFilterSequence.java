@@ -13,7 +13,7 @@ public class UTestFilterSequence {
     @Test
     public void runTest_FilterSequence() {
         BigDecimal price = new BigDecimal("100.00");
-        FilterSequence filters = new FilterSequence(1L, "Тапочки", new PageFilterImpl(25, 50), price);
+        FilterSequence filters = new FilterSequence(1L, "Тапочки", new PageFilter(25, 50), price);
         assertEquals(1L, filters.get("id"));
         assertEquals("Тапочки", filters.get("name"));
         assertEquals(price, filters.get("price"));

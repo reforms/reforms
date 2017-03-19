@@ -1,15 +1,32 @@
 package com.reforms.orm.filter;
 
-/**
- * Контракт на получение параметров для постраничной загрузки данных
- * @author evgenie
- */
-public interface PageFilter {
+public class PageFilter implements IPageFilter {
 
-    public boolean hasPageFilter();
+    private Integer pageLimit;
+    private Integer pageOffset;
 
-    public Integer getPageLimit();
+    public PageFilter() {
+        this(null, null);
+    }
 
-    public Integer getPageOffset();
+    public PageFilter(Integer pageLimit, Integer pageOffset) {
+        this.pageLimit = pageLimit;
+        this.pageOffset = pageOffset;
+    }
+
+    @Override
+    public boolean hasPageFilter() {
+        return pageLimit != null && pageOffset != null;
+    }
+
+    @Override
+    public Integer getPageLimit() {
+        return pageLimit;
+    }
+
+    @Override
+    public Integer getPageOffset() {
+        return pageOffset;
+    }
 
 }

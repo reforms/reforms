@@ -1,23 +1,16 @@
 package com.reforms.orm;
 
-import com.reforms.orm.dao.OrmHandler;
-import com.reforms.orm.dao.OrmIterator;
-import com.reforms.orm.extractor.OrmSelectColumnExtractorAndAliasModifier;
-import com.reforms.orm.filter.*;
-import com.reforms.orm.select.IResultSetObjectReader;
-import com.reforms.orm.select.IResultSetReaderFactory;
-import com.reforms.orm.select.SelectedColumn;
-import com.reforms.sql.expr.query.SelectQuery;
-import com.reforms.sql.parser.SqlParser;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
-
 import static com.reforms.orm.OrmConfigurator.getInstance;
 import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
+import static com.reforms.orm.selectable.AllSelectedColumnFilter.ALL_COLUMNS_FILTER;
+
+import java.util.List;
+
+import com.reforms.orm.dao.*;
+import com.reforms.orm.filter.FilterObject;
+import com.reforms.orm.filter.FilterSequence;
+import com.reforms.orm.filter.IFilterValues;
+import com.reforms.orm.selectable.ISelectedColumnFilter;
 
 public class OrmDao {
 
@@ -28,156 +21,174 @@ public class OrmDao {
     }
 
     public <OrmType> OrmType loadOrm(Class<OrmType> ormClass, String sqlQuery, Object filterBobj) throws Exception {
-        return loadOrm(ormClass, sqlQuery, new FilterObject(filterBobj));
+        return loadOrm(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
+    }
+
+    public <OrmType> OrmType loadOrm(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter, Object filterBobj)
+            throws Exception {
+        return loadOrm(ormClass, sqlQuery, solumnFilter, new FilterObject(filterBobj));
+    }
+
+    public <OrmType> OrmType loadOrm(Class<OrmType> ormClass, String sqlQuery, IFilterValues filters) throws Exception {
+        return loadOrm(ormClass, sqlQuery, ALL_COLUMNS_FILTER, filters);
     }
 
     public <OrmType> OrmType loadSimpleOrm(Class<OrmType> ormClass, String sqlQuery, Object... filters) throws Exception {
-        return loadOrm(ormClass, sqlQuery, new FilterSequence(filters));
+        return loadOrm(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterSequence(filters));
     }
 
-    @SuppressWarnings("unchecked")
-    public <OrmType> OrmType loadOrm(Class<OrmType> ormClass, String sqlQuery, IFilterValues filters) throws Exception {
-        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
-        Connection connection = cHolder.getConnection(connectionHolder);
-        SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
-        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
-        IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetObjectReader ormReader = rsrFactory.resolveReader(ormClass, selectedColumns);
-        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
-        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
-        String preparedSqlQuery = selectQuery.toString();
-        try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
-            paramSetterEngine.setParamsTo(ps);
-            try (ResultSet rs = ps.executeQuery()) {
-                OrmType orm = null;
-                if (ormReader.canRead(rs)) {
-                    orm = ormReader.read(rs);
-                }
-                return orm;
-            }
-        }
+    public <OrmType> OrmType loadSimpleOrm(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter, Object... filters)
+            throws Exception {
+        return loadOrm(ormClass, sqlQuery, solumnFilter, new FilterSequence(filters));
+    }
+
+    public <OrmType> OrmType loadOrm(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter, IFilterValues filters)
+            throws Exception {
+        DaoContext daoCtx = new DaoContext();
+        daoCtx.setConnectionHolder(connectionHolder);
+        daoCtx.setOrmType(ormClass);
+        daoCtx.setQuery(sqlQuery);
+        daoCtx.setSelectedColumnFilter(solumnFilter);
+        daoCtx.setFilterValues(filters);
+        return getDao().load(daoCtx);
     }
 
     public <OrmType> List<OrmType> loadOrms(Class<OrmType> ormClass, String sqlQuery) throws Exception {
-        return loadOrms(ormClass, sqlQuery, EMPTY_FILTER_MAP);
+        return loadOrms(ormClass, sqlQuery, ALL_COLUMNS_FILTER, EMPTY_FILTER_MAP);
+    }
+
+    public <OrmType> List<OrmType> loadOrms(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter) throws Exception {
+        return loadOrms(ormClass, sqlQuery, solumnFilter, EMPTY_FILTER_MAP);
     }
 
     public <OrmType> List<OrmType> loadOrms(Class<OrmType> ormClass, String sqlQuery, Object filterBobj) throws Exception {
-        return loadOrms(ormClass, sqlQuery, new FilterObject(filterBobj));
+        return loadOrms(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
+    }
+
+    public <OrmType> List<OrmType> loadOrms(Class<OrmType> ormClass, String sqlQuery, IFilterValues filter) throws Exception {
+        return loadOrms(ormClass, sqlQuery, ALL_COLUMNS_FILTER, filter);
+    }
+
+    public <OrmType> List<OrmType> loadOrms(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter, Object filterBobj)
+            throws Exception {
+        return loadOrms(ormClass, sqlQuery, solumnFilter, new FilterObject(filterBobj));
     }
 
     public <OrmType> List<OrmType> loadSimpleOrms(Class<OrmType> ormClass, String sqlQuery, Object... filters) throws Exception {
-        return loadOrms(ormClass, sqlQuery, new FilterSequence(filters));
+        return loadOrms(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterSequence(filters));
     }
 
-    @SuppressWarnings("unchecked")
-    public <OrmType> List<OrmType> loadOrms(Class<OrmType> ormClass, String sqlQuery, IFilterValues filters) throws Exception {
-        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
-        Connection connection = cHolder.getConnection(connectionHolder);
-        SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
-        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
-        IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetObjectReader ormReader = rsrFactory.resolveReader(ormClass, selectedColumns);
-        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
-        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
-        String preparedSqlQuery = selectQuery.toString();
-        List<OrmType> orms = new ArrayList<>();
-        try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
-            paramSetterEngine.setParamsTo(ps);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (ormReader.canRead(rs)) {
-                    OrmType orm = ormReader.read(rs);
-                    orms.add(orm);
-                }
-            }
-        }
-        return orms;
+    public <OrmType> List<OrmType> loadSimpleOrms(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter,
+            Object... filters) throws Exception {
+        return loadOrms(ormClass, sqlQuery, solumnFilter, new FilterSequence(filters));
+    }
+
+    public <OrmType> List<OrmType> loadOrms(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter,
+            IFilterValues filters) throws Exception {
+        DaoContext daoCtx = new DaoContext();
+        daoCtx.setConnectionHolder(connectionHolder);
+        daoCtx.setOrmType(ormClass);
+        daoCtx.setQuery(sqlQuery);
+        daoCtx.setSelectedColumnFilter(solumnFilter);
+        daoCtx.setFilterValues(filters);
+        return getDao().loads(daoCtx);
     }
 
     public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, Object filterBobj)
             throws Exception {
-        handleOrms(ormClass, sqlQuery, handler, new FilterObject(filterBobj));
+        handleOrms(ormClass, sqlQuery, handler, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
+    }
+
+    public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, IFilterValues filter)
+            throws Exception {
+        handleOrms(ormClass, sqlQuery, handler, ALL_COLUMNS_FILTER, filter);
+    }
+
+    public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler,
+            ISelectedColumnFilter solumnFilter, Object filterBobj)
+            throws Exception {
+        handleOrms(ormClass, sqlQuery, handler, solumnFilter, new FilterObject(filterBobj));
     }
 
     public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler) throws Exception {
-        handleOrms(ormClass, sqlQuery, handler, EMPTY_FILTER_MAP);
+        handleOrms(ormClass, sqlQuery, handler, ALL_COLUMNS_FILTER, EMPTY_FILTER_MAP);
+    }
+
+    public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler,
+            ISelectedColumnFilter solumnFilter) throws Exception {
+        handleOrms(ormClass, sqlQuery, handler, solumnFilter, EMPTY_FILTER_MAP);
     }
 
     public <OrmType> void handleSimpleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, Object... filters)
             throws Exception {
-        handleOrms(ormClass, sqlQuery, handler, new FilterSequence(filters));
+        handleOrms(ormClass, sqlQuery, handler, ALL_COLUMNS_FILTER, new FilterSequence(filters));
     }
 
-    public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, IFilterValues filters)
+    public <OrmType> void handleSimpleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler,
+            ISelectedColumnFilter solumnFilter, Object... filters)
             throws Exception {
-        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
-        Connection connection = cHolder.getConnection(connectionHolder);
-        SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
-        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
-        IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetObjectReader ormReader = rsrFactory.resolveReader(ormClass, selectedColumns);
-        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
-        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
-        String preparedSqlQuery = selectQuery.toString();
-        try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
-            paramSetterEngine.setParamsTo(ps);
-            try (ResultSet rs = ps.executeQuery()) {
-                handler.startHandle();
-                while (ormReader.canRead(rs)) {
-                    OrmType orm = ormReader.read(rs);
-                    handler.handleOrm(orm);
-                }
-                handler.endHandle();
-            }
-        }
+        handleOrms(ormClass, sqlQuery, handler, solumnFilter, new FilterSequence(filters));
+    }
+
+    @SuppressWarnings("unchecked")
+    public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler,
+            ISelectedColumnFilter solumnFilter, IFilterValues filters)
+            throws Exception {
+        DaoContext daoCtx = new DaoContext();
+        daoCtx.setConnectionHolder(connectionHolder);
+        daoCtx.setOrmType(ormClass);
+        daoCtx.setQuery(sqlQuery);
+        daoCtx.setSelectedColumnFilter(solumnFilter);
+        daoCtx.setFilterValues(filters);
+        getDao().handle(daoCtx, (OrmHandler<Object>) handler);
+
     }
 
     public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery, Object filterBobj) throws Exception {
-        return loadOrmIterator(ormClass, sqlQuery, new FilterObject(filterBobj));
+        return loadOrmIterator(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
+    }
+
+    public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery, IFilterValues filter) throws Exception {
+        return loadOrmIterator(ormClass, sqlQuery, ALL_COLUMNS_FILTER, filter);
+    }
+
+    public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter,
+            Object filterBobj) throws Exception {
+        return loadOrmIterator(ormClass, sqlQuery, solumnFilter, new FilterObject(filterBobj));
     }
 
     public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery) throws Exception {
-        return loadOrmIterator(ormClass, sqlQuery, EMPTY_FILTER_MAP);
+        return loadOrmIterator(ormClass, sqlQuery, ALL_COLUMNS_FILTER, EMPTY_FILTER_MAP);
+    }
+
+    public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter)
+            throws Exception {
+        return loadOrmIterator(ormClass, sqlQuery, solumnFilter, EMPTY_FILTER_MAP);
     }
 
     public <OrmType> OrmIterator<OrmType> loadSimpleOrmIterator(Class<OrmType> ormClass, String sqlQuery, Object... filters)
             throws Exception {
-        return loadOrmIterator(ormClass, sqlQuery, new FilterSequence(filters));
+        return loadOrmIterator(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterSequence(filters));
     }
 
-    public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery, IFilterValues filters) throws Exception {
-        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
-        Connection connection = cHolder.getConnection(connectionHolder);
-        SelectQuery selectQuery = parseSqlQuery(sqlQuery);
-        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
-        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
-        IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetObjectReader ormReader = rsrFactory.resolveReader(ormClass, selectedColumns);
-        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
-        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
-        String preparedSqlQuery = selectQuery.toString();
-        PreparedStatement ps = null;
-        try {
-            ps = connection.prepareStatement(preparedSqlQuery);
-            paramSetterEngine.setParamsTo(ps);
-            OrmIterator<OrmType> ormIterator = new OrmIterator<OrmType>(ps, ormReader);
-            ormIterator.prepare();
-            return ormIterator;
-        } catch (Exception ex) {
-            if (ps != null) {
-                ps.close();
-            }
-            throw ex;
-        }
+    public <OrmType> OrmIterator<OrmType> loadSimpleOrmIterator(Class<OrmType> ormClass, String sqlQuery,
+            ISelectedColumnFilter solumnFilter, Object... filters)
+            throws Exception {
+        return loadOrmIterator(ormClass, sqlQuery, solumnFilter, new FilterSequence(filters));
     }
 
-    private SelectQuery parseSqlQuery(String sqlQuery) {
-        SqlParser sqlParser = new SqlParser(sqlQuery);
-        SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        return selectQuery;
+    public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter,
+            IFilterValues filters) throws Exception {
+        DaoContext daoCtx = new DaoContext();
+        daoCtx.setConnectionHolder(connectionHolder);
+        daoCtx.setOrmType(ormClass);
+        daoCtx.setQuery(sqlQuery);
+        daoCtx.setSelectedColumnFilter(solumnFilter);
+        daoCtx.setFilterValues(filters);
+        return getDao().iterate(daoCtx);
     }
 
+    private IDao getDao() {
+        return getInstance(IDao.class);
+    }
 }

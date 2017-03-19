@@ -124,6 +124,18 @@ public class FilterMap implements IFilterValues {
     }
 
     @Override
+    public void applyPageFilter(IPageFilter newPageFiler) {
+        if (newPageFiler != null) {
+            if (newPageFiler.getPageLimit() != null) {
+                setPageLimit(newPageFiler.getPageLimit());
+            }
+            if (newPageFiler.getPageOffset() != null) {
+                setPageOffset(newPageFiler.getPageOffset());
+            }
+        }
+    }
+
+    @Override
     public Integer getPageOffset() {
         Object pageOffset = getValue(PAGE_OFFSET_KEY, null);
         if (pageOffset instanceof Integer) {

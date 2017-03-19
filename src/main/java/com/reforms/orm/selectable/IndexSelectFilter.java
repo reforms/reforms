@@ -13,6 +13,13 @@ public class IndexSelectFilter implements ISelectedColumnFilter {
 
     private List<Integer> indexes = new ArrayList<>();
 
+    public IndexSelectFilter() {
+    }
+
+    public IndexSelectFilter(List<Integer> indexes) {
+        this.indexes.addAll(indexes);
+    }
+
     public void addIndex(int index) {
         indexes.add(index);
     }

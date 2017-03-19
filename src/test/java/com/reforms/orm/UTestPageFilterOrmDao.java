@@ -13,7 +13,7 @@ import org.junit.Test;
 import com.reforms.orm.filter.FilterMap;
 import com.reforms.orm.filter.FilterSequence;
 import com.reforms.orm.filter.IFilterValues;
-import com.reforms.orm.filter.PageFilterImpl;
+import com.reforms.orm.filter.PageFilter;
 
 public class UTestPageFilterOrmDao extends GoodsDbTest {
 
@@ -56,16 +56,16 @@ public class UTestPageFilterOrmDao extends GoodsDbTest {
 
     @Test
     public void runPageOrmDao_FilterSequence() throws Exception {
-        PageFilterImpl pageFilter = new PageFilterImpl(1, 0);
+        PageFilter pageFilter = new PageFilter(1, 0);
         loadAndAssertOrm(SELECT_GOODS_QUERY_2, new FilterSequence(pageFilter), GOODS_1);
 
-        pageFilter = new PageFilterImpl(2, 0);
+        pageFilter = new PageFilter(2, 0);
         loadAndAssertOrm(SELECT_GOODS_QUERY_2, new FilterSequence(pageFilter), GOODS_1, GOODS_2);
 
-        pageFilter = new PageFilterImpl(3, 0);
+        pageFilter = new PageFilter(3, 0);
         loadAndAssertOrm(SELECT_GOODS_QUERY_2, new FilterSequence(pageFilter), GOODS_1, GOODS_2, GOODS_3);
 
-        pageFilter = new PageFilterImpl(1, 2);
+        pageFilter = new PageFilter(1, 2);
         loadAndAssertOrm(SELECT_GOODS_QUERY_2, new FilterSequence(pageFilter), GOODS_3);
     }
 
