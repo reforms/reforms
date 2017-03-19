@@ -9,7 +9,7 @@ import com.reforms.orm.select.SelectedColumn;
  * Контракт на чтение значения Long из выборки ResultSet
  * @author evgenie
  */
-class LongParamRsReader implements IParamRsReader<Long> {
+class LongResultSetValueReader implements IResultSetValueReader<Long> {
 
     @Override
     public Long readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws SQLException {

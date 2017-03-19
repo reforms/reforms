@@ -3,10 +3,10 @@ package com.reforms.orm.select.bobj;
 import com.reforms.orm.reflex.IInstanceBuilder;
 import com.reforms.orm.reflex.IReflexor;
 import com.reforms.orm.select.ColumnAlias;
-import com.reforms.orm.select.IResultSetReader;
+import com.reforms.orm.select.IResultSetObjectReader;
 import com.reforms.orm.select.SelectedColumn;
-import com.reforms.orm.select.bobj.reader.IParamRsReader;
-import com.reforms.orm.select.bobj.reader.ParamRsReaderFactory;
+import com.reforms.orm.select.bobj.reader.IResultSetValueReader;
+import com.reforms.orm.select.bobj.reader.ResultSetValueReaderFactory;
 
 import java.sql.ResultSet;
 import java.util.List;
@@ -15,18 +15,18 @@ import static com.reforms.orm.OrmConfigurator.getInstance;
 import static com.reforms.orm.reflex.ClassUtils.isEnumClass;
 import static com.reforms.orm.reflex.Reflexor.createReflexor;
 
-public class ResultSetOrmReader implements IResultSetReader {
+public class ResultSetOrmReader implements IResultSetObjectReader {
 
     private List<SelectedColumn> columns;
     private IReflexor reflexor;
-    private ParamRsReaderFactory paramRsReaderFactory;
+    private ResultSetValueReaderFactory resultSetValueReaderFactory;
     private IResultSetValueAdapter valueAdapter;
     private IInstanceBuilder ormInstanceBuilder;
 
     public ResultSetOrmReader(Class<?> ormClass, List<SelectedColumn> columns) {
         this.columns = columns;
         reflexor = createReflexor(ormClass);
-        paramRsReaderFactory = getInstance(ParamRsReaderFactory.class);
+        resultSetValueReaderFactory = getInstance(ResultSetValueReaderFactory.class);
         valueAdapter = getInstance(IResultSetValueAdapter.class);
         ormInstanceBuilder = reflexor.createInstanceBuilder();
     }
@@ -50,7 +50,7 @@ public class ResultSetOrmReader implements IResultSetReader {
             } else if (isEnumClass(clazz)) {
                 paramKey = Enum.class;
             }
-            IParamRsReader<?> paramReader = paramRsReaderFactory.getParamRsReader(paramKey);
+            IResultSetValueReader<?> paramReader = resultSetValueReaderFactory.getParamRsReader(paramKey);
             if (paramReader == null) {
                 throw new IllegalStateException("Не найден IParamRsReader для чтения из ResultSet значения для '" + paramKey + "'");
             }

@@ -6,7 +6,7 @@ import java.sql.ResultSet;
  * Контракт на вычитывание объекта из ResultSet
  * @author evgenie
  */
-public interface IResultSetReader {
+public interface IResultSetObjectReader {
 
     public boolean canRead(ResultSet rs) throws Exception;
 

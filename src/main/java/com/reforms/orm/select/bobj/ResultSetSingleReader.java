@@ -1,10 +1,10 @@
 package com.reforms.orm.select.bobj;
 
 import com.reforms.orm.select.ColumnAlias;
-import com.reforms.orm.select.IResultSetReader;
+import com.reforms.orm.select.IResultSetObjectReader;
 import com.reforms.orm.select.SelectedColumn;
-import com.reforms.orm.select.bobj.reader.IParamRsReader;
-import com.reforms.orm.select.bobj.reader.ParamRsReaderFactory;
+import com.reforms.orm.select.bobj.reader.IResultSetValueReader;
+import com.reforms.orm.select.bobj.reader.ResultSetValueReaderFactory;
 
 import java.sql.ResultSet;
 import java.util.List;
@@ -16,18 +16,18 @@ import static com.reforms.orm.reflex.ClassUtils.isEnumClass;
  * Вычитываем простые объекты и примитивы не требующие логики создания: int, String, BigDecimal и т.д.
  * @author evgenie
  */
-public class ResultSetSingleReader implements IResultSetReader {
+public class ResultSetSingleReader implements IResultSetObjectReader {
 
     private Class<?> itemClass;
 
     private SelectedColumn column;
-    private ParamRsReaderFactory paramRsReaderFactory;
+    private ResultSetValueReaderFactory resultSetValueReaderFactory;
     private IResultSetValueAdapter valueAdapter;
 
     public ResultSetSingleReader(Class<?> itemClass, List<SelectedColumn> columns) {
         this.itemClass = itemClass;
         column = findSelectedColumn(columns);
-        paramRsReaderFactory = getInstance(ParamRsReaderFactory.class);
+        resultSetValueReaderFactory = getInstance(ResultSetValueReaderFactory.class);
         valueAdapter = getInstance(IResultSetValueAdapter.class);
     }
 
@@ -47,7 +47,7 @@ public class ResultSetSingleReader implements IResultSetReader {
         } else if (isEnumClass(clazz)) {
             paramKey = Enum.class;
         }
-        IParamRsReader<?> paramReader = paramRsReaderFactory.getParamRsReader(paramKey);
+        IResultSetValueReader<?> paramReader = resultSetValueReaderFactory.getParamRsReader(paramKey);
         if (paramReader == null) {
             throw new IllegalStateException("Не найден IParamRsReader для чтения из ResultSet значения для '" + paramKey + "'");
         }

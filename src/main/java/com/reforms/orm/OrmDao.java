@@ -2,7 +2,7 @@ package com.reforms.orm;
 
 import com.reforms.orm.extractor.OrmSelectColumnExtractorAndAliasModifier;
 import com.reforms.orm.filter.*;
-import com.reforms.orm.select.IResultSetReader;
+import com.reforms.orm.select.IResultSetObjectReader;
 import com.reforms.orm.select.IResultSetReaderFactory;
 import com.reforms.orm.select.SelectedColumn;
 import com.reforms.orm.select.bobj.model.OrmHandler;
@@ -43,7 +43,7 @@ public class OrmDao {
         OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetReader ormReader = rsrFactory.resolveReader(ormClass, selectedColumns);
+        IResultSetObjectReader ormReader = rsrFactory.resolveReader(ormClass, selectedColumns);
         SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
@@ -79,7 +79,7 @@ public class OrmDao {
         OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetReader ormReader = rsrFactory.resolveReader(ormClass, selectedColumns);
+        IResultSetObjectReader ormReader = rsrFactory.resolveReader(ormClass, selectedColumns);
         SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
@@ -118,7 +118,7 @@ public class OrmDao {
         OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetReader ormReader = rsrFactory.resolveReader(ormClass, selectedColumns);
+        IResultSetObjectReader ormReader = rsrFactory.resolveReader(ormClass, selectedColumns);
         SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();
@@ -155,7 +155,7 @@ public class OrmDao {
         OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery);
         IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetReader ormReader = rsrFactory.resolveReader(ormClass, selectedColumns);
+        IResultSetObjectReader ormReader = rsrFactory.resolveReader(ormClass, selectedColumns);
         SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, filters);
         String preparedSqlQuery = selectQuery.toString();

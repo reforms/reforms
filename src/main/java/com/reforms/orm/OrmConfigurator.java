@@ -11,7 +11,7 @@ import com.reforms.orm.select.bobj.ColumnToFieldNameConverter;
 import com.reforms.orm.select.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.select.bobj.IResultSetValueAdapter;
 import com.reforms.orm.select.bobj.ResultSetValueAdapter;
-import com.reforms.orm.select.bobj.reader.ParamRsReaderFactory;
+import com.reforms.orm.select.bobj.reader.ResultSetValueReaderFactory;
 import com.reforms.orm.select.report.ColumnToRecordNameConverter;
 import com.reforms.orm.select.report.IColumnToRecordNameConverter;
 import com.reforms.orm.select.report.converter.ColumnValueConverterFactory;
@@ -38,7 +38,7 @@ public class OrmConfigurator {
         putInstance(IColumnToRecordNameConverter.class, new ColumnToRecordNameConverter());
         putInstance(IConnectionHolder.class, new ReflexConnectionHolder());
         putInstance(ParamSetterFactory.class, new ParamSetterFactory().configure().sealed());
-        putInstance(ParamRsReaderFactory.class, new ParamRsReaderFactory().configure().sealed());
+        putInstance(ResultSetValueReaderFactory.class, new ResultSetValueReaderFactory().configure().sealed());
         putInstance(IResultSetValueAdapter.class, new ResultSetValueAdapter());
         putInstance(IColumnToFieldNameConverter.class, new ColumnToFieldNameConverter());
         putInstance(IResultSetReaderFactory.class, new ResultSetReaderFactory());

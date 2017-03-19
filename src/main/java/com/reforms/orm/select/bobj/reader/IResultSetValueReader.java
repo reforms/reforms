@@ -8,7 +8,7 @@ import com.reforms.orm.select.SelectedColumn;
  * Контракт на чтение значения <ParamType> из выборки ResultSet
  * @author evgenie
  */
-public interface IParamRsReader<ParamType> {
+public interface IResultSetValueReader<ParamType> {
 
     public ParamType readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws Exception;
 

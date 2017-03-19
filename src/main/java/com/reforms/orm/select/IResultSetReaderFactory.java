@@ -14,5 +14,5 @@ public interface IResultSetReaderFactory {
      * @param columns список колонок
      * @return считыватель объектов или NULL, если не удалось найти подходящий объект
      */
-    public IResultSetReader resolveReader(Class<?> ormClass, List<SelectedColumn> columns);
+    public IResultSetObjectReader resolveReader(Class<?> ormClass, List<SelectedColumn> columns);
 }

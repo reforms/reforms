@@ -9,7 +9,7 @@ import com.reforms.orm.select.SelectedColumn;
  * Контракт на чтение значения Double из выборки ResultSet
  * @author evgenie
  */
-class FloatParamRsReader implements IParamRsReader<Float> {
+class FloatResultSetValueReader implements IResultSetValueReader<Float> {
 
     @Override
     public Float readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws SQLException {

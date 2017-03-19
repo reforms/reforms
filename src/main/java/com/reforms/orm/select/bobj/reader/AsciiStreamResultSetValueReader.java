@@ -7,14 +7,14 @@ import java.sql.ResultSet;
 import com.reforms.orm.select.SelectedColumn;
 
 /**
- * Контракт на чтение значения byte[] из выборки ResultSet
+ * Контракт на чтение значения AsciiStream из выборки ResultSet
  * @author evgenie
  */
-class BinaryStreamParamRsReader implements IParamRsReader<byte[]> {
+class AsciiStreamResultSetValueReader implements IResultSetValueReader<byte[]> {
 
     @Override
     public byte[] readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws Exception {
-        try (InputStream stream = rs.getBinaryStream(column.getIndex())) {
+        try (InputStream stream = rs.getAsciiStream(column.getIndex())) {
             if (rs.wasNull()) {
                 return null;
             }

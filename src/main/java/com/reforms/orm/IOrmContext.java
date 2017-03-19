@@ -5,7 +5,7 @@ import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.select.IResultSetReaderFactory;
 import com.reforms.orm.select.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.select.bobj.IResultSetValueAdapter;
-import com.reforms.orm.select.bobj.reader.IParamRsReader;
+import com.reforms.orm.select.bobj.reader.IResultSetValueReader;
 import com.reforms.orm.select.report.IColumnToRecordNameConverter;
 import com.reforms.orm.select.report.converter.IColumnValueConverter;
 
@@ -17,7 +17,7 @@ public interface IOrmContext {
 
     public void addReportValueConverter(String key, IColumnValueConverter converter);
 
-    public void addParamReader(String key, IParamRsReader<?> converter);
+    public void addParamReader(String key, IResultSetValueReader<?> converter);
 
     public void addParamSetter(String key, ParamSetter paramSetter);
 

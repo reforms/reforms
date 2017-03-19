@@ -6,8 +6,8 @@ import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.select.IResultSetReaderFactory;
 import com.reforms.orm.select.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.select.bobj.IResultSetValueAdapter;
-import com.reforms.orm.select.bobj.reader.IParamRsReader;
-import com.reforms.orm.select.bobj.reader.ParamRsReaderFactory;
+import com.reforms.orm.select.bobj.reader.IResultSetValueReader;
+import com.reforms.orm.select.bobj.reader.ResultSetValueReaderFactory;
 import com.reforms.orm.select.report.IColumnToRecordNameConverter;
 import com.reforms.orm.select.report.converter.ColumnValueConverterFactory;
 import com.reforms.orm.select.report.converter.IColumnValueConverter;
@@ -28,8 +28,8 @@ class OrmContext implements IOrmContext {
     }
 
     @Override
-    public void addParamReader(String key, IParamRsReader<?> converter) {
-        ParamRsReaderFactory factory = getInstance(ParamRsReaderFactory.class);
+    public void addParamReader(String key, IResultSetValueReader<?> converter) {
+        ResultSetValueReaderFactory factory = getInstance(ResultSetValueReaderFactory.class);
         factory.addCustomParamReader(converter, key);
     }
 
@@ -127,8 +127,8 @@ class OrmContext implements IOrmContext {
     public void sealed() {
         ColumnValueConverterFactory columnValueFactory = getInstance(ColumnValueConverterFactory.class);
         columnValueFactory.sealedCustom();
-        ParamRsReaderFactory paramReaderFactory = getInstance(ParamRsReaderFactory.class);
-        paramReaderFactory.sealedCustom();
+        ResultSetValueReaderFactory resultSetValueReaderFactory = getInstance(ResultSetValueReaderFactory.class);
+        resultSetValueReaderFactory.sealedCustom();
         ParamSetterFactory paramSetterfactory = getInstance(ParamSetterFactory.class);
         paramSetterfactory.sealedCustom();
     }

@@ -10,7 +10,7 @@ import com.reforms.orm.select.SelectedColumn;
  * Контракт на чтение значения Time из выборки ResultSet
  * @author evgenie
  */
-class TimeColumnValueConverter implements IParamRsReader<Time> {
+class TimeResultSetValueReader implements IResultSetValueReader<Time> {
 
     @Override
     public Time readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws SQLException {

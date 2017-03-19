@@ -10,7 +10,7 @@ import com.reforms.orm.select.SelectedColumn;
  * Контракт на чтение значения Date из выборки ResultSet
  * @author evgenie
  */
-class DateParamRsReader implements IParamRsReader<Date> {
+class DateResultSetValueReader implements IResultSetValueReader<Date> {
 
     @Override
     public Date readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws SQLException {

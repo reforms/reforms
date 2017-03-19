@@ -9,7 +9,7 @@ import com.reforms.orm.select.SelectedColumn;
  * Контракт на чтение значения Integer из выборки ResultSet
  * @author evgenie
  */
-class IntParamRsReader implements IParamRsReader<Integer> {
+class IntResultSetValueReader implements IResultSetValueReader<Integer> {
 
     @Override
     public Integer readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws SQLException {

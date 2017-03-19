@@ -11,11 +11,11 @@ import static com.reforms.orm.reflex.EnumReflexor.createEnumReflexor;
  * Контракт на чтение значения Enum из выборки ResultSet
  * @author evgenie
  */
-class EnumParamRsReader implements IParamRsReader<Enum<?>> {
+class EnumResultSetValueReader implements IResultSetValueReader<Enum<?>> {
 
-    private ParamRsReaderFactory factory;
+    private ResultSetValueReaderFactory factory;
 
-    public EnumParamRsReader(ParamRsReaderFactory factory) {
+    public EnumResultSetValueReader(ResultSetValueReaderFactory factory) {
         this.factory = factory;
     }
 
@@ -23,7 +23,7 @@ class EnumParamRsReader implements IParamRsReader<Enum<?>> {
     public Enum<?> readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws Exception {
         IEnumReflexor enumReflexor = createEnumReflexor(toBeClass);
         Class<?> assignToBeReadClass = enumReflexor.getAssignValueClass();
-        IParamRsReader<?> realReader = factory.getParamRsReader(assignToBeReadClass);
+        IResultSetValueReader<?> realReader = factory.getParamRsReader(assignToBeReadClass);
         if (realReader == null) {
             throw new IllegalStateException("Не найден IParamRsReader для чтения из ResultSet значения для класса '" + assignToBeReadClass + "'");
         }

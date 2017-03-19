@@ -1,6 +1,6 @@
 package com.reforms.orm.select.bobj.model;
 
-import com.reforms.orm.select.IResultSetReader;
+import com.reforms.orm.select.IResultSetObjectReader;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,10 +12,10 @@ public class OrmIterator<OrmType> implements AutoCloseable {
     private PreparedStatement ps;
     private ResultSet rs;
 
-    private IResultSetReader reader;
+    private IResultSetObjectReader reader;
     private OrmType currentRecord;
 
-    public OrmIterator(PreparedStatement ps, IResultSetReader reader) {
+    public OrmIterator(PreparedStatement ps, IResultSetObjectReader reader) {
         this.ps = ps;
         this.reader = reader;
     }

@@ -1,7 +1,7 @@
 package com.reforms.orm.select.report;
 
 import com.reforms.orm.select.ColumnAlias;
-import com.reforms.orm.select.IResultSetReader;
+import com.reforms.orm.select.IResultSetObjectReader;
 import com.reforms.orm.select.SelectedColumn;
 import com.reforms.orm.select.report.converter.ColumnValueConverterFactory;
 import com.reforms.orm.select.report.converter.IColumnValueConverter;
@@ -16,7 +16,7 @@ import static com.reforms.orm.OrmConfigurator.getInstance;
  *
  * @author evgenie
  */
-public class ResultSetRecordReader implements IResultSetReader {
+public class ResultSetRecordReader implements IResultSetObjectReader {
 
     private List<SelectedColumn> columns;
     private ColumnValueConverterFactory converterFactory;

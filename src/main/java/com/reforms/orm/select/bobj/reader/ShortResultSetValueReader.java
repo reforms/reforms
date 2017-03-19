@@ -9,7 +9,7 @@ import com.reforms.orm.select.SelectedColumn;
  * Контракт на чтение значения Short из выборки ResultSet
  * @author evgenie
  */
-class ShortParamRsReader implements IParamRsReader<Short> {
+class ShortResultSetValueReader implements IResultSetValueReader<Short> {
 
     @Override
     public Short readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws SQLException {

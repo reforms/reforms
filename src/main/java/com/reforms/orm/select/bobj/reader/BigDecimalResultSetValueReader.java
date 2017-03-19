@@ -10,7 +10,7 @@ import com.reforms.orm.select.SelectedColumn;
  * Контракт на чтение значения BigDecimal из выборки ResultSet
  * @author evgenie
  */
-class BigDecimalParamRsReader implements IParamRsReader<BigDecimal> {
+class BigDecimalResultSetValueReader implements IResultSetValueReader<BigDecimal> {
 
     @Override
     public BigDecimal readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws SQLException {

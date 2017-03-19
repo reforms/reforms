@@ -9,11 +9,11 @@ import com.reforms.orm.select.SelectedColumn;
  * Контракт на чтение значения Boolean из выборки ResultSet
  * @author evgenie
  */
-class ByteParamRsReader implements IParamRsReader<Byte> {
+class BooleanResultSetValueReader implements IResultSetValueReader<Boolean> {
 
     @Override
-    public Byte readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws SQLException {
-        byte value = rs.getByte(column.getIndex());
+    public Boolean readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws SQLException {
+        boolean value = rs.getBoolean(column.getIndex());
         if (rs.wasNull()) {
             return null;
         }

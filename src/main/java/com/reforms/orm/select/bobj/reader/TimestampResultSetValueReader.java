@@ -10,7 +10,7 @@ import com.reforms.orm.select.SelectedColumn;
  * Контракт на чтение значения Timestamp из выборки ResultSet
  * @author evgenie
  */
-class TimestampParamRsReader implements IParamRsReader<Timestamp> {
+class TimestampResultSetValueReader implements IResultSetValueReader<Timestamp> {
 
     @Override
     public Timestamp readValue(SelectedColumn column, ResultSet rs, Class<?> toBeClass) throws SQLException {
