@@ -15,4 +15,6 @@ public interface ISchemeManager {
     public DbType getDbType(String schemeKey);
 
     public DbType getDefaultDbType();
+
+    public boolean isSingleDbType();
 }

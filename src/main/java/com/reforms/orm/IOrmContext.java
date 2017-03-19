@@ -8,6 +8,7 @@ import com.reforms.orm.dao.filter.param.ParamSetter;
 import com.reforms.orm.dao.report.IColumnToRecordNameConverter;
 import com.reforms.orm.dao.report.converter.IColumnValueConverter;
 import com.reforms.orm.scheme.ISchemeManager;
+import com.reforms.sql.db.DbType;
 
 /**
  * Фасад, для взаимодействия с framework REFORMS
@@ -36,6 +37,10 @@ public interface IOrmContext {
     public void changeResultSetValueAdapter(CreateNewInstance<IResultSetValueAdapter> creator);
 
     public void setResultSetValueAdapter(IResultSetValueAdapter newValueAdapter);
+
+    public void setDefaultScheme(String name);
+
+    public void setDefaultDbType(DbType dbType);
 
     public void changeSchemeManager(CreateNewInstance<ISchemeManager> creator);
 

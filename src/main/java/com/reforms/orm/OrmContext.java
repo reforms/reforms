@@ -11,6 +11,8 @@ import com.reforms.orm.dao.report.IColumnToRecordNameConverter;
 import com.reforms.orm.dao.report.converter.ColumnValueConverterFactory;
 import com.reforms.orm.dao.report.converter.IColumnValueConverter;
 import com.reforms.orm.scheme.ISchemeManager;
+import com.reforms.orm.scheme.SchemeManager;
+import com.reforms.sql.db.DbType;
 
 import static com.reforms.orm.OrmConfigurator.getInstance;
 import static com.reforms.orm.OrmConfigurator.putInstance;
@@ -93,6 +95,24 @@ class OrmContext implements IOrmContext {
     @Override
     public void setResultSetValueAdapter(IResultSetValueAdapter newValueAdapter) {
         putInstance(IResultSetValueAdapter.class, newValueAdapter);
+    }
+
+    @Override
+    public void setDefaultScheme(String schemeName) {
+        ISchemeManager currentSchemeManager = getInstance(ISchemeManager.class);
+        if (!(currentSchemeManager instanceof SchemeManager)) {
+            throw new IllegalStateException("Не известная реализация ISchemeManager: '" + currentSchemeManager + "'");
+        }
+        ((SchemeManager) currentSchemeManager).setDefaultSchemeName(schemeName);
+    }
+
+    @Override
+    public void setDefaultDbType(DbType dbType) {
+        ISchemeManager currentSchemeManager = getInstance(ISchemeManager.class);
+        if (!(currentSchemeManager instanceof SchemeManager)) {
+            throw new IllegalStateException("Не известная реализация ISchemeManager: '" + currentSchemeManager + "'");
+        }
+        ((SchemeManager) currentSchemeManager).setDefaultDbType(dbType);
     }
 
     @Override

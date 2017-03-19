@@ -19,9 +19,22 @@ public class DbTypeExtractor {
     public DbTypeExtractor() {
     }
 
+    private volatile DbType cachedDbType = null;
+
     public DbType extractDbType(SelectQuery selectQuery) {
-        TableExpressionExtractor tableExprExtractor = new TableExpressionExtractor();
+        if (cachedDbType != null) {
+            return cachedDbType;
+        }
         ISchemeManager schemeManager = getInstance(ISchemeManager.class);
+        DbType dbType = extractDbType(selectQuery, schemeManager);
+        if (schemeManager.isSingleDbType()) {
+            cachedDbType = dbType;
+        }
+        return dbType;
+    }
+
+    private DbType extractDbType(SelectQuery selectQuery, ISchemeManager schemeManager) {
+        TableExpressionExtractor tableExprExtractor = new TableExpressionExtractor();
         for (TableExpression tableExpr : tableExprExtractor.extractFilterExpressions(selectQuery)) {
             if (tableExpr.hasSchemeName()) {
                 String schemeKey = tableExpr.getSchemeName();

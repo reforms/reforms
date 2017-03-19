@@ -52,4 +52,9 @@ public class SchemeManager implements ISchemeManager {
     public void setDefaultDbType(DbType dbType) {
         putDbType(DEFAULT_SCHEME_NAME, dbType);
     }
+
+    @Override
+    public boolean isSingleDbType() {
+        return dbTypes.size() < 2;
+    }
 }
