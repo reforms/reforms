@@ -1,12 +1,12 @@
 package com.reforms.orm;
 
+import com.reforms.orm.dao.OrmHandler;
+import com.reforms.orm.dao.OrmIterator;
 import com.reforms.orm.extractor.OrmSelectColumnExtractorAndAliasModifier;
 import com.reforms.orm.filter.*;
 import com.reforms.orm.select.IResultSetObjectReader;
 import com.reforms.orm.select.IResultSetReaderFactory;
 import com.reforms.orm.select.SelectedColumn;
-import com.reforms.orm.select.bobj.model.OrmHandler;
-import com.reforms.orm.select.bobj.model.OrmIterator;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
 
@@ -36,7 +36,7 @@ public class OrmDao {
     }
 
     @SuppressWarnings("unchecked")
-    public <OrmType> OrmType loadOrm(Class<OrmType> ormClass, String sqlQuery, FilterValues filters) throws Exception {
+    public <OrmType> OrmType loadOrm(Class<OrmType> ormClass, String sqlQuery, IFilterValues filters) throws Exception {
         IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
@@ -72,7 +72,7 @@ public class OrmDao {
     }
 
     @SuppressWarnings("unchecked")
-    public <OrmType> List<OrmType> loadOrms(Class<OrmType> ormClass, String sqlQuery, FilterValues filters) throws Exception {
+    public <OrmType> List<OrmType> loadOrms(Class<OrmType> ormClass, String sqlQuery, IFilterValues filters) throws Exception {
         IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
@@ -110,7 +110,7 @@ public class OrmDao {
         handleOrms(ormClass, sqlQuery, handler, new FilterSequence(filters));
     }
 
-    public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, FilterValues filters)
+    public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, IFilterValues filters)
             throws Exception {
         IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(connectionHolder);
@@ -148,7 +148,7 @@ public class OrmDao {
         return loadOrmIterator(ormClass, sqlQuery, new FilterSequence(filters));
     }
 
-    public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery, FilterValues filters) throws Exception {
+    public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery, IFilterValues filters) throws Exception {
         IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);

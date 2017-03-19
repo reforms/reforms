@@ -10,11 +10,11 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.reforms.orm.dao.OrmHandler;
+import com.reforms.orm.dao.OrmIterator;
 import com.reforms.orm.filter.FilterMap;
 import com.reforms.orm.filter.FilterSequence;
-import com.reforms.orm.filter.FilterValues;
-import com.reforms.orm.select.bobj.model.OrmHandler;
-import com.reforms.orm.select.bobj.model.OrmIterator;
+import com.reforms.orm.filter.IFilterValues;
 import com.reforms.orm.select.report.model.ReportRecord;
 import com.reforms.orm.select.report.model.ReportRecordHandler;
 
@@ -120,7 +120,7 @@ public class UTestOrmDao extends GoodsDbTest {
         }
     }
 
-    private void loadAndAssertOrm(String query, FilterValues filters, GoodsOrm... expectedGoodsOrms) throws Exception {
+    private void loadAndAssertOrm(String query, IFilterValues filters, GoodsOrm... expectedGoodsOrms) throws Exception {
         OrmDao ormDao = new OrmDao(h2ds);
         List<GoodsOrm> actualGoodsOrms = ormDao.loadOrms(GoodsOrm.class, query, filters);
         assertEquals(expectedGoodsOrms.length, actualGoodsOrms.size());

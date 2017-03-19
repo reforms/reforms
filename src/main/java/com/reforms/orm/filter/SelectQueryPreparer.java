@@ -46,7 +46,7 @@ public class SelectQueryPreparer {
      * @param filters
      * @return
      */
-    public FilterPrepareStatementSetter prepare(SelectQuery selectQuery, FilterValues filters) {
+    public FilterPrepareStatementSetter prepare(SelectQuery selectQuery, IFilterValues filters) {
         if (filters == null) {
             filters = EMPTY_FILTER_MAP;
         }
@@ -56,7 +56,7 @@ public class SelectQueryPreparer {
         return prepareFilters(selectQuery, filters);
     }
 
-    private void preparePage(SelectQuery selectQuery, FilterValues filters) {
+    private void preparePage(SelectQuery selectQuery, IFilterValues filters) {
         if (filters.hasPageFilter()) {
             PageModifier pageModifer = OrmConfigurator.getInstance(PageModifier.class);
             pageModifer.changeSelectQuery(selectQuery, filters);
@@ -79,7 +79,7 @@ public class SelectQueryPreparer {
         }
     }
 
-    private FilterPrepareStatementSetter prepareFilters(SelectQuery selectQuery, FilterValues filters) {
+    private FilterPrepareStatementSetter prepareFilters(SelectQuery selectQuery, IFilterValues filters) {
         ParamSetterFactory paramSetterFactory = getInstance(ParamSetterFactory.class);
         FilterPrepareStatementSetter fpss = new FilterPrepareStatementSetter(paramSetterFactory);
         FilterExpressionExtractor filterExprExtractor = new FilterExpressionExtractor();

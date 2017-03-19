@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import com.reforms.orm.filter.FilterMap;
 import com.reforms.orm.filter.FilterSequence;
-import com.reforms.orm.filter.FilterValues;
+import com.reforms.orm.filter.IFilterValues;
 import com.reforms.orm.filter.PageFilterImpl;
 
 public class UTestPageFilterOrmDao extends GoodsDbTest {
@@ -87,7 +87,7 @@ public class UTestPageFilterOrmDao extends GoodsDbTest {
         return goodsOrm;
     }
 
-    private void loadAndAssertOrm(String query, FilterValues filters, GoodsOrm... expectedGoodsOrms) throws Exception {
+    private void loadAndAssertOrm(String query, IFilterValues filters, GoodsOrm... expectedGoodsOrms) throws Exception {
         OrmDao ormDao = new OrmDao(h2ds);
         List<GoodsOrm> actualGoodsOrms = ormDao.loadOrms(GoodsOrm.class, query, filters);
         assertEquals(expectedGoodsOrms.length, actualGoodsOrms.size());

@@ -11,7 +11,7 @@ import java.util.Map;
  *              например, putLongValue(String key, Long longValue)
  * @author evgenie
  */
-public class FilterMap implements FilterValues {
+public class FilterMap implements IFilterValues {
 
     public static final String PAGE_LIMIT_KEY = "__PAGE_LIMIT__";
     public static final String PAGE_OFFSET_KEY = "__PAGE_OFFSET__";

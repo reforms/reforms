@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import com.reforms.orm.filter.FilterMap;
 import com.reforms.orm.filter.FilterObject;
-import com.reforms.orm.filter.FilterValues;
+import com.reforms.orm.filter.IFilterValues;
 import com.reforms.orm.select.report.model.Report;
 import com.reforms.orm.select.report.model.ReportRecord;
 
@@ -66,7 +66,7 @@ public class UTestReportDaoDynamicFilter extends GoodsDbTest {
         assertFullReport(SELECT_GOODS_SIMPLE_QUERY, new FilterObject(new GoodsFilter()));
     }
 
-    private void assertFullReport(String query, FilterValues filters) throws Exception {
+    private void assertFullReport(String query, IFilterValues filters) throws Exception {
         ReportDao reportDao = new ReportDao();
         Report report = reportDao.loadReport(h2ds, query, filters);
         assertReportRecord(report.get(0), "1", "Тапочки", "Мягкие", "100.00", "TR-75", "01.01.2017 19:12:01.690");
@@ -82,7 +82,7 @@ public class UTestReportDaoDynamicFilter extends GoodsDbTest {
         assertReportRecord(report.get(2), "3", "Одеяло", "Пуховое", "300.00", "ZR-75", "03.01.2017 19:14:01.690");
     }
 
-    private void assertReport(String query, FilterValues filters) throws Exception {
+    private void assertReport(String query, IFilterValues filters) throws Exception {
         ReportDao reportDao = new ReportDao();
         Report report = reportDao.loadReport(h2ds, query, filters);
         assertEquals("Ожижается 1 запись", 1, report.size());

@@ -50,7 +50,7 @@ public class ReportDao {
         return loadReport(connectionHolder, sqlQuery, new FilterSequence(filters));
     }
 
-    public Report loadReport(Object connectionHolder, String sqlQuery, FilterValues filters) throws Exception {
+    public Report loadReport(Object connectionHolder, String sqlQuery, IFilterValues filters) throws Exception {
         IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
@@ -87,7 +87,7 @@ public class ReportDao {
         handleReport(connectionHolder, sqlQuery, handler, new FilterSequence(filters));
     }
 
-    public void handleReport(Object connectionHolder, String sqlQuery, ReportRecordHandler handler, FilterValues filters) throws Exception {
+    public void handleReport(Object connectionHolder, String sqlQuery, ReportRecordHandler handler, IFilterValues filters) throws Exception {
         IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);
@@ -123,7 +123,7 @@ public class ReportDao {
         return loadReportIterator(connectionHolder, sqlQuery, new FilterSequence(filters));
     }
 
-    public ReportIterator loadReportIterator(Object connectionHolder, String sqlQuery, FilterValues filters) throws Exception {
+    public ReportIterator loadReportIterator(Object connectionHolder, String sqlQuery, IFilterValues filters) throws Exception {
         IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(connectionHolder);
         SelectQuery selectQuery = parseSqlQuery(sqlQuery);

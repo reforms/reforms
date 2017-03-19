@@ -1,4 +1,4 @@
-package com.reforms.orm.select.bobj.model;
+package com.reforms.orm.dao;
 
 /**
  * Обработка сущностей по одному.

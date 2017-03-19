@@ -7,7 +7,7 @@ import com.reforms.orm.reflex.Reflexor;
  * TODO оптимизация и рефакторинг
  * @author evgenie
  */
-public class FilterObject implements FilterValues {
+public class FilterObject implements IFilterValues {
 
     private Object filter;
     private IReflexor reflexor;

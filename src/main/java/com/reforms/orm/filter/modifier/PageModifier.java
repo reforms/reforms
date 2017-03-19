@@ -8,7 +8,7 @@ import static com.reforms.sql.expr.term.value.PageQuestionExpression.PQE_OFFSET;
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.extractor.DbTypeExtractor;
-import com.reforms.orm.filter.FilterValues;
+import com.reforms.orm.filter.IFilterValues;
 import com.reforms.sql.db.DbType;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.statement.PageStatement;
@@ -26,7 +26,7 @@ public class PageModifier {
     public PageModifier() {
     }
 
-    public void changeSelectQuery(SelectQuery selectQuery, FilterValues filters) {
+    public void changeSelectQuery(SelectQuery selectQuery, IFilterValues filters) {
         DbTypeExtractor dbTypeExtractor = OrmConfigurator.getInstance(DbTypeExtractor.class);
         DbType dbType = dbTypeExtractor.extractDbType(selectQuery);
         if (POSTGRESQL == dbType || MIX == dbType) {
@@ -36,7 +36,7 @@ public class PageModifier {
         throw new IllegalStateException("Постраничная разбивка временно не поддерживается для СУБД с типом '" + dbType + "'");
     }
 
-    public void changeSelectQueryWhenPostgreSql(SelectQuery selectQuery, FilterValues filters) {
+    public void changeSelectQueryWhenPostgreSql(SelectQuery selectQuery, IFilterValues filters) {
         PageStatement pageStatement = new PageStatement();
         Object pageLimit = filters.getPageLimit();
         if (pageLimit != null) {

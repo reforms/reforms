@@ -7,7 +7,7 @@ import java.util.Map;
  * Фильтр в виде последовательного набора значений
  * @author evgenie
  */
-public class FilterSequence implements FilterValues {
+public class FilterSequence implements IFilterValues {
 
     private int pageIndex;
     private PageFilter pageFilter;

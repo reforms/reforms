@@ -4,7 +4,7 @@ package com.reforms.orm.filter;
  * Контракт на получение значения фильтра по ключу
  * @author evgenie
  */
-public interface FilterValues extends PageFilter {
+public interface IFilterValues extends PageFilter {
 
     /**
      * Получить значение именнованного параметр фильтрации для запроса
