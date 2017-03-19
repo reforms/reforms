@@ -6,7 +6,7 @@ import java.util.List;
  * Контракт на совершение базовых операций к БД
  * @author evgenie
  */
-public interface IDao {
+interface IOrmDao {
 
     <OrmType> OrmType load(DaoContext daoCtx) throws Exception;
 

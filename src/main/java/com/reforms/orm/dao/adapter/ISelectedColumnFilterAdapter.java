@@ -6,11 +6,11 @@ import com.reforms.orm.selectable.ISelectedColumnFilter;
  * Контракт на формирование фильтра колонок, для выборки
  * @author evgenie
  */
-public interface ISelectedColumnFilterAdapter {
+public interface ISelectedColumnFilterAdapter<Adapter> {
 
-    Object addSelectableIndex(int toBeSelectedIndexColumn);
+    Adapter addSelectableIndex(int toBeSelectedIndexColumn);
 
-    Object addSelectableIndexes(int ... toBeSelectedIndexColumns);
+    Adapter addSelectableIndexes(int ... toBeSelectedIndexColumns);
 
-    Object setSelectedColumnFilter(ISelectedColumnFilter filter);
+    Adapter setSelectedColumnFilter(ISelectedColumnFilter filter);
 }

@@ -1,14 +1,14 @@
 package com.reforms.orm;
 
+import com.reforms.orm.dao.ReportIterator;
+import com.reforms.orm.dao.ReportRecordHandler;
 import com.reforms.orm.extractor.ReportSelectColumnExtractorAndAliasModifier;
 import com.reforms.orm.filter.*;
 import com.reforms.orm.select.IResultSetObjectReader;
 import com.reforms.orm.select.IResultSetReaderFactory;
 import com.reforms.orm.select.SelectedColumn;
 import com.reforms.orm.select.report.model.Report;
-import com.reforms.orm.select.report.model.ReportIterator;
 import com.reforms.orm.select.report.model.ReportRecord;
-import com.reforms.orm.select.report.model.ReportRecordHandler;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
 

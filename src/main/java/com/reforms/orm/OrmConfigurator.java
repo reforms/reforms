@@ -1,8 +1,9 @@
 package com.reforms.orm;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.reforms.ann.ThreadSafe;
-import com.reforms.orm.dao.Dao;
-import com.reforms.orm.dao.IDao;
 import com.reforms.orm.filter.param.ParamSetterFactory;
 import com.reforms.orm.reflex.LocalCache;
 import com.reforms.orm.scheme.ISchemeManager;
@@ -18,9 +19,6 @@ import com.reforms.orm.select.report.ColumnToRecordNameConverter;
 import com.reforms.orm.select.report.IColumnToRecordNameConverter;
 import com.reforms.orm.select.report.converter.ColumnValueConverterFactory;
 import com.reforms.sql.db.DbType;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class OrmConfigurator {
 
@@ -45,7 +43,6 @@ public class OrmConfigurator {
         putInstance(IColumnToFieldNameConverter.class, new ColumnToFieldNameConverter());
         putInstance(IResultSetReaderFactory.class, new ResultSetReaderFactory());
         putInstance(LocalCache.class, new LocalCache());
-        putInstance(IDao.class, new Dao());
         SchemeManager schemeManager = new SchemeManager();
         schemeManager.setDefaultDbType(DbType.MIX);
         putInstance(ISchemeManager.class, schemeManager);

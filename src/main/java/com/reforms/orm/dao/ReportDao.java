@@ -5,86 +5,59 @@ import static com.reforms.orm.OrmConfigurator.getInstance;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.IConnectionHolder;
 import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.extractor.OrmSelectColumnExtractorAndAliasModifier;
+import com.reforms.orm.extractor.ReportSelectColumnExtractorAndAliasModifier;
 import com.reforms.orm.filter.FilterPrepareStatementSetter;
 import com.reforms.orm.filter.SelectQueryPreparer;
 import com.reforms.orm.select.IResultSetObjectReader;
 import com.reforms.orm.select.IResultSetReaderFactory;
 import com.reforms.orm.select.SelectedColumn;
+import com.reforms.orm.select.report.model.Report;
+import com.reforms.orm.select.report.model.ReportRecord;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
 
-/**
- *
- * @author evgenie
- */
 @ThreadSafe
-public class Dao implements IDao {
+class ReportDao implements IReportDao {
 
     @Override
-    public <OrmType> OrmType load(DaoContext daoCtx) throws Exception {
+    public Report loadReport(DaoContext daoCtx) throws Exception {
         IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
         SelectQuery selectQuery = parseSqlQuery(daoCtx.getQuery());
-        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
+        ReportSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(ReportSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery, daoCtx.getSelectedColumnFilter());
         IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetObjectReader ormReader = rsrFactory.resolveReader(daoCtx.getOrmType(), selectedColumns);
+        IResultSetObjectReader reportReader = rsrFactory.resolveReader(ReportRecord.class, selectedColumns);
+        Report report = new Report();
         SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, daoCtx.getFilterValues());
         String preparedSqlQuery = selectQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
             paramSetterEngine.setParamsTo(ps);
             try (ResultSet rs = ps.executeQuery()) {
-                OrmType orm = null;
-                if (ormReader.canRead(rs)) {
-                    orm = ormReader.read(rs);
-                }
-                return orm;
-            }
-        }
-    }
-
-    @Override
-    public <OrmType> List<OrmType> loads(DaoContext daoCtx) throws Exception {
-        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
-        Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
-        SelectQuery selectQuery = parseSqlQuery(daoCtx.getQuery());
-        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
-        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery, daoCtx.getSelectedColumnFilter());
-        IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetObjectReader ormReader = rsrFactory.resolveReader(daoCtx.getOrmType(), selectedColumns);
-        SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
-        FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, daoCtx.getFilterValues());
-        String preparedSqlQuery = selectQuery.toString();
-        List<OrmType> orms = new ArrayList<>();
-        try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
-            paramSetterEngine.setParamsTo(ps);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (ormReader.canRead(rs)) {
-                    OrmType orm = ormReader.read(rs);
-                    orms.add(orm);
+                while (reportReader.canRead(rs)) {
+                    ReportRecord reportRecord = reportReader.read(rs);
+                    report.add(reportRecord);
                 }
             }
         }
-        return orms;
+        return report;
     }
 
     @Override
-    public <OrmType> OrmIterator<OrmType> iterate(DaoContext daoCtx) throws Exception {
+    public ReportIterator iterate(DaoContext daoCtx) throws Exception {
         IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
         SelectQuery selectQuery = parseSqlQuery(daoCtx.getQuery());
-        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
+        ReportSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(ReportSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery, daoCtx.getSelectedColumnFilter());
         IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetObjectReader ormReader = rsrFactory.resolveReader(daoCtx.getOrmType(), selectedColumns);
+        IResultSetObjectReader reportReader = rsrFactory.resolveReader(ReportRecord.class, selectedColumns);
         SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, daoCtx.getFilterValues());
         String preparedSqlQuery = selectQuery.toString();
@@ -92,9 +65,9 @@ public class Dao implements IDao {
         try {
             ps = connection.prepareStatement(preparedSqlQuery);
             paramSetterEngine.setParamsTo(ps);
-            OrmIterator<OrmType> ormIterator = new OrmIterator<OrmType>(ps, ormReader);
-            ormIterator.prepare();
-            return ormIterator;
+            ReportIterator reportIterator = new ReportIterator(ps, reportReader);
+            reportIterator.prepare();
+            return reportIterator;
         } catch (Exception ex) {
             if (ps != null) {
                 ps.close();
@@ -104,14 +77,14 @@ public class Dao implements IDao {
     }
 
     @Override
-    public void handle(DaoContext daoCtx, OrmHandler<Object> handler) throws Exception {
+    public void handle(DaoContext daoCtx, ReportRecordHandler handler) throws Exception {
         IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
         SelectQuery selectQuery = parseSqlQuery(daoCtx.getQuery());
-        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
+        ReportSelectColumnExtractorAndAliasModifier selectedColumnExtractor = OrmConfigurator.getInstance(ReportSelectColumnExtractorAndAliasModifier.class);
         List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery, daoCtx.getSelectedColumnFilter());
         IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
-        IResultSetObjectReader ormReader = rsrFactory.resolveReader(daoCtx.getOrmType(), selectedColumns);
+        IResultSetObjectReader reportReader = rsrFactory.resolveReader(ReportRecord.class, selectedColumns);
         SelectQueryPreparer filterPreparer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
         FilterPrepareStatementSetter paramSetterEngine = filterPreparer.prepare(selectQuery, daoCtx.getFilterValues());
         String preparedSqlQuery = selectQuery.toString();
@@ -119,9 +92,9 @@ public class Dao implements IDao {
             paramSetterEngine.setParamsTo(ps);
             try (ResultSet rs = ps.executeQuery()) {
                 handler.startHandle();
-                while (ormReader.canRead(rs)) {
-                    Object orm = ormReader.read(rs);
-                    handler.handleOrm(orm);
+                while (reportReader.canRead(rs)) {
+                    ReportRecord reportRecord = reportReader.read(rs);
+                    handler.handleReportRecord(reportRecord);
                 }
                 handler.endHandle();
             }

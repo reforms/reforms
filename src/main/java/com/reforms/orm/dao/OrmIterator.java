@@ -8,7 +8,6 @@ import java.sql.SQLException;
 
 public class OrmIterator<OrmType> implements AutoCloseable {
 
-
     private PreparedStatement ps;
     private ResultSet rs;
 

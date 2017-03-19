@@ -7,7 +7,7 @@ import com.reforms.orm.selectable.ISelectedColumnFilter;
  * Контекст данных для совершения определенной операции
  * @author evgenie
  */
-public class DaoContext {
+class DaoContext {
 
     /** Объект, который содержит доступ к БД */
     private Object connectionHolder;
@@ -24,43 +24,43 @@ public class DaoContext {
     /** Фильтр данных */
     private IFilterValues filterValues;
 
-    public Object getConnectionHolder() {
+    Object getConnectionHolder() {
         return connectionHolder;
     }
 
-    public void setConnectionHolder(Object connectionHolder) {
+    void setConnectionHolder(Object connectionHolder) {
         this.connectionHolder = connectionHolder;
     }
 
-    public String getQuery() {
+    String getQuery() {
         return query;
     }
 
-    public void setQuery(String query) {
+    void setQuery(String query) {
         this.query = query;
     }
 
-    public Class<?> getOrmType() {
+    Class<?> getOrmType() {
         return ormType;
     }
 
-    public void setOrmType(Class<?> ormType) {
+    void setOrmType(Class<?> ormType) {
         this.ormType = ormType;
     }
 
-    public ISelectedColumnFilter getSelectedColumnFilter() {
+    ISelectedColumnFilter getSelectedColumnFilter() {
         return selectedColumnFilter;
     }
 
-    public void setSelectedColumnFilter(ISelectedColumnFilter selectedColumnFilter) {
+    void setSelectedColumnFilter(ISelectedColumnFilter selectedColumnFilter) {
         this.selectedColumnFilter = selectedColumnFilter;
     }
 
-    public IFilterValues getFilterValues() {
+    IFilterValues getFilterValues() {
         return filterValues;
     }
 
-    public void setFilterValues(IFilterValues filterValues) {
+    void setFilterValues(IFilterValues filterValues) {
         this.filterValues = filterValues;
     }
 

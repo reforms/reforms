@@ -12,11 +12,11 @@ import org.junit.Test;
 
 import com.reforms.orm.dao.OrmHandler;
 import com.reforms.orm.dao.OrmIterator;
+import com.reforms.orm.dao.ReportRecordHandler;
 import com.reforms.orm.filter.FilterMap;
 import com.reforms.orm.filter.FilterSequence;
 import com.reforms.orm.filter.IFilterValues;
 import com.reforms.orm.select.report.model.ReportRecord;
-import com.reforms.orm.select.report.model.ReportRecordHandler;
 
 public class UTestOrmDao extends GoodsDbTest {
 

@@ -1,12 +1,13 @@
 package com.reforms.orm;
 
-import static com.reforms.orm.OrmConfigurator.getInstance;
 import static com.reforms.orm.filter.FilterMap.EMPTY_FILTER_MAP;
 import static com.reforms.orm.selectable.AllSelectedColumnFilter.ALL_COLUMNS_FILTER;
 
 import java.util.List;
 
-import com.reforms.orm.dao.*;
+import com.reforms.orm.dao.OrmDaoAdapter;
+import com.reforms.orm.dao.OrmHandler;
+import com.reforms.orm.dao.OrmIterator;
 import com.reforms.orm.filter.FilterObject;
 import com.reforms.orm.filter.FilterSequence;
 import com.reforms.orm.filter.IFilterValues;
@@ -44,13 +45,10 @@ public class OrmDao {
 
     public <OrmType> OrmType loadOrm(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter, IFilterValues filters)
             throws Exception {
-        DaoContext daoCtx = new DaoContext();
-        daoCtx.setConnectionHolder(connectionHolder);
-        daoCtx.setOrmType(ormClass);
-        daoCtx.setQuery(sqlQuery);
-        daoCtx.setSelectedColumnFilter(solumnFilter);
-        daoCtx.setFilterValues(filters);
-        return getDao().load(daoCtx);
+        OrmDaoAdapter daoAdapter = new OrmDaoAdapter(connectionHolder, sqlQuery);
+        daoAdapter.setSelectedColumnFilter(solumnFilter);
+        daoAdapter.setFilterValue(filters);
+        return daoAdapter.load(ormClass);
     }
 
     public <OrmType> List<OrmType> loadOrms(Class<OrmType> ormClass, String sqlQuery) throws Exception {
@@ -85,13 +83,10 @@ public class OrmDao {
 
     public <OrmType> List<OrmType> loadOrms(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter,
             IFilterValues filters) throws Exception {
-        DaoContext daoCtx = new DaoContext();
-        daoCtx.setConnectionHolder(connectionHolder);
-        daoCtx.setOrmType(ormClass);
-        daoCtx.setQuery(sqlQuery);
-        daoCtx.setSelectedColumnFilter(solumnFilter);
-        daoCtx.setFilterValues(filters);
-        return getDao().loads(daoCtx);
+        OrmDaoAdapter daoAdapter = new OrmDaoAdapter(connectionHolder, sqlQuery);
+        daoAdapter.setSelectedColumnFilter(solumnFilter);
+        daoAdapter.setFilterValue(filters);
+        return daoAdapter.loads(ormClass);
     }
 
     public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, Object filterBobj)
@@ -130,18 +125,13 @@ public class OrmDao {
         handleOrms(ormClass, sqlQuery, handler, solumnFilter, new FilterSequence(filters));
     }
 
-    @SuppressWarnings("unchecked")
     public <OrmType> void handleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler,
             ISelectedColumnFilter solumnFilter, IFilterValues filters)
             throws Exception {
-        DaoContext daoCtx = new DaoContext();
-        daoCtx.setConnectionHolder(connectionHolder);
-        daoCtx.setOrmType(ormClass);
-        daoCtx.setQuery(sqlQuery);
-        daoCtx.setSelectedColumnFilter(solumnFilter);
-        daoCtx.setFilterValues(filters);
-        getDao().handle(daoCtx, (OrmHandler<Object>) handler);
-
+        OrmDaoAdapter daoAdapter = new OrmDaoAdapter(connectionHolder, sqlQuery);
+        daoAdapter.setSelectedColumnFilter(solumnFilter);
+        daoAdapter.setFilterValue(filters);
+        daoAdapter.handle(ormClass, handler);
     }
 
     public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery, Object filterBobj) throws Exception {
@@ -179,16 +169,10 @@ public class OrmDao {
 
     public <OrmType> OrmIterator<OrmType> loadOrmIterator(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter,
             IFilterValues filters) throws Exception {
-        DaoContext daoCtx = new DaoContext();
-        daoCtx.setConnectionHolder(connectionHolder);
-        daoCtx.setOrmType(ormClass);
-        daoCtx.setQuery(sqlQuery);
-        daoCtx.setSelectedColumnFilter(solumnFilter);
-        daoCtx.setFilterValues(filters);
-        return getDao().iterate(daoCtx);
+        OrmDaoAdapter daoAdapter = new OrmDaoAdapter(connectionHolder, sqlQuery);
+        daoAdapter.setSelectedColumnFilter(solumnFilter);
+        daoAdapter.setFilterValue(filters);
+        return daoAdapter.iterate(ormClass);
     }
 
-    private IDao getDao() {
-        return getInstance(IDao.class);
-    }
 }

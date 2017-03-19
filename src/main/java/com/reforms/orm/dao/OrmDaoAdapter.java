@@ -1,15 +1,10 @@
 package com.reforms.orm.dao;
 
-import static com.reforms.orm.OrmConfigurator.getInstance;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.reforms.orm.dao.adapter.IDaoAdapter;
-import com.reforms.orm.dao.adapter.IFilterValuesAdapter;
-import com.reforms.orm.dao.adapter.IPageFilterAdapter;
-import com.reforms.orm.dao.adapter.ISelectedColumnFilterAdapter;
 import com.reforms.orm.filter.*;
 import com.reforms.orm.selectable.CompositeSelectedColumnFilter;
 import com.reforms.orm.selectable.ISelectedColumnFilter;
@@ -19,7 +14,7 @@ import com.reforms.orm.selectable.IndexSelectFilter;
  * Адаптер к dao
  * @author evgenie
  */
-public class DaoAdapter implements ISelectedColumnFilterAdapter, IFilterValuesAdapter, IPageFilterAdapter, IDaoAdapter {
+public class OrmDaoAdapter implements IDaoAdapter {
 
     private final Object connectionHolder;
     private final String query;
@@ -36,19 +31,19 @@ public class DaoAdapter implements ISelectedColumnFilterAdapter, IFilterValuesAd
     private Integer pageOffset;
     private IPageFilter pageFilter;
 
-    public DaoAdapter(Object connectionHolder, String query) {
+    public OrmDaoAdapter(Object connectionHolder, String query) {
         this.connectionHolder = connectionHolder;
         this.query = query;
     }
 
     @Override
-    public DaoAdapter addSelectableIndex(int toBeSelectedIndexColumn) {
+    public IDaoAdapter addSelectableIndex(int toBeSelectedIndexColumn) {
         addIndex(toBeSelectedIndexColumn);
         return this;
     }
 
     @Override
-    public DaoAdapter addSelectableIndexes(int... toBeSelectedIndexColumns) {
+    public IDaoAdapter addSelectableIndexes(int... toBeSelectedIndexColumns) {
         for (int toBeSelectedIndexColumn : toBeSelectedIndexColumns) {
             addIndex(toBeSelectedIndexColumn);
         }
@@ -65,19 +60,19 @@ public class DaoAdapter implements ISelectedColumnFilterAdapter, IFilterValuesAd
     }
 
     @Override
-    public DaoAdapter setSelectedColumnFilter(ISelectedColumnFilter filter) {
+    public IDaoAdapter setSelectedColumnFilter(ISelectedColumnFilter filter) {
         selectedColumnFilter = filter;
         return this;
     }
 
     @Override
-    public DaoAdapter addSimpleFilterValue(Object value) {
+    public IDaoAdapter addSimpleFilterValue(Object value) {
         addFilterValue(value);
         return this;
     }
 
     @Override
-    public DaoAdapter addSimpleFilterValues(Object... values) {
+    public IDaoAdapter addSimpleFilterValues(Object... values) {
         for (Object value : values) {
             addFilterValue(value);
         }
@@ -92,13 +87,13 @@ public class DaoAdapter implements ISelectedColumnFilterAdapter, IFilterValuesAd
     }
 
     @Override
-    public DaoAdapter setFilterObject(Object filterBobj) {
+    public IDaoAdapter setFilterObject(Object filterBobj) {
         this.filterBobj = filterBobj;
         return this;
     }
 
     @Override
-    public DaoAdapter addFilterPair(String paramName, Object paramValue) {
+    public IDaoAdapter addFilterPair(String paramName, Object paramValue) {
         if (filterMap == null) {
             filterMap = new FilterMap();
         }
@@ -107,7 +102,7 @@ public class DaoAdapter implements ISelectedColumnFilterAdapter, IFilterValuesAd
     }
 
     @Override
-    public DaoAdapter addFilterPairs(Map<String, Object> filterValues) {
+    public IDaoAdapter addFilterPairs(Map<String, Object> filterValues) {
         if (filterMap == null) {
             filterMap = new FilterMap();
         }
@@ -116,25 +111,25 @@ public class DaoAdapter implements ISelectedColumnFilterAdapter, IFilterValuesAd
     }
 
     @Override
-    public DaoAdapter setFilterValue(IFilterValues filter) {
+    public IDaoAdapter setFilterValue(IFilterValues filter) {
         this.filter = filter;
         return this;
     }
 
     @Override
-    public DaoAdapter setPageLimit(int pageLimit) {
+    public IDaoAdapter setPageLimit(int pageLimit) {
         this.pageLimit = pageLimit;
         return this;
     }
 
     @Override
-    public DaoAdapter setPageOffset(int pageOffset) {
+    public IDaoAdapter setPageOffset(int pageOffset) {
         this.pageOffset = pageOffset;
         return this;
     }
 
     @Override
-    public DaoAdapter setPageOffset(IPageFilter pageFilter) {
+    public IDaoAdapter setPageOffset(IPageFilter pageFilter) {
         this.pageFilter = pageFilter;
         return this;
     }
@@ -198,21 +193,21 @@ public class DaoAdapter implements ISelectedColumnFilterAdapter, IFilterValuesAd
 
     @Override
     public <OrmType> OrmType load(Class<OrmType> ormClass) throws Exception {
-        IDao dao = getInstance(IDao.class);
+        IOrmDao dao = new OrmDao();
         DaoContext daoCtx = buildDaoContext(ormClass);
         return dao.load(daoCtx);
     }
 
     @Override
     public <OrmType> List<OrmType> loads(Class<OrmType> ormClass) throws Exception {
-        IDao dao = getInstance(IDao.class);
+        IOrmDao dao = new OrmDao();
         DaoContext daoCtx = buildDaoContext(ormClass);
         return dao.loads(daoCtx);
     }
 
     @Override
     public <OrmType> OrmIterator<OrmType> iterate(Class<OrmType> ormClass) throws Exception {
-        IDao dao = getInstance(IDao.class);
+        IOrmDao dao = new OrmDao();
         DaoContext daoCtx = buildDaoContext(ormClass);
         return dao.iterate(daoCtx);
     }
@@ -220,9 +215,8 @@ public class DaoAdapter implements ISelectedColumnFilterAdapter, IFilterValuesAd
     @SuppressWarnings("unchecked")
     @Override
     public <OrmType> void handle(Class<OrmType> ormClass, OrmHandler<OrmType> handler) throws Exception {
-        IDao dao = getInstance(IDao.class);
+        IOrmDao dao = new OrmDao();
         DaoContext daoCtx = buildDaoContext(ormClass);
         dao.handle(daoCtx, (OrmHandler<Object>) handler);
     }
-
 }

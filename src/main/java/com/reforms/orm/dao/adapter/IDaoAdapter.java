@@ -5,7 +5,9 @@ import java.util.List;
 import com.reforms.orm.dao.OrmHandler;
 import com.reforms.orm.dao.OrmIterator;
 
-public interface IDaoAdapter {
+public interface IDaoAdapter extends ISelectedColumnFilterAdapter<IDaoAdapter>,
+                                     IFilterValuesAdapter<IDaoAdapter>,
+                                     IPageFilterAdapter<IDaoAdapter> {
 
     <OrmType> OrmType load(Class<OrmType> ormClass) throws Exception;
 

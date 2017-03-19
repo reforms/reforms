@@ -1,4 +1,6 @@
-package com.reforms.orm.select.report.model;
+package com.reforms.orm.dao;
+
+import com.reforms.orm.select.report.model.ReportRecord;
 
 public interface ReportRecordHandler {
 

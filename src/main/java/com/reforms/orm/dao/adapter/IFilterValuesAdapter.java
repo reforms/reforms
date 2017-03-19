@@ -8,18 +8,18 @@ import com.reforms.orm.filter.IFilterValues;
  * Контракт на формирование фильтра значений
  * @author evgenie
  */
-public interface IFilterValuesAdapter {
+public interface IFilterValuesAdapter<Adapter> {
 
-    Object addSimpleFilterValue(Object filterValue);
+    Adapter addSimpleFilterValue(Object filterValue);
 
-    Object addSimpleFilterValues(Object ... filterValues);
+    Adapter addSimpleFilterValues(Object ... filterValues);
 
-    Object setFilterObject(Object filterBobj);
+    Adapter setFilterObject(Object filterBobj);
 
-    Object addFilterPair(String paramName, Object filterValue);
+    Adapter addFilterPair(String paramName, Object filterValue);
 
-    Object addFilterPairs(Map<String, Object> filterValues);
+    Adapter addFilterPairs(Map<String, Object> filterValues);
 
-    Object setFilterValue(IFilterValues filter);
+    Adapter setFilterValue(IFilterValues filter);
 
 }

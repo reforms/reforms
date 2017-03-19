@@ -6,12 +6,12 @@ import com.reforms.orm.filter.IPageFilter;
  * Контракт на добавление параметров постраничной разбивки
  * @author evgenie
  */
-public interface IPageFilterAdapter {
+public interface IPageFilterAdapter<Adapter> {
 
-    public Object setPageLimit(int pageLimit);
+    Adapter setPageLimit(int pageLimit);
 
-    public Object setPageOffset(int pageOffset);
+    Adapter setPageOffset(int pageOffset);
 
-    public Object setPageOffset(IPageFilter pageFilter);
+    Adapter setPageOffset(IPageFilter pageFilter);
 
 }
