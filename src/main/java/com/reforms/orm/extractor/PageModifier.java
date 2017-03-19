@@ -1,4 +1,4 @@
-package com.reforms.orm.dao.filter;
+package com.reforms.orm.extractor;
 
 import static com.reforms.sql.db.DbType.MIX;
 import static com.reforms.sql.db.DbType.POSTGRESQL;
@@ -7,8 +7,7 @@ import static com.reforms.sql.expr.term.value.PageQuestionExpression.PQE_OFFSET;
 
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.dao.filter.param.IFilterValues;
-import com.reforms.orm.extractor.DbTypeExtractor;
+import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.sql.db.DbType;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.statement.PageStatement;

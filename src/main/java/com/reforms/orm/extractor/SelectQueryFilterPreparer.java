@@ -1,7 +1,7 @@
-package com.reforms.orm.dao.filter;
+package com.reforms.orm.extractor;
 
 import static com.reforms.orm.OrmConfigurator.getInstance;
-import static com.reforms.orm.dao.filter.param.FilterMap.EMPTY_FILTER_MAP;
+import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
 import static com.reforms.sql.expr.term.value.ValueExpressionType.*;
 
 import java.lang.reflect.Array;
@@ -12,11 +12,9 @@ import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.dao.column.ColumnAlias;
 import com.reforms.orm.dao.column.ColumnAliasParser;
-import com.reforms.orm.dao.filter.param.FilterPrepareStatementSetter;
-import com.reforms.orm.dao.filter.param.IFilterValues;
-import com.reforms.orm.dao.filter.param.setter.ParamSetterFactory;
-import com.reforms.orm.extractor.FilterExpressionExtractor;
-import com.reforms.orm.extractor.TableExpressionExtractor;
+import com.reforms.orm.dao.filter.FilterPrepareStatementSetter;
+import com.reforms.orm.dao.filter.IFilterValues;
+import com.reforms.orm.dao.filter.param.ParamSetterFactory;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.tree.SelectQueryTree;
 import com.reforms.sql.expr.query.SelectQuery;
@@ -30,9 +28,9 @@ import com.reforms.sql.expr.term.value.ValueExpression;
  * @author evgenie
  */
 @ThreadSafe
-public class SelectQueryPreparer {
+public class SelectQueryFilterPreparer {
 
-    public SelectQueryPreparer() {
+    public SelectQueryFilterPreparer() {
     }
 
     /**

@@ -1,15 +1,15 @@
 package com.reforms.orm;
 
+import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
 import static com.reforms.orm.dao.filter.column.AllSelectedColumnFilter.ALL_COLUMNS_FILTER;
-import static com.reforms.orm.dao.filter.param.FilterMap.EMPTY_FILTER_MAP;
 
 import com.reforms.orm.dao.ReportDaoAdapter;
 import com.reforms.orm.dao.ReportIterator;
 import com.reforms.orm.dao.ReportRecordHandler;
+import com.reforms.orm.dao.filter.FilterObject;
+import com.reforms.orm.dao.filter.FilterSequence;
+import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
-import com.reforms.orm.dao.filter.param.FilterObject;
-import com.reforms.orm.dao.filter.param.FilterSequence;
-import com.reforms.orm.dao.filter.param.IFilterValues;
 import com.reforms.orm.dao.report.model.Report;
 
 /**

@@ -1,15 +1,15 @@
 package com.reforms.orm;
 
-import static com.reforms.orm.dao.filter.param.FilterMap.EMPTY_FILTER_MAP;
+import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
 import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 
 import org.junit.Test;
 
-import com.reforms.orm.dao.filter.param.FilterMap;
-import com.reforms.orm.dao.filter.param.FilterObject;
-import com.reforms.orm.dao.filter.param.IFilterValues;
+import com.reforms.orm.dao.filter.FilterMap;
+import com.reforms.orm.dao.filter.FilterObject;
+import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.report.model.Report;
 import com.reforms.orm.dao.report.model.ReportRecord;
 

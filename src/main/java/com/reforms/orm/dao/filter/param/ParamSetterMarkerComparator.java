@@ -1,4 +1,4 @@
-package com.reforms.orm.dao.filter.param.setter;
+package com.reforms.orm.dao.filter.param;
 
 import static com.reforms.orm.dao.column.ColumnAliasType.*;
 

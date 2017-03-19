@@ -1,4 +1,4 @@
-package com.reforms.orm.dao.filter.param;
+package com.reforms.orm.dao.filter;
 
 import java.util.Collections;
 import java.util.HashMap;

@@ -13,9 +13,9 @@ import org.junit.Test;
 import com.reforms.orm.dao.ReportRecordHandler;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
-import com.reforms.orm.dao.filter.param.FilterMap;
-import com.reforms.orm.dao.filter.param.FilterSequence;
-import com.reforms.orm.dao.filter.param.IFilterValues;
+import com.reforms.orm.dao.filter.FilterMap;
+import com.reforms.orm.dao.filter.FilterSequence;
+import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.report.model.ReportRecord;
 
 public class UTestOrmDao extends GoodsDbTest {

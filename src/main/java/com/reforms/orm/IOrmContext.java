@@ -4,7 +4,7 @@ import com.reforms.orm.dao.IResultSetReaderFactory;
 import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.dao.bobj.IResultSetValueAdapter;
 import com.reforms.orm.dao.bobj.reader.IResultSetValueReader;
-import com.reforms.orm.dao.filter.param.setter.ParamSetter;
+import com.reforms.orm.dao.filter.param.ParamSetter;
 import com.reforms.orm.dao.report.IColumnToRecordNameConverter;
 import com.reforms.orm.dao.report.converter.IColumnValueConverter;
 import com.reforms.orm.scheme.ISchemeManager;

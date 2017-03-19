@@ -7,7 +7,7 @@ import java.util.Date;
 
 import org.junit.Test;
 
-import com.reforms.orm.dao.filter.param.FilterMap;
+import com.reforms.orm.dao.filter.FilterMap;
 import com.reforms.orm.reflex.Reflexor;
 
 /**

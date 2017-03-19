@@ -11,9 +11,9 @@ import org.junit.Test;
 
 import com.reforms.orm.dao.ReportIterator;
 import com.reforms.orm.dao.ReportRecordHandler;
-import com.reforms.orm.dao.filter.param.FilterMap;
-import com.reforms.orm.dao.filter.param.FilterObject;
-import com.reforms.orm.dao.filter.param.IFilterValues;
+import com.reforms.orm.dao.filter.FilterMap;
+import com.reforms.orm.dao.filter.FilterObject;
+import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.report.model.Report;
 import com.reforms.orm.dao.report.model.ReportRecord;
 

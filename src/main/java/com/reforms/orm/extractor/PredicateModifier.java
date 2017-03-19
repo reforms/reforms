@@ -1,4 +1,4 @@
-package com.reforms.orm.dao.filter;
+package com.reforms.orm.extractor;
 
 import com.reforms.orm.tree.SelectQueryTree;
 import com.reforms.sql.expr.statement.WhereStatement;

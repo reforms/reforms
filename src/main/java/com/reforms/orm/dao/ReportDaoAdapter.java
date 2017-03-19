@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.reforms.orm.dao.filter.*;
 import com.reforms.orm.dao.filter.column.CompositeSelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.IndexSelectFilter;
 import com.reforms.orm.dao.filter.page.IPageFilter;
 import com.reforms.orm.dao.filter.page.PageFilter;
-import com.reforms.orm.dao.filter.param.*;
 import com.reforms.orm.dao.report.IReportDaoAdapter;
 import com.reforms.orm.dao.report.model.Report;
 

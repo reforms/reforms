@@ -11,7 +11,7 @@ import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.dao.bobj.IResultSetValueAdapter;
 import com.reforms.orm.dao.bobj.ResultSetValueAdapter;
 import com.reforms.orm.dao.bobj.reader.ResultSetValueReaderFactory;
-import com.reforms.orm.dao.filter.param.setter.ParamSetterFactory;
+import com.reforms.orm.dao.filter.param.ParamSetterFactory;
 import com.reforms.orm.dao.report.ColumnToRecordNameConverter;
 import com.reforms.orm.dao.report.IColumnToRecordNameConverter;
 import com.reforms.orm.dao.report.converter.ColumnValueConverterFactory;

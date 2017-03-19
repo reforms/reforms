@@ -1,6 +1,6 @@
 package com.reforms.orm.filter;
 
-import static com.reforms.orm.dao.filter.param.FilterMap.EMPTY_FILTER_MAP;
+import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
@@ -9,8 +9,8 @@ import java.util.Iterator;
 import org.junit.Test;
 
 import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.dao.filter.SelectQueryPreparer;
-import com.reforms.orm.dao.filter.param.FilterMap;
+import com.reforms.orm.dao.filter.FilterMap;
+import com.reforms.orm.extractor.SelectQueryFilterPreparer;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
 
@@ -90,7 +90,7 @@ public class UTestSelectQueryStaticFilterPreparer {
     private void assertStaticFilter(String query, String etalonQuery, FilterMap filters) {
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        SelectQueryPreparer queryPreaprer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
+        SelectQueryFilterPreparer queryPreaprer = OrmConfigurator.getInstance(SelectQueryFilterPreparer.class);
         queryPreaprer.prepare(selectQuery, filters);
         assertEquals(etalonQuery, selectQuery.toString());
     }
@@ -106,7 +106,7 @@ public class UTestSelectQueryStaticFilterPreparer {
     private void assertFailStaticFilter(String query, FilterMap filters) {
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        SelectQueryPreparer queryPreaprer = OrmConfigurator.getInstance(SelectQueryPreparer.class);
+        SelectQueryFilterPreparer queryPreaprer = OrmConfigurator.getInstance(SelectQueryFilterPreparer.class);
         try {
             queryPreaprer.prepare(selectQuery, filters);
             fail("Ожидается, что выражение '" + query + "' имеет не валидный фильтр");

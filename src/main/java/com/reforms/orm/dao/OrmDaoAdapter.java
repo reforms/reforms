@@ -7,12 +7,12 @@ import java.util.Map;
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
+import com.reforms.orm.dao.filter.*;
 import com.reforms.orm.dao.filter.column.CompositeSelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.IndexSelectFilter;
 import com.reforms.orm.dao.filter.page.IPageFilter;
 import com.reforms.orm.dao.filter.page.PageFilter;
-import com.reforms.orm.dao.filter.param.*;
 
 /**
  * Адаптер к dao

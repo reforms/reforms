@@ -1,4 +1,4 @@
-package com.reforms.orm.dao.filter.param;
+package com.reforms.orm.dao.filter;
 
 import static com.reforms.orm.dao.column.ColumnAliasType.*;
 
@@ -11,8 +11,8 @@ import java.sql.Timestamp;
 import java.util.*;
 
 import com.reforms.orm.dao.column.ColumnAliasType;
-import com.reforms.orm.dao.filter.param.setter.ParamSetter;
-import com.reforms.orm.dao.filter.param.setter.ParamSetterFactory;
+import com.reforms.orm.dao.filter.param.ParamSetter;
+import com.reforms.orm.dao.filter.param.ParamSetterFactory;
 
 /**
  * Устанавливает значения с заданного индекса в PrepareStatement
