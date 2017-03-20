@@ -35,7 +35,7 @@ public class DbTypeExtractor {
 
     private DbType extractDbType(SelectQuery selectQuery, ISchemeManager schemeManager) {
         TableExpressionExtractor tableExprExtractor = new TableExpressionExtractor();
-        for (TableExpression tableExpr : tableExprExtractor.extractFilterExpressions(selectQuery)) {
+        for (TableExpression tableExpr : tableExprExtractor.extractTableExpressions(selectQuery)) {
             if (tableExpr.hasSchemeName()) {
                 String schemeKey = tableExpr.getSchemeName();
                 DbType dbType = schemeManager.getDbType(schemeKey);

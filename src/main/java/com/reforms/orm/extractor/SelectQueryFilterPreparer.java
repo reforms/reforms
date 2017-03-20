@@ -1,13 +1,5 @@
 package com.reforms.orm.extractor;
 
-import static com.reforms.orm.OrmConfigurator.getInstance;
-import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
-import static com.reforms.sql.expr.term.value.ValueExpressionType.*;
-
-import java.lang.reflect.Array;
-import java.util.Collection;
-import java.util.List;
-
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.dao.column.ColumnAlias;
@@ -22,6 +14,14 @@ import com.reforms.sql.expr.term.from.TableExpression;
 import com.reforms.sql.expr.term.value.FilterExpression;
 import com.reforms.sql.expr.term.value.PageQuestionExpression;
 import com.reforms.sql.expr.term.value.ValueExpression;
+
+import java.lang.reflect.Array;
+import java.util.Collection;
+import java.util.List;
+
+import static com.reforms.orm.OrmConfigurator.getInstance;
+import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
+import static com.reforms.sql.expr.term.value.ValueExpressionType.*;
 
 /**
  * Подготовка SelectQuery к тому виду, в котором она будет отправлена в PrepareStatement
@@ -64,7 +64,7 @@ public class SelectQueryFilterPreparer {
     private void prepareScheme(SelectQuery selectQuery) {
         TableExpressionExtractor tableExprExtractor = new TableExpressionExtractor();
         ISchemeManager schemeManager = getInstance(ISchemeManager.class);
-        for (TableExpression tableExpr : tableExprExtractor.extractFilterExpressions(selectQuery)) {
+        for (TableExpression tableExpr : tableExprExtractor.extractTableExpressions(selectQuery)) {
             if (tableExpr.hasSchemeName()) {
                 String schemeKey = tableExpr.getSchemeName();
                 String originScheme = schemeManager.getSchemeName(schemeKey);

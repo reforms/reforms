@@ -22,8 +22,26 @@ public class UTestCurrentSqlParser {
         // assertWhereStatement("id = :id? AND name = :name?");
         // assertOrderByStatement("1 ASC, 2 DESC");
         //        assertSelectQuery("SELECT age AS bobj1.bobj2.bobj3");
-        //assertSelectQuery("SELECT age AS #t_bobj1.bobj2.bobj3");
-        assertSelectQuery("SELECT * FROM ibank2.clients cln CROSS JOIN ibank2.accounts acc WHERE cln.client_id = acc.id");
+        //assertSelectQuery("SELECT clientId::real");
+        //assertSelectQuery("SELECT * FROM ibank2.clients cln CROSS JOIN ibank2.accounts acc WHERE cln.client_id = acc.id");
+        //        assertSelectQueryWithAsClause("SELECT clientId::real");
+        assertSelectQuery("SELECT NOW()");
+    }
+
+    private void assertSelectQueryWithAsClause(String query) { //AS client_name
+        for (String asClause : new String[] {
+                // TODO исправить парсер
+                // "::date",
+                // "::time",
+                //" AT TIME ZONE 'UTC' AS datetime_alias,
+                //" \"Первая\"\" колонка\"",
+                " firstColumn",
+                " AS firstColumn",
+                " \"Первая колонка\"",
+                " AS \"Первая колонка\"",
+        }) {
+            assertSelectQuery(query + asClause);
+        }
     }
 
     private void assertWhereStatement(String whereStatement) {

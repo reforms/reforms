@@ -1,14 +1,14 @@
 package com.reforms.sql.expr.query;
 
-import static com.reforms.sql.expr.term.ExpressionType.ET_SELECT_QUERY;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import com.reforms.sql.expr.statement.*;
 import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.term.SelectableExpression;
 import com.reforms.sql.expr.viewer.SqlBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.reforms.sql.expr.term.ExpressionType.ET_SELECT_QUERY;
 
 /**
  * TODO: ссылки.
@@ -73,6 +73,13 @@ public class SelectQuery extends SelectableExpression {
 
     public void setHavingStatement(HavingStatement havingStatement) {
         this.havingStatement = havingStatement;
+    }
+
+    public LinkingSelectQuery getLinkingQueryAt(int index) {
+        if (linkingQueries.size() > index) {
+            return linkingQueries.get(index);
+        }
+        return null;
     }
 
     public List<LinkingSelectQuery> getLinkingQueries() {

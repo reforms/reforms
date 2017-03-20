@@ -54,11 +54,38 @@ public class SqlParser {
     }
 
     public SelectQuery parseSelectQuery() {
-        SelectQuery directSelectQuery = parseSingleSelectQuery();
+        SelectQuery directSelectQuery = parseVariantOfSelectQuery();
         if (!stream.finished()) {
             throw stream.createException("Не удалось до конца разобрать запрос");
         }
         return directSelectQuery;
+    }
+
+    /**
+     * (SELECT ...) UNION ALL (SELECT )
+     * @return
+     */
+    private SelectQuery parseVariantOfSelectQuery() {
+        if (checkIsSubSelectQuery()) {
+            SelectQuery subSelectQuery = parseSubSelectQuery();
+            List<LinkingSelectQuery> linkingSelectQueries = parseLinkingSelectQueries();
+            OrderByStatement orderByStatement = parseOrderByStatement();
+            PageStatement pageStatement = parsePageStatement();
+            if (linkingSelectQueries.isEmpty() && orderByStatement == null && pageStatement == null) {
+                return subSelectQuery;
+            }
+            SelectQuery listOfSelectQuery = new SelectQuery();
+            LinkingSelectQuery firstLinkingQuery = new LinkingSelectQuery();
+            firstLinkingQuery.setLinkedSelectQuery(subSelectQuery);
+            listOfSelectQuery.addLinkingQuery(firstLinkingQuery);
+            for (LinkingSelectQuery otherLinkedQuery : linkingSelectQueries) {
+                listOfSelectQuery.addLinkingQuery(otherLinkedQuery);
+            }
+            listOfSelectQuery.setOrderByStatement(orderByStatement);
+            listOfSelectQuery.setPageStatement(pageStatement);
+            return listOfSelectQuery;
+        }
+        return parseSingleSelectQuery();
     }
 
     private SelectQuery parseSingleSelectQuery() {
@@ -193,7 +220,7 @@ public class SqlParser {
                 String allWord = parseAllWord();
                 linkedSelectExpr.setAllWord(allWord);
             }
-            SelectQuery linkedSelectQuery = parseSingleSelectQuery();
+            SelectQuery linkedSelectQuery = parseVariantOfSelectQuery();
             linkedSelectExpr.setLinkedSelectQuery(linkedSelectQuery);
             linkingSelectQueries.add(linkedSelectExpr);
         }
@@ -407,7 +434,7 @@ public class SqlParser {
     private FuncExpression parseFuncExpression() {
         FuncExpression funcExpr = new FuncExpression();
         int from = stream.getCursor();
-        String funcName = stream.parseSpecialWordValue(false);
+        String funcName = stream.parseSpecialWordValue();
         if (funcName == null) {
             throw stream.createException("Ожидается наименование функции", from);
         }
@@ -460,8 +487,12 @@ public class SqlParser {
         if (checkIsStringExpression()) {
             return true;
         }
-        // 3.3
+        // 3.3.1
         if (checkIsDateExpression()) {
+            return true;
+        }
+        // 3.3.2
+        if (checkIsDateJdbcExpression()) {
             return true;
         }
         // 3.4
@@ -489,9 +520,13 @@ public class SqlParser {
         if (checkIsStringExpression()) {
             return parseStringExpression();
         }
-        // 3.3
+        // 3.3.1
         if (checkIsDateExpression()) {
             return parseDateExpression();
+        }
+        // 3.3.2
+        if (checkIsDateJdbcExpression()) {
+            return parseDateJdbcExpression();
         }
         // 3.4
         if (checkIsConstExpression()) {
@@ -505,7 +540,7 @@ public class SqlParser {
         if (checkIsFilterExpression()) {
             return parseFilterExpression();
         }
-        return null;
+        throw stream.createException("Ожидается типовое значение");
     }
 
     // 3.1
@@ -538,29 +573,53 @@ public class SqlParser {
         return new StringExpression(stringValue);
     }
 
-    // 3.3
+    // 3.3.1
     private boolean checkIsDateExpression() {
         return stream.checkIsSpecialWordValueOneOf(SW_TIME, SW_DATE, SW_TIMESTAMP, SW_INTERVAL);
     }
 
-    // 3.3
+    // 3.3.1
     private ValueExpression parseDateExpression() {
         int from = stream.getCursor();
         String dateWord = stream.parseSpecialWordValueAndCheckOneOf(SW_TIME, SW_DATE, SW_TIMESTAMP, SW_INTERVAL);
         StringExpression dateValue = parseStringExpression();
         if (SW_TIME.equalsIgnoreCase(dateWord)) {
-            return new TimeExpression(dateWord, dateValue.getValue());
+            return new TimeExpression(dateWord, dateValue.getValue(), false);
         }
         if (SW_DATE.equalsIgnoreCase(dateWord)) {
-            return new DateExpression(dateWord, dateValue.getValue());
+            return new DateExpression(dateWord, dateValue.getValue(), false);
         }
         if (SW_TIMESTAMP.equalsIgnoreCase(dateWord)) {
-            return new TimestampExpression(dateWord, dateValue.getValue());
+            return new TimestampExpression(dateWord, dateValue.getValue(), false);
         }
         if (SW_INTERVAL.equalsIgnoreCase(dateWord)) {
             return new IntervalExpression(dateWord, dateValue.getValue());
         }
         throw stream.createException("Не известное выражение типа даты: '" + dateWord + "', value: '" + dateValue.getValue() + "'", from);
+    }
+
+    private boolean checkIsDateJdbcExpression() {
+        return stream.checkIsDelim('{', false);
+    }
+
+    private ValueExpression parseDateJdbcExpression() {
+        stream.checkIsDelim('{', true);
+        stream.moveCursor();
+        int from = stream.getCursor();
+        String dateTimeAlias = stream.parseSpecialWordValueAndCheckOneOf("T", "D", "TS");
+        StringExpression dateValue = parseStringExpression();
+        stream.checkIsDelim('}', true);
+        stream.moveCursor();
+        if ("T".equalsIgnoreCase(dateTimeAlias)) {
+            return new TimeExpression(dateTimeAlias, dateValue.getValue(), true);
+        }
+        if ("D".equalsIgnoreCase(dateTimeAlias)) {
+            return new DateExpression(dateTimeAlias, dateValue.getValue(), true);
+        }
+        if ("TS".equalsIgnoreCase(dateTimeAlias)) {
+            return new TimestampExpression(dateTimeAlias, dateValue.getValue(), true);
+        }
+        throw stream.createException("Не известное выражение типа даты в JDBC: '" + dateTimeAlias + "', value: '" + dateValue.getValue() + "'", from);
     }
 
     // 3.4
@@ -714,12 +773,13 @@ public class SqlParser {
         if (checkIsFuncExpression()) {
             targetExpr = parseFuncExpression();
         } else {
-            String typeName = stream.parseSpecialWordValue(false);
+            String typeName = stream.parseSpecialWordValue();
             if (typeName == null) {
                 throw stream.createException("Ожидается имя типа в CAST функции", from);
             }
             targetExpr = new FuncExpression();
             targetExpr.setName(typeName);
+            targetExpr.setShortStyle(true);
         }
         from = stream.getCursor();
         stream.checkIsCloseParen();
@@ -758,7 +818,7 @@ public class SqlParser {
 
     // 7
     private boolean checkIsColumnExpression() {
-        return stream.checkIsIdentifierValue(true);
+        return stream.checkIsIdentifierValue(true, true);
     }
 
     // 7
@@ -767,7 +827,7 @@ public class SqlParser {
         String prefix = null;
         String columnName = null;
         int from = stream.getCursor();
-        String value = stream.parseIdentifierValue();
+        String value = stream.parseIdentifierValue(true);
         if (value == null) {
             throw stream.createException("Не является именем колонки", from);
         }
@@ -780,7 +840,7 @@ public class SqlParser {
                 columnName = stream.getValueFrom(stream.getCursor() - 1);
             } else {
                 from = stream.getCursor();
-                columnName = stream.parseIdentifierValue();
+                columnName = stream.parseIdentifierValue(true);
                 if (columnName == null) {
                     throw stream.createException("Не является именем колонки", from);
                 }
@@ -886,7 +946,7 @@ public class SqlParser {
     }
 
     private boolean checkIsTableExpression() {
-        return stream.checkIsIdentifierValue(true);
+        return stream.checkIsIdentifierValue(true, true);
     }
 
     private TableExpression parseTableExpression() {
@@ -944,12 +1004,13 @@ public class SqlParser {
             templateExpr = parseFuncExpression();
         } else {
             from = stream.getCursor();
-            String templateName = stream.parseSpecialWordValue(false);
+            String templateName = stream.parseSpecialWordValue();
             if (templateName == null) {
                 throw stream.createException("Ожидается имя шаблона для VALUES выражения", from);
             }
             templateExpr = new FuncExpression();
             templateExpr.setName(templateName);
+            templateExpr.setShortStyle(true);
         }
         tableValuesExpr.setTemplateExpr(templateExpr);
         return tableValuesExpr;

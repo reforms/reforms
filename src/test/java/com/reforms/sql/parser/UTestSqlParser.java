@@ -10,16 +10,16 @@ import static org.junit.Assert.assertEquals;
 /**
  * 1.
  * SELECT client_id, name_cln, addr_cln
-        FROM ibank2.clients
+        FROM schemeName.test_clients
                 WHERE (client_id, name_cln, addr_cln) = (60, 'архивный юрик', 'moskow');
     2.
-    assertWhereStatement("WHERE (1) MATCH (SELECT client_id FROM ibank2.clients)");
-    TODO add new test:
-    (SELECT client_id, 1 as filter FROM ibank2.clients
+    assertWhereStatement("WHERE (1) MATCH (SELECT client_id FROM schemeName.test_clients)");
+    TODO add new test in SCENARIO package:
+    (SELECT client_id, 1 as filter FROM schemeName.test_clients
              WHERE group_id = 1 AND act_time >= NOW()
              ORDER BY client_id DESC)
              UNION ALL
-             (SELECT client_id, 2 as filter FROM ibank2.clients
+             (SELECT client_id, 2 as filter FROM schemeName.test_clients
              WHERE group_id = 1 AND act_time < NOW()
              ORDER BY client_id DESC)
              ORDER BY filter
@@ -67,6 +67,8 @@ public class UTestSqlParser {
     @Test
     public void testColumnsSelectStatement() {
         assertSelectQueryWithAsClause("SELECT age");
+        assertSelectQueryWithAsClause("SELECT \"age\"");
+        assertSelectQueryWithAsClause("SELECT \"schemaName\".\"age\"");
     }
 
     @Test
@@ -89,6 +91,7 @@ public class UTestSqlParser {
         assertSelectQueryWithAsClause("SELECT NULLIF(client_id, 2)");
         assertSelectQueryWithAsClause("SELECT UPPER('tot')");
         assertSelectQueryWithAsClause("SELECT LOWER('tot')");
+        assertSelectQueryWithAsClause("SELECT NOW()");
     }
 
     @Test
@@ -122,6 +125,24 @@ public class UTestSqlParser {
         assertSelectQueryWithAsClause("SELECT ((2 + 3) * 4 - 5) * columnName");
     }
 
+    @Test
+    public void testCommonSqlDateAndTime() {
+        //        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC'");
+        //        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC'");
+        //        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC' AS datetime_alias");
+        //        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS datetime_alias");
+        //        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC' AS \"Сейчас\"");
+        //        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS \"Сейчас\"");
+        //{ts '2017-01-01 19:12:01.69'}
+        assertSelectQueryWithAsClause("SELECT TIME '2004-10-19 10:23:54'");
+        assertSelectQueryWithAsClause("SELECT DATE '2004-10-19 10:23:54'");
+        assertSelectQueryWithAsClause("SELECT TIMESTAMP '2004-10-19 10:23:54'");
+        assertSelectQueryWithAsClause("SELECT INTERVAL '1 day'");
+        assertSelectQueryWithAsClause("SELECT {TS '2017-01-01 19:12:01.69'}");
+        assertSelectQueryWithAsClause("SELECT {D '2017-01-01'}");
+        assertSelectQueryWithAsClause("SELECT {T '19:12:01'}");
+    }
+
     private void assertSelectQueryWithAsClause(String query) { //AS client_name
         for (String asClause : new String[] {
                 // TODO исправить парсер
@@ -152,25 +173,6 @@ public class UTestSqlParser {
         assertSelectQuery("SELECT age AS b3:t#bobj1.bobj2.bobj3");
         // Результат с алиаса b3, в качестве сетера будет setAge и типом timestamp
         assertSelectQuery("SELECT age AS b3:t#");
-    }
-
-    @Test
-    public void testCommonSqlDateAndTime() {
-//        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC'");
-//        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC'");
-//        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC' AS datetime_alias");
-//        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS datetime_alias");
-        //        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC' AS \"Сейчас\"");
-        //        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS \"Сейчас\"");
-        //{ts '2017-01-01 19:12:01.69'}
-        assertSelectQuery("SELECT TIME '2004-10-19 10:23:54'");
-        assertSelectQuery("SELECT TIME '2004-10-19 10:23:54' AS time_alias");
-        assertSelectQuery("SELECT DATE '2004-10-19 10:23:54'");
-        assertSelectQuery("SELECT DATE '2004-10-19 10:23:54' AS date_alias");
-        assertSelectQuery("SELECT TIMESTAMP '2004-10-19 10:23:54'");
-        assertSelectQuery("SELECT TIMESTAMP '2004-10-19 10:23:54' AS timestamp_alias");
-        assertSelectQuery("SELECT INTERVAL '1 day'");
-        assertSelectQuery("SELECT INTERVAL '1 day' AS timestamp_alias");
     }
 
 //    @Test
@@ -257,29 +259,33 @@ public class UTestSqlParser {
         assertSelectQuery("SELECT 2 FROM tableName AS tn");
         assertSelectQuery("SELECT 2 FROM tableName AS tn, tableName1 AS tn1");
         assertSelectQuery("SELECT 2 FROM schemaName.tableName");
+        assertSelectQuery("SELECT 2 FROM schemaName.[tableName]");
+        assertSelectQuery("SELECT 2 FROM schemaName.\"tableName\"");
+        assertSelectQuery("SELECT 2 FROM \"schemaName\".[tableName]");
+        assertSelectQuery("SELECT 2 FROM \"schemaName\".\"tableName\"");
         assertSelectQuery("SELECT 2 FROM schemaName.tableName, schemaName.tableName");
         assertSelectQuery("SELECT 2 FROM schemaName.tableName AS stn");
         assertSelectQuery("SELECT 2 FROM schemaName.tableName AS stn, schemaName.tableName AS stn");
 
-        assertSelectQuery("SELECT cl.cl1 FROM (SELECT client_id AS cl1 FROM ibank2.clients) cl");
+        assertSelectQuery("SELECT cl.cl1 FROM (SELECT client_id AS cl1 FROM schemeName.test_clients) cl");
         assertSelectQuery("SELECT cl1.cl1, cl2.cl2 " +
-                "FROM (SELECT client_id AS cl1 FROM ibank2.clients) AS cl1, " +
-                "(SELECT client_id AS cl2 FROM ibank2.clients) AS cl2");
+                "FROM (SELECT client_id AS cl1 FROM schemeName.test_clients) AS cl1, " +
+                "(SELECT client_id AS cl2 FROM schemeName.test_clients) AS cl2");
 
-        assertSelectQuery("SELECT * FROM ibank2.clients cln CROSS JOIN ibank2.accounts acc WHERE cln.client_id = acc.id");
-        assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p LEFT OUTER JOIN ibank2.clients cl ON p.client_id = cl.client_id");
-        assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p LEFT JOIN ibank2.clients cl ON p.client_id = cl.client_id");
-        assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p INNER JOIN ibank2.clients cl ON p.client_id = cl.client_id");
-        assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p RIGHT OUTER JOIN ibank2.clients cl ON p.client_id = cl.client_id");
-        assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p RIGHT JOIN ibank2.clients cl ON p.client_id = cl.client_id");
-        assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p FULL OUTER JOIN ibank2.clients cl ON p.client_id = cl.client_id");
-        assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p FULL JOIN ibank2.clients cl ON p.client_id = cl.client_id");
-        assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p RIGHT OUTER JOIN ibank2.clients cl ON p.client_id = cl.client_id");
-        assertSelectQuery("SELECT doc_id, cl.name_cln FROM ibank2.payment p, ibank2.clients cl LEFT OUTER JOIN ibank2.c2accounts c2a ON cl.client_id = c2a.client_id");
+        assertSelectQuery("SELECT * FROM schemeName.test_clients cln CROSS JOIN schemeName.accounts acc WHERE cln.client_id = acc.id");
+        assertSelectQuery("SELECT doc_id, cl.name_cln FROM schemeName.payment p LEFT OUTER JOIN schemeName.test_clients cl ON p.client_id = cl.client_id");
+        assertSelectQuery("SELECT doc_id, cl.name_cln FROM schemeName.payment p LEFT JOIN schemeName.test_clients cl ON p.client_id = cl.client_id");
+        assertSelectQuery("SELECT doc_id, cl.name_cln FROM schemeName.payment p INNER JOIN schemeName.test_clients cl ON p.client_id = cl.client_id");
+        assertSelectQuery("SELECT doc_id, cl.name_cln FROM schemeName.payment p RIGHT OUTER JOIN schemeName.test_clients cl ON p.client_id = cl.client_id");
+        assertSelectQuery("SELECT doc_id, cl.name_cln FROM schemeName.payment p RIGHT JOIN schemeName.test_clients cl ON p.client_id = cl.client_id");
+        assertSelectQuery("SELECT doc_id, cl.name_cln FROM schemeName.payment p FULL OUTER JOIN schemeName.test_clients cl ON p.client_id = cl.client_id");
+        assertSelectQuery("SELECT doc_id, cl.name_cln FROM schemeName.payment p FULL JOIN schemeName.test_clients cl ON p.client_id = cl.client_id");
+        assertSelectQuery("SELECT doc_id, cl.name_cln FROM schemeName.payment p RIGHT OUTER JOIN schemeName.test_clients cl ON p.client_id = cl.client_id");
+        assertSelectQuery("SELECT doc_id, cl.name_cln FROM schemeName.payment p, schemeName.test_clients cl LEFT OUTER JOIN schemeName.c2accounts c2a ON cl.client_id = c2a.client_id");
         assertSelectQuery("SELECT * FROM (VALUES (1, 2), (2, 3)) AS v(a, b)");
         assertSelectQuery("SELECT * FROM (VALUES (1, 2), (2, 3)) v(a, b)");
         assertSelectQuery("SELECT * FROM (VALUES (1, 2), (2, 3)) v");
-        assertSelectQuery("SELECT * FROM ibank2.clients cl, (VALUES (1), (2), (3)) v(a)");
+        assertSelectQuery("SELECT * FROM schemeName.test_clients cl, (VALUES (1), (2), (3)) v(a)");
     }
 
     @Test
@@ -316,8 +322,8 @@ public class UTestSqlParser {
         assertConditionStatement("(SELECT 1) IS NOT NULL", havingFlag);
         assertConditionStatement("(SELECT 1) IS NULL", havingFlag);
         // EXISTS
-        assertConditionStatement("NOT EXISTS (SELECT 1 FROM ibank2.clients)", havingFlag);
-        assertConditionStatement("EXISTS (SELECT 1 FROM ibank2.clients)", havingFlag);
+        assertConditionStatement("NOT EXISTS (SELECT 1 FROM schemeName.test_clients)", havingFlag);
+        assertConditionStatement("EXISTS (SELECT 1 FROM schemeName.test_clients)", havingFlag);
         // BETWEEN
         assertConditionStatement("t1.value BETWEEN t1.value1 AND t2.value2", havingFlag);
         assertConditionStatement("t1.value NOT BETWEEN t1.value1 AND t2.value2", havingFlag);
@@ -339,13 +345,13 @@ public class UTestSqlParser {
         assertConditionStatement("LOWER(t2.name_cln) LIKE ('12' || '_13') ESCAPE '_'", havingFlag);
         assertConditionStatement("UPPER(t2.name_cln) LIKE ('12' || '_13') ESCAPE ('' || '_')", havingFlag);
         // QUANTIFIER
-        assertConditionStatement("2 = ANY (SELECT client_id FROM ibank2.clients cl)", havingFlag);
-        assertConditionStatement("2 = ALL (SELECT client_id FROM ibank2.clients cl)", havingFlag);
-        assertConditionStatement("2 = SOME (SELECT client_id FROM ibank2.clients cl)", havingFlag);
+        assertConditionStatement("2 = ANY (SELECT client_id FROM schemeName.test_clients cl)", havingFlag);
+        assertConditionStatement("2 = ALL (SELECT client_id FROM schemeName.test_clients cl)", havingFlag);
+        assertConditionStatement("2 = SOME (SELECT client_id FROM schemeName.test_clients cl)", havingFlag);
         // UNIQUE
-        assertConditionStatement("UNIQUE (SELECT client_id FROM ibank2.clients)", havingFlag);
-        assertConditionStatement("(UNIQUE (SELECT client_id FROM ibank2.clients))", havingFlag);
-        // assertWhereStatement("WHERE (1) MATCH (SELECT client_id FROM ibank2.clients)");
+        assertConditionStatement("UNIQUE (SELECT client_id FROM schemeName.test_clients)", havingFlag);
+        assertConditionStatement("(UNIQUE (SELECT client_id FROM schemeName.test_clients))", havingFlag);
+        // assertWhereStatement("WHERE (1) MATCH (SELECT client_id FROM schemeName.test_clients)");
         // CASE
         assertConditionStatement("name LIKE '12' OR (CASE WHEN id = ? OR id = ? THEN 0 ELSE id END) > 2", havingFlag);
     }
@@ -402,6 +408,14 @@ public class UTestSqlParser {
         assertSelectQuery("SELECT id, name FROM local.users INTERSECT SELECT id, name FROM local.users WHERE id > 3");
         assertSelectQuery("SELECT id, name FROM local.users MINUS ALL SELECT id, name FROM local.users WHERE id > 3");
         assertSelectQuery("SELECT id, name FROM local.users MINUS SELECT id, name FROM local.users WHERE id > 3");
+        assertSelectQuery("(SELECT client_id, 1 as filter FROM schemeName.test_clients " +
+                "WHERE group_id = 1 AND act_time >= NOW() " +
+                "ORDER BY client_id DESC) " +
+                "UNION ALL " +
+                "(SELECT client_id, 2 as filter FROM schemeName.test_clients " +
+                "WHERE group_id = 1 AND act_time < NOW() " +
+                "ORDER BY client_id DESC) " +
+                "ORDER BY filter");
     }
 
     @Test

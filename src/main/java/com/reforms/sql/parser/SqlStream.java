@@ -277,6 +277,16 @@ public class SqlStream {
     }
 
     /**
+     * Проверить, является ли следуюший токен обернутым в двойные кавычки
+     * @return true - токен в двойных кавычках, false - иначе
+     */
+    public boolean checkIsDoubleQuoteValue() {
+        skipSpaces();
+        char symbol = getSymbol();
+        return '"' == symbol;
+    }
+
+    /**
      * Распарсить значение в двойных кавычках
      * @return значение в двойных кавычках
      *         или NULL, если это не значение в двойных кавычках
@@ -442,31 +452,18 @@ public class SqlStream {
      *         или NULL, если это не логически-значимая часть sql выражения
      */
     public String parseSpecialWordValue() {
-        return parseSpecialWordValue(true);
-    }
-
-    /**
-     * Распарсить логически-значимую часть sql выражения - ключевое слово
-     * @param toUpperCase признак того, что результат нужно приводить к верхнему регистру
-     * @return логически-значимая часть sql выражения
-     *         или NULL, если это не логически-значимая часть sql выражения
-     */
-    public String parseSpecialWordValue(boolean toUpperCase) {
-        String specialWordValue = parseIdentifierValue();
-        if (specialWordValue != null && toUpperCase) {
-            specialWordValue = specialWordValue.toUpperCase();
-        }
-        return specialWordValue;
+        return parseIdentifierValue();
     }
 
     /**
      * Проверить, является ли это логически-значимой частью sql выражения
      * @param ignoreSqlSpecialWord признак того, что ключевые слова игнорируются
+     * @param doubleQuoteFlag признак разбора токена, указанного в двойных кавычках.
      * @return true - это логически-значимой частью sql выражения
      */
-    public boolean checkIsIdentifierValue(boolean ignoreSqlSpecialWord) {
+    public boolean checkIsIdentifierValue(boolean ignoreSqlSpecialWord, boolean doubleQuoteFlag) {
         keepParserState();
-        String identifier = parseIdentifierValue();
+        String identifier = parseIdentifierValue(doubleQuoteFlag);
         rollbackParserState();
         return !(identifier == null || (SqlWords.isSqlWord(identifier) && ignoreSqlSpecialWord));
     }
@@ -491,7 +488,7 @@ public class SqlStream {
      *         или NULL, если это не логически-значимая часть sql выражения
      */
     public String parseMetaIdentifierValue() {
-        return parseIdentifierValue(DONT_SQL_EXT_IDENTIFIER_CHARS);
+        return parseIdentifierValue(DONT_SQL_EXT_IDENTIFIER_CHARS, ':', false);
     }
 
     /**
@@ -506,18 +503,41 @@ public class SqlStream {
      *         или NULL, если это не логически-значимая часть sql выражения
      */
     public String parseIdentifierValue() {
-        return parseIdentifierValue(DONT_SQL_IDENTIFIER_CHARS);
+        return parseIdentifierValue(false);
+    }
+
+    /**
+     * Распарсить логически-значимую часть sql выражения
+     * @param doubleQuoteFlag признак разбора токена, указанного в двойных кавычках.
+     * @return логически-значимая часть sql выражения
+     *         или NULL, если это не логически-значимая часть sql выражения
+     */
+    public String parseIdentifierValue(boolean doubleQuoteFlag) {
+        return parseIdentifierValue(DONT_SQL_IDENTIFIER_CHARS, EOF, doubleQuoteFlag);
     }
 
     private String parseIdentifierValue(List<Character> dontSqlWordLetters) {
-        skipSpaces();
-        int from = getCursor();
-        while (!dontSqlWordLetters.contains(getSymbol())) {
-            moveCursor();
+        return parseIdentifierValue(dontSqlWordLetters, EOF, false);
+    }
+
+    private String parseIdentifierValue(List<Character> dontSqlWordLetters, char ignoreFirst, boolean doubleQuoteFlag) {
+        if (doubleQuoteFlag && checkIsDoubleQuoteValue()) {
+            return parseDoubleQuoteValue();
         }
+        return parseSimpleIdentifierValue(dontSqlWordLetters, ignoreFirst);
+    }
+
+    private String parseSimpleIdentifierValue(List<Character> dontSqlWordLetters, char ignoreFirst) {
+        skipSpaces();
         String word = null;
-        if (from != getCursor()) {
-            word = getValueFrom(from).trim();
+        int from = getCursor();
+        if (ignoreFirst != getSymbol()) {
+            while (!dontSqlWordLetters.contains(getSymbol())) {
+                moveCursor();
+            }
+            if (from != getCursor()) {
+                word = getValueFrom(from).trim();
+            }
         }
         return word;
     }

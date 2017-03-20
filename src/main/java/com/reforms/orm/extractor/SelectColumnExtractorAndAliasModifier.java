@@ -7,6 +7,7 @@ import com.reforms.orm.dao.column.ColumnAliasParser;
 import com.reforms.orm.dao.column.SelectedColumn;
 import com.reforms.orm.dao.filter.column.AllSelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
+import com.reforms.sql.expr.query.LinkingSelectQuery;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.statement.SelectStatement;
 import com.reforms.sql.expr.term.*;
@@ -39,7 +40,10 @@ class SelectColumnExtractorAndAliasModifier {
             selectedColumnFilter = getInstance(AllSelectedColumnFilter.class);
         }
         List<SelectedColumn> columns = new ArrayList<>();
-        SelectStatement selectStatement = selectQuery.getSelectStatement();
+        SelectStatement selectStatement = extractFirstSelectStatement(selectQuery);
+        if (selectStatement == null) {
+            throw new IllegalStateException("Не удалось извлечь список полей для выборки у запроса '" + selectQuery + "'");
+        }
         List<SelectableExpression> selectableExprs = selectStatement.getSelectExps();
         int index = 1;
         Iterator<SelectableExpression> selectableExprIterator = selectableExprs.iterator();
@@ -67,13 +71,24 @@ class SelectColumnExtractorAndAliasModifier {
         return columns;
     }
 
+    private SelectStatement extractFirstSelectStatement(SelectQuery selectQuery) {
+        if (selectQuery.getSelectStatement() != null) {
+            return selectQuery.getSelectStatement();
+        }
+        LinkingSelectQuery linkingSelectQuery = selectQuery.getLinkingQueryAt(0);
+        if (linkingSelectQuery != null) {
+            return extractFirstSelectStatement(linkingSelectQuery.getLinkedSelectQuery());
+        }
+        return null;
+    }
+
     protected SelectedColumn fromAliasExpression(int index, AliasExpression aliasExpr) {
         SelectedColumn selectedColumn = new SelectedColumn();
         Expression primaryExpr = aliasExpr.getPrimaryExpr();
         if (primaryExpr instanceof ColumnExpression) {
             ColumnExpression columnExpr = (ColumnExpression) primaryExpr;
-            selectedColumn.setPrefixColumnName(columnExpr.getPrefix());
-            selectedColumn.setColumnName(columnExpr.getColumnName());
+            selectedColumn.setPrefixColumnName(unwrapValue(columnExpr.getPrefix()));
+            selectedColumn.setColumnName(unwrapValue(columnExpr.getColumnName()));
         }
         AsClauseExpression asClauseExpr = aliasExpr.getAsClauseExpr();
         String alias = asClauseExpr.getAlias();
@@ -93,8 +108,8 @@ class SelectColumnExtractorAndAliasModifier {
         SelectedColumn selectedColumn = new SelectedColumn();
         String columnName = columnExpr.getColumnName();
         selectedColumn.setIndex(index);
-        selectedColumn.setColumnName(columnName);
-        selectedColumn.setPrefixColumnName(columnExpr.getPrefix());
+        selectedColumn.setPrefixColumnName(unwrapValue(columnExpr.getPrefix()));
+        selectedColumn.setColumnName(unwrapValue(columnName));
         ColumnAlias cAlias = new ColumnAlias();
         cAlias.setAlias(columnName);
         cAlias.setJavaAliasKey(columnName);
@@ -117,4 +132,13 @@ class SelectColumnExtractorAndAliasModifier {
         return selectedColumn;
     }
 
+    private String unwrapValue(String value) {
+        if (value == null) {
+            return null;
+        }
+        if (value.charAt(0) != '"') {
+            return value;
+        }
+        return value.substring(1, value.length() - 1);
+    }
 }

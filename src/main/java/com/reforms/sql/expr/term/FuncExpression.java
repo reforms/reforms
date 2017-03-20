@@ -1,11 +1,11 @@
 package com.reforms.sql.expr.term;
 
-import static com.reforms.sql.expr.term.ExpressionType.ET_FUNC_EXPRESSION;
-
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.reforms.sql.expr.term.ExpressionType.ET_FUNC_EXPRESSION;
 
 /**
  *
@@ -13,11 +13,21 @@ import java.util.List;
  */
 public class FuncExpression extends SelectableExpression {
 
+    private boolean shortStyle;
+
     private String name;
 
     private String quantifier;
 
     private List<SelectableExpression> args = new ArrayList<>();
+
+    public boolean isShortStyle() {
+        return shortStyle;
+    }
+
+    public void setShortStyle(boolean shortStyle) {
+        this.shortStyle = shortStyle;
+    }
 
     public String getName() {
         return name;
@@ -56,7 +66,7 @@ public class FuncExpression extends SelectableExpression {
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendSpace();
         sqlBuilder.appendWord(name);
-        if (!args.isEmpty()) {
+        if (!args.isEmpty() || !shortStyle) {
             sqlBuilder.append("(");
             if (quantifier != null) {
                 sqlBuilder.appendSpace();

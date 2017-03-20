@@ -18,7 +18,7 @@ public class TableExpressionExtractor extends SqlBuilder {
 
     private List<TableExpression> tableExprs;
 
-    public List<TableExpression> extractFilterExpressions(SelectQuery selectQuery) {
+    public List<TableExpression> extractTableExpressions(SelectQuery selectQuery) {
         tableExprs = new ArrayList<>();
         selectQuery.view(this);
         return tableExprs;

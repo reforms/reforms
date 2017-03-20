@@ -1,10 +1,10 @@
 package com.reforms.sql.expr.query;
 
-import static com.reforms.sql.expr.term.ExpressionType.ET_LINKING_SELECT_QUERY;
-
 import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.viewer.SqlBuilder;
+
+import static com.reforms.sql.expr.term.ExpressionType.ET_LINKING_SELECT_QUERY;
 
 public class LinkingSelectQuery extends Expression {
 
@@ -45,8 +45,10 @@ public class LinkingSelectQuery extends Expression {
 
     @Override
     public void view(SqlBuilder sqlBuilder) {
-        sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(linkedWord);
+        if (linkedWord != null) {
+            sqlBuilder.appendSpace();
+            sqlBuilder.appendWord(linkedWord);
+        }
         if (allWord != null) {
             sqlBuilder.appendSpace();
             sqlBuilder.appendWord(allWord);

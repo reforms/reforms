@@ -1,17 +1,17 @@
 package com.reforms.orm.filter;
 
-import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
-import static org.junit.Assert.assertEquals;
-
-import java.math.BigDecimal;
-
-import org.junit.Test;
-
 import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.dao.filter.FilterMap;
 import com.reforms.orm.extractor.SelectQueryFilterPreparer;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
+
+import org.junit.Test;
+
+import java.math.BigDecimal;
+
+import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
+import static org.junit.Assert.assertEquals;
 
 public class UTestSearchGroupDynamicFilter {
 
