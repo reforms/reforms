@@ -38,4 +38,13 @@ public class OptWords {
 
     public static final OptWord OW_R_RIGHT = new OptWord(true, SW_RIGHT);
 
+    public static final OptWord OW_R_WITH = new OptWord(true, SW_WITH);
+
+    public static final OptWord OW_R_TIES = new OptWord(true, SW_TIES);
+
+    public static final OptWord OW_R_AT = new OptWord(true, SW_AT);
+
+    public static final OptWord OW_R_TIME = new OptWord(true, SW_TIME);
+
+    public static final OptWord OW_R_ZONE = new OptWord(true, SW_ZONE);
 }

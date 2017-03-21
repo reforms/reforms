@@ -11,6 +11,8 @@ public abstract class Expression implements ISqlViewer, IExpressionChanger {
 
     private boolean wrapped;
 
+    private boolean spacable = true;
+
     private boolean changedFlag;
 
     /** TODO: Архитектурный костыль.
@@ -37,6 +39,14 @@ public abstract class Expression implements ISqlViewer, IExpressionChanger {
 
     public Expression getChangedExpr() {
         return changedExpr;
+    }
+
+    public void setSpacable(boolean spacable) {
+        this.spacable = spacable;
+    }
+
+    public boolean isSpacable() {
+        return spacable;
     }
 
     @Override

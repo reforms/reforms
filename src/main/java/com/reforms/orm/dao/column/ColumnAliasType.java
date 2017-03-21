@@ -8,13 +8,14 @@ import java.util.Map;
  * *  Список поддерживаемых форматов для алиасов:
  *  z               - boolean
  *  y               - byte
- *  z               - short
+ *  x               - short
  *  i               - int
  *  f               - float
  *  w               - double
  *  l               - long
  *  s or nothing    - java.lang.String
  *  n               - java.math.BigDecimal
+ *  I               - java.math.BigInteger
  *  d               - java.sql.Date
  *  v               - java.sql.Time
  *  t               - java.sql.Timestamp
@@ -36,6 +37,7 @@ public enum ColumnAliasType {
     CAT_E_ENUM("e"),
     CAT_S_STRING("s"),
     CAT_N_BIGDECIMAL("n"),
+    CAT_I_BIGINTEGER("I"),
     CAT_D_DATE("d"),
     CAT_V_TIME("v"),
     CAT_T_TIMESTAMP("t"),

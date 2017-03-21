@@ -1,8 +1,8 @@
 package com.reforms.orm.dao.filter.param;
 
-import static com.reforms.orm.dao.column.ColumnAliasType.*;
-
 import java.util.*;
+
+import static com.reforms.orm.dao.column.ColumnAliasType.*;
 
 /**
  * Фабрика установщиков параметров в ResultSet
@@ -28,6 +28,7 @@ public class ParamSetterFactory {
         baseParamSetters.put(CAT_E_ENUM.getMarker(), new EnumParamSetter(this));
         baseParamSetters.put(CAT_S_STRING.getMarker(), new StringParamSetter());
         baseParamSetters.put(CAT_N_BIGDECIMAL.getMarker(), new BigDecimalParamSetter());
+        baseParamSetters.put(CAT_I_BIGINTEGER.getMarker(), new BigDecimalParamSetter());
         baseParamSetters.put(CAT_D_DATE.getMarker(), new DateParamSetter());
         baseParamSetters.put(CAT_T_TIMESTAMP.getMarker(), new TimestampParamSetter());
         baseParamSetters.put(CAT_V_TIME.getMarker(), new TimeParamSetter());

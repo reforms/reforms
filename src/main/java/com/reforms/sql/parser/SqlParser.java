@@ -114,7 +114,12 @@ public class SqlParser {
         String selectWord = stream.parseSpecialWordValueAndCheck(SW_SELECT);
         // 2. [ALL | DISTINCT] mode word
         String selectModeWord = parseSelectModeWord();
-        // 3. SELECT STATEMENT
+        // 3. [TOP]
+        TopExpression topExpr = null;
+        if (checkIsTopExpression()) {
+            topExpr = parseTopExpression();
+        }
+        // 4. SELECT STATEMENT
         SelectStatement selectStatement = new SelectStatement();
         SelectableExpression selectExpr = parseFullSelectableExpression();
         if (selectExpr == null) {
@@ -134,6 +139,7 @@ public class SqlParser {
         }
         selectStatement.setSelectWord(selectWord);
         selectStatement.setModeWord(selectModeWord);
+        selectStatement.setCustomExpr(topExpr);
         return selectStatement;
     }
 
@@ -267,10 +273,16 @@ public class SqlParser {
         if (selectExpr != null) {
             AsClauseExpression asClauseExpr = parseAsClauseExpression(true);
             if (asClauseExpr != null) {
-                AliasExpression aliasExpr = new AliasExpression();
-                aliasExpr.setPrimaryExpr(selectExpr);
-                aliasExpr.setAsClauseExpr(asClauseExpr);
-                selectExpr = aliasExpr;
+                if (selectExpr instanceof ExtendsSelectableExpression) {
+                    ExtendsSelectableExpression extSelectableExpr = (ExtendsSelectableExpression) selectExpr;
+                    extSelectableExpr.setAsClauseExpr(asClauseExpr);
+                    selectExpr = extSelectableExpr;
+                } else {
+                    ExtendsSelectableExpression extSelectableExpr = new ExtendsSelectableExpression();
+                    extSelectableExpr.setPrimaryExpr(selectExpr);
+                    extSelectableExpr.setAsClauseExpr(asClauseExpr);
+                    selectExpr = extSelectableExpr;
+                }
             }
         }
         return selectExpr;
@@ -315,12 +327,18 @@ public class SqlParser {
                 } else {
                     parentLevel = levels.pop();
                 }
-                parentLevel.add(currentLevel.combine(true));
+                Expression layerExpression = currentLevel.combine(true);
+                ExtendsSelectableExpression extSelectableExpr = parseExtendsSelectableExpression();
+                if (extSelectableExpr != null) {
+                    extSelectableExpr.setPrimaryExpr(layerExpression);
+                    layerExpression = extSelectableExpr;
+                }
+                parentLevel.add(layerExpression);
                 levels.push(parentLevel);
                 continue;
             }
             if (expressionState) {
-                Expression expr = parseSelectableExpression();
+                Expression expr = parseSelectableWithExtraInfoExpression();
                 ParenLevel currentLevel = levels.peek();
                 currentLevel.add(expr);
                 expressionState = false;
@@ -377,6 +395,78 @@ public class SqlParser {
         return null;
     }
 
+    private SelectableExpression parseSelectableWithExtraInfoExpression() {
+        SelectableExpression primaryExpr = parseSelectableExpression();
+        ExtendsSelectableExpression extSelectableExpr = parseExtendsSelectableExpression();
+        if (extSelectableExpr != null) {
+            extSelectableExpr.setPrimaryExpr(primaryExpr);
+            return extSelectableExpr;
+        }
+        return primaryExpr;
+    }
+
+    private ExtendsSelectableExpression parseExtendsSelectableExpression() {
+        TimeZoneExpression timeZoneExpr = null;
+        if (checkIsTimeZoneExpression()) {
+            timeZoneExpr = parseTimeZoneExpression();
+        }
+        TypeCastExpression typeCastExpr = null;
+        if (checkIsTypeCastExpression()) {
+            typeCastExpr = parseTypeCastExpression();
+        }
+        ExtendsSelectableExpression extSelectableExpr = null;
+        if (timeZoneExpr != null || typeCastExpr != null) {
+            extSelectableExpr = new ExtendsSelectableExpression();
+            extSelectableExpr.setTimeZoneExpr(timeZoneExpr);
+            extSelectableExpr.setTypeCastExpr(typeCastExpr);
+            return extSelectableExpr;
+        }
+        return null;
+    }
+
+    private boolean checkIsTimeZoneExpression() {
+        return stream.checkIsSpecialWordSequents(OW_R_AT, OW_R_TIME, OW_R_ZONE);
+    }
+
+    private TimeZoneExpression parseTimeZoneExpression() {
+        String atTimeZonePhrase = stream.parseSpecialWordSequents(OW_R_AT, OW_R_TIME, OW_R_ZONE);
+        if (atTimeZonePhrase == null) {
+            throw stream.createException("Ожидается фраза 'AT TIME ZONE'");
+        }
+        Expression timeZoneNameExpr = parseSelectableExpression();
+        TimeZoneExpression timeZoneExpr = new TimeZoneExpression();
+        timeZoneExpr.setAtTimeZonePhrase(atTimeZonePhrase);
+        timeZoneExpr.setTimeZoneNameExpr(timeZoneNameExpr);
+        return timeZoneExpr;
+    }
+
+    private boolean checkIsTypeCastExpression() {
+        stream.skipSpaces();
+        return ':' == stream.getSymbol() && ':' == stream.getSymbol(1);
+    }
+
+    private TypeCastExpression parseTypeCastExpression() {
+        if (!checkIsTypeCastExpression()) {
+            throw stream.createException("Ожидается символы '::'");
+        }
+        stream.moveCursor(2);
+        FuncExpression typeInfoExpr = null;
+        if (checkIsFuncExpression()) {
+            typeInfoExpr = parseFuncExpression();
+        } else {
+            String typeName = stream.parseSpecialWordValue();
+            if (typeName == null) {
+                throw stream.createException("Ожидается имя кастуемого типа функции");
+            }
+            typeInfoExpr = new FuncExpression();
+            typeInfoExpr.setName(typeName);
+            typeInfoExpr.setShortStyle(true);
+        }
+        TypeCastExpression typeCastExpr = new TypeCastExpression();
+        typeCastExpr.setTypeInfoExpr(typeInfoExpr);
+        return typeCastExpr;
+    }
+
     private SelectableExpression parseSelectableExpression() {
         // 1
         if (checkIsAsteriskExpression()) {
@@ -406,7 +496,45 @@ public class SqlParser {
         if (checkIsColumnExpression()) {
             return parseColumnExpression();
         }
-        throw stream.createException("Неизвестное выражение для выборки", stream.getCursor());
+        throw stream.createException("Неизвестное выражение для выборки");
+    }
+
+    private boolean checkIsTopExpression() {
+        return stream.checkIsSpecialWordValueSame(SW_TOP);
+    }
+
+    private TopExpression parseTopExpression() {
+        String topWord = stream.parseSpecialWordValueAndCheck(SW_TOP);
+        boolean argFlag = false;
+        if (stream.checkIsOpenParent(false)) {
+            argFlag = true;
+            stream.moveCursor();
+        }
+        Expression valueExpr = parseSelectableExpression();
+        if (argFlag) {
+            stream.checkIsCloseParen();
+            stream.moveCursor();
+        }
+        String percentWord = stream.parseSpecialWordValueVariants(SW_PERCENT);
+        String withTiesWords = null;
+        int from = stream.getCursor();
+        if (checkIsWithWord()) {
+            withTiesWords = stream.parseSpecialWordSequents(OW_R_WITH, OW_R_TIES);
+            if (withTiesWords == null) {
+                throw stream.createException("Неизвестное выражение при разборе TOP части. Ожидается 'WITH TIES'.", from);
+            }
+        }
+        TopExpression topExpr = new TopExpression();
+        topExpr.setTopWord(topWord);
+        topExpr.setArgFlag(argFlag);
+        topExpr.setExpression(valueExpr);
+        topExpr.setPercentWord(percentWord);
+        topExpr.setWithTiesWords(withTiesWords);
+        return topExpr;
+    }
+
+    private boolean checkIsWithWord() {
+        return stream.checkIsSpecialWordValueSame(SW_WITH);
     }
 
     // 1
@@ -1460,7 +1588,7 @@ public class SqlParser {
         while (',' == stream.getSymbol()) {
             stream.moveCursor();
             from = stream.getCursor();
-            Expression valueExpr = parseSelectableExpression();
+            Expression valueExpr = parseSelectableWithExtraInfoExpression();
             stream.skipSpaces();
             leftValuesExpr.addValueExpr(valueExpr);
         }

@@ -64,7 +64,6 @@ public class FuncExpression extends SelectableExpression {
 
     @Override
     public void view(SqlBuilder sqlBuilder) {
-        sqlBuilder.appendSpace();
         sqlBuilder.appendWord(name);
         if (!args.isEmpty() || !shortStyle) {
             sqlBuilder.append("(");

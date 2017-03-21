@@ -38,7 +38,9 @@ public class SqlBuilder {
             if (expr.isChangedExpression()) {
                 appendExpression(expr.getChangedExpr());
             } else {
-                appendSpace();
+                if (expr.isSpacable()) {
+                    appendSpace();
+                }
                 if (expr.isWrapped()) {
                     append("(");
                 }

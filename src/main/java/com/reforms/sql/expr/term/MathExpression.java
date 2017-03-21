@@ -1,8 +1,8 @@
 package com.reforms.sql.expr.term;
 
-import static com.reforms.sql.expr.term.ExpressionType.ET_MATH_EXPRESSION;
-
 import com.reforms.sql.expr.viewer.SqlBuilder;
+
+import static com.reforms.sql.expr.term.ExpressionType.ET_MATH_EXPRESSION;
 
 public class MathExpression extends SelectableExpression {
 

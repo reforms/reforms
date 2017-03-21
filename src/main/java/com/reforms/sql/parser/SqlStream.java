@@ -243,13 +243,15 @@ public class SqlStream {
         return null;
     }
 
+    /** Символ одинарной кавычки */
+    private static final char SINGLE_QUOTE_CHAR = '\'';
+
     /**
      * Проверить, является ли следующий токен строковым значением или нет
      * @return true следующий токен является строковым значением
      */
     public boolean checkIsStringValue() {
-        skipSpaces();
-        return '\'' == getSymbol();
+        return checkIsCharQuotedValue(SINGLE_QUOTE_CHAR);
     }
 
     /**
@@ -258,13 +260,63 @@ public class SqlStream {
      *         или NULL, если это не строковое значение
      */
     public String parseStringValue() {
-        if (checkIsStringValue()) {
+        return parseCharQuotedValue(SINGLE_QUOTE_CHAR);
+    }
+
+    /** Символ двойной кавычки */
+    private static final char DOUBLE_QUOTE_CHAR = '"';
+
+    /**
+     * Проверить, является ли следуюший токен обернутым в двойные кавычки
+     * @return true - токен в двойных кавычках, false - иначе
+     */
+    public boolean checkIsDoubleQuoteValue() {
+        return checkIsCharQuotedValue(DOUBLE_QUOTE_CHAR);
+    }
+
+    /**
+     * Распарсить значение в двойных кавычках
+     * @return значение в двойных кавычках
+     *         или NULL, если это не значение в двойных кавычках
+     */
+    public String parseDoubleQuoteValue() {
+        return parseCharQuotedValue(DOUBLE_QUOTE_CHAR);
+    }
+
+    /**
+     * Проверить, является ли следуюший токен обернутым в двойные/одинарные кавычки
+     * @param quotedSymbol симол одинарной или двойной кавычки
+     * @return true - токен в двойных/одинарных кавычках, false - иначе
+     */
+    private boolean checkIsCharQuotedValue(char quotedSymbol) {
+        skipSpaces();
+        char symbol = getSymbol();
+        return quotedSymbol == symbol;
+    }
+
+    /**
+     * Распарсить строковое значение
+     * @param quotedSymbol симол одинарной или двойной кавычки
+     * @return строковое значение
+     *         или NULL, если это не строковое значение
+     */
+    private String parseCharQuotedValue(char quotedSymbol) {
+        if (checkIsCharQuotedValue(quotedSymbol)) {
             char symbol = getSymbol();
             int from = getCursor();
-            if ('\'' == symbol) {
+            if (quotedSymbol == symbol) {
                 moveCursor();
-                while ('\'' != (symbol = getSymbol()) && symbol != '\0') {
+                symbol = getSymbol();
+                while ('\0' != symbol) {
+                    if (quotedSymbol == symbol) {
+                        char nextSymbol = getSymbol(1);
+                        if (quotedSymbol != nextSymbol) {
+                            break;
+                        }
+                        moveCursor();
+                    }
                     moveCursor();
+                    symbol = getSymbol();
                 }
             }
             if (symbol == '\0') {
@@ -274,40 +326,6 @@ public class SqlStream {
             return getValueFrom(from);
         }
         return null;
-    }
-
-    /**
-     * Проверить, является ли следуюший токен обернутым в двойные кавычки
-     * @return true - токен в двойных кавычках, false - иначе
-     */
-    public boolean checkIsDoubleQuoteValue() {
-        skipSpaces();
-        char symbol = getSymbol();
-        return '"' == symbol;
-    }
-
-    /**
-     * Распарсить значение в двойных кавычках
-     * @return значение в двойных кавычках
-     *         или NULL, если это не значение в двойных кавычках
-     */
-    public String parseDoubleQuoteValue() {
-        skipSpaces();
-        int from = getCursor();
-        char symbol = getSymbol();
-        if ('"' != symbol) {
-            return null;
-        }
-        moveCursor();
-        while ('"' != (symbol = getSymbol()) && symbol != '\0') {
-            moveCursor();
-        }
-        if (symbol == '\0') {
-            throw createException("Не является строкой в двойных кавычках", from);
-        }
-        moveCursor();
-        String doubleQuoteValue = getValueFrom(from);
-        return doubleQuoteValue;
     }
 
     /**
@@ -330,24 +348,19 @@ public class SqlStream {
      */
     public String parseSpecialWordSequents(OptWord ... sequentWords) {
         keepParserState();
-        StringBuilder result = null;
+        skipSpaces();
+        int from = getCursor();
         for (OptWord sequentWord : sequentWords) {
             if (checkIsSpecialWordValueSame(sequentWord.getWord())) {
-                String word = parseSpecialWordValue();
-                if (result != null) {
-                    result.append(" ");
-                } else {
-                    result = new StringBuilder();
-                }
-                result.append(word);
+                parseSpecialWordValue();
             } else if (sequentWord.isRequired()) {
                 rollbackParserState();
                 return null;
             }
         }
         skipParserState();
-        if (result != null) {
-            return result.toString();
+        if (from != getCursor()) {
+            return getValueFrom(from);
         }
         return null;
     }
@@ -755,6 +768,7 @@ public class SqlStream {
     //-------------------------- STATE API ------------------------- \\
     /**
      * Сохранить текущие параметры потока в стек
+     * TODO: крайне желательно, чтобы все STATE API использовалось внутри этого класса
      */
     public void keepParserState() {
         markers.push(new SqlParserState(cursor, lineNumber));
@@ -762,6 +776,7 @@ public class SqlStream {
 
     /**
      * Выталкнуть из стека параметры потока
+     * TODO: крайне желательно, чтобы все STATE API использовалось внутри этого класса
      */
     public void skipParserState() {
         if (markers.isEmpty()) {
@@ -772,6 +787,7 @@ public class SqlStream {
 
     /**
      * Выталкнуть из стека параметры потока и применить их к текущему состоянию
+     * TODO: крайне желательно, чтобы все STATE API использовалось внутри этого класса
      */
     public void rollbackParserState() {
         if (markers.isEmpty()) {

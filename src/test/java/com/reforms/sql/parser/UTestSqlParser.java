@@ -10,12 +10,12 @@ import static org.junit.Assert.assertEquals;
 /**
  * 1.
  * SELECT client_id, name_cln, addr_cln
-        FROM schemeName.test_clients
+        FROM schemeName.test_clns
                 WHERE (client_id, name_cln, addr_cln) = (60, 'архивный юрик', 'moskow');
     2.
-    assertWhereStatement("WHERE (1) MATCH (SELECT client_id FROM schemeName.test_clients)");
+    assertWhereStatement("WHERE (1) MATCH (SELECT client_id FROM schemeName.test_clns)");
     TODO add new test in SCENARIO package:
-    (SELECT client_id, 1 as filter FROM schemeName.test_clients
+    (SELECT client_id, 1 as filter FROM schemeName.test_clns
              WHERE group_id = 1 AND act_time >= NOW()
              ORDER BY client_id DESC)
              UNION ALL
@@ -41,9 +41,9 @@ public class UTestSqlParser {
 
     @Test
     public void testStringsSelectStatement() {
+        assertSelectQueryWithAsClause("SELECT ''");
         assertSelectQueryWithAsClause("SELECT '2'");
-        // TODO исправить парсер
-        // assertSelectQueryWithAsClause("SELECT '2'''");
+        assertSelectQueryWithAsClause("SELECT '2'''");
     }
 
     @Test
@@ -127,13 +127,11 @@ public class UTestSqlParser {
 
     @Test
     public void testCommonSqlDateAndTime() {
-        //        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC'");
-        //        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC'");
-        //        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC' AS datetime_alias");
-        //        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS datetime_alias");
-        //        assertSelectQuery("SELECT NOW() AT TIME ZONE 'UTC' AS \"Сейчас\"");
-        //        assertSelectQuery("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC' AS \"Сейчас\"");
-        //{ts '2017-01-01 19:12:01.69'}
+        assertSelectQueryWithAsClause("SELECT NOW() AT TIME ZONE 'UTC'");
+        assertSelectQueryWithAsClause("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC'");
+        assertSelectQueryWithAsClause("SELECT NOW() AT TIME ZONE 'UTC'");
+        assertSelectQueryWithAsClause("SELECT columnId AT TIME ZONE 'UTC'");
+        assertSelectQueryWithAsClause("SELECT '2004-10-19 10:23:54+02' AT TIME ZONE 'UTC'");
         assertSelectQueryWithAsClause("SELECT TIME '2004-10-19 10:23:54'");
         assertSelectQueryWithAsClause("SELECT DATE '2004-10-19 10:23:54'");
         assertSelectQueryWithAsClause("SELECT TIMESTAMP '2004-10-19 10:23:54'");
@@ -143,18 +141,86 @@ public class UTestSqlParser {
         assertSelectQueryWithAsClause("SELECT {T '19:12:01'}");
     }
 
-    private void assertSelectQueryWithAsClause(String query) { //AS client_name
-        for (String asClause : new String[] {
-                // TODO исправить парсер
-                // "::date",
-                // "::time",
-                //" AT TIME ZONE 'UTC' AS datetime_alias,
-                //" \"Первая\"\" колонка\"",
-                " firstColumn",
-                " AS firstColumn",
-                " \"Первая колонка\"",
-                " AS \"Первая колонка\"",
-        }) {
+    @Test
+    public void testMsSqlTopSelectExt() {
+        assertSelectQueryWithAsClause("SELECT TOP 50 *");
+        assertSelectQueryWithAsClause("SELECT TOP 50 PERCENT *");
+        assertSelectQueryWithAsClause("SELECT TOP 50 PERCENT client_id");
+        assertSelectQueryWithAsClause("SELECT TOP 50 WITH TIES *");
+        assertSelectQueryWithAsClause("SELECT TOP 50 WITH TIES client_id");
+        assertSelectQueryWithAsClause("SELECT TOP(50) *");
+        assertSelectQueryWithAsClause("SELECT TOP(50) PERCENT *");
+        assertSelectQueryWithAsClause("SELECT TOP(50) PERCENT client_id");
+        assertSelectQueryWithAsClause("SELECT TOP(50) WITH TIES *");
+        assertSelectQueryWithAsClause("SELECT TOP(50) WITH TIES client_id");
+        assertSelectQueryWithAsClause("SELECT ALL TOP 50 *");
+        assertSelectQueryWithAsClause("SELECT ALL TOP 50 PERCENT *");
+        assertSelectQueryWithAsClause("SELECT ALL TOP 50 PERCENT client_id");
+        assertSelectQueryWithAsClause("SELECT ALL TOP 50 WITH TIES *");
+        assertSelectQueryWithAsClause("SELECT ALL TOP 50 WITH TIES client_id");
+        assertSelectQueryWithAsClause("SELECT ALL TOP(50) *");
+        assertSelectQueryWithAsClause("SELECT ALL TOP(50) PERCENT *");
+        assertSelectQueryWithAsClause("SELECT ALL TOP(50) PERCENT client_id");
+        assertSelectQueryWithAsClause("SELECT ALL TOP(50) WITH TIES *");
+        assertSelectQueryWithAsClause("SELECT ALL TOP(50) WITH TIES client_id");
+    }
+
+    @Test
+    public void testMySqlDateAndTime() {
+        assertSelectQueryWithAsClause("SELECT CONVERT(datetime2(0), '2015-03-29T01:01:00', 126) AT TIME ZONE 'Central European Standard Time'");
+        assertSelectQueryWithAsClause("SELECT SalesOrderID, OrderDate, OrderDate AT TIME ZONE 'Pacific Standard Time'");
+    }
+
+    @Test
+    public void testPostgreSqlDateAndTime() {
+        // Общие
+        assertSelectQueryWithAsClause("SELECT TIME '2004-10-19 10:23:54'");
+        //assertSelectQuery("SELECT TIME WITH TIME ZONE '2004-10-19 10:23:54+02'");
+        assertSelectQueryWithAsClause("SELECT TIMESTAMP '2004-10-19 10:23:54'");
+        //assertSelectQuery("SELECT TIMESTAMP WITH TIME ZONE '2004-10-19 10:23:54+02'");
+        //  Временная арифметика
+        assertSelectQuery("SELECT '2012-01-05'::DATE - '2012-01-01'::DATE AS result");
+        assertSelectQuery("SELECT '2012-01-05'::TIMESTAMP - '2012-01-01'::TIMESTAMP AS result");
+        assertSelectQuery("SELECT '2012-01-05'::TIMESTAMP - '1 hour'::INTERVAL AS result");
+        assertSelectQuery("SELECT '2010-05-06'::DATE + INTERVAL '1 month 1 day 1 minute' AS result");
+        assertSelectQuery("SELECT '1 hour'::interval / 7 AS result");
+        assertSelectQueryWithAsClause("SELECT INTERVAL '1 minute' * 99");
+        assertSelectQueryWithAsClause("SELECT INTERVAL '1 hour' - interval '33 minutes'");
+        assertSelectQueryWithAsClause("SELECT INTERVAL '1 hour 27 minutes' + interval '33 minutes'");
+        // Специальные значения времени
+        assertSelectQuery("SELECT 'epoch'::TIMESTAMP");
+        assertSelectQuery("SELECT 'infinity'::TIMESTAMP");
+        assertSelectQuery("SELECT '-infinity'::TIMESTAMP");
+        assertSelectQuery("SELECT 'today'::TIMESTAMP, NOW()::DATE");
+        assertSelectQuery("SELECT 'now'::TIMESTAMP, NOW()");
+        assertSelectQuery("SELECT 'tomorrow'::TIMESTAMP, now()::DATE");
+        assertSelectQuery("SELECT 'yesterday'::TIMESTAMP, now()::DATE");
+        assertSelectQuery("SELECT 'allballs'::TIME");
+        // Полезные функции
+        assertSelectQuery("SELECT (TIMESTAMP '2010-06-12 20:11')::DATE");
+        assertSelectQueryWithAsClause("SELECT DATE_TRUNC('month', timestamp '2010-06-12 20:11')");
+        assertSelectQueryWithAsClause("SELECT DATE_TRUNC('week', timestamp '2010-06-12 20:11')");
+        assertSelectQueryWithAsClause("SELECT DATE_TRUNC('quarter', timestamp '2010-06-12 20:11')");
+        assertSelectQueryWithAsClause("SELECT DATE_TRUNC('year', timestamp '2010-06-12 20:11')");
+        // Получение полей времени (года, месяца, недели, дня, часа, минуты, секунды и т. д.)
+        //assertSelectQuery("SELECT EXTRACT(year FROM now()), date_part('year', now()), now()::date");
+        //assertSelectQueryWithAsClause("SELECT EXTRACT(month FROM NOW()), date_part('month', NOW()), NOW()");
+        //assertSelectQuery("SELECT EXTRACT(dow FROM NOW()), date_part('dow', NOW()), NOW()::date");
+    }
+
+    private static final String[] AS_CLAUSE_FULL_VARIANTS = new String[] {
+            "::DATE",
+            "::TIME",
+            "::VARCHAR(5)",
+            " \"Первая\"\" колонка\"",
+            " firstColumn",
+            " AS firstColumn",
+            " \"Первая колонка\"",
+            " AS \"Первая колонка\"",
+    };
+
+    private void assertSelectQueryWithAsClause(String query) {
+        for (String asClause : AS_CLAUSE_FULL_VARIANTS) {
             assertSelectQuery(query + asClause);
         }
     }
@@ -174,50 +240,6 @@ public class UTestSqlParser {
         // Результат с алиаса b3, в качестве сетера будет setAge и типом timestamp
         assertSelectQuery("SELECT age AS b3:t#");
     }
-
-//    @Test
-//    public void testPostgreSqlDateAndTime() {
-    //        // Общие
-//        assertSelectQuery("SELECT TIME '2004-10-19 10:23:54'");
-//        assertSelectQuery("SELECT TIME WITH TIME ZONE '2004-10-19 10:23:54+02'");
-//        assertSelectQuery("SELECT TIMESTAMP '2004-10-19 10:23:54'");
-//        assertSelectQuery("SELECT TIMESTAMP WITH TIME ZONE '2004-10-19 10:23:54+02'");
-    //        //  Временная арифметика
-//        assertSelectQuery("SELECT '2012-01-05'::date - '2012-01-01'::date AS result");
-//        assertSelectQuery("SELECT '2012-01-05'::timestamp - '2012-01-01'::timestamp AS result");
-//        assertSelectQuery("SELECT '2012-01-05'::timestamp - '1 hour'::interval AS result");
-//        assertSelectQuery("SELECT '2010-05-06'::date + interval '1 month 1 day 1 minute' AS result");
-//        assertSelectQuery("SELECT '1 hour'::interval / 7 AS result");
-//        assertSelectQuery("SELECT interval '1 minute' * 99 AS result");
-//        assertSelectQuery("SELECT interval '1 hour' - interval '33 minutes' AS result");
-//        assertSelectQuery("SELECT interval '1 hour 27 minutes' + interval '33 minutes' AS result");
-    //        // Специальные значения времени
-//        assertSelectQuery("SELECT 'epoch'::timestamp");
-//        assertSelectQuery("SELECT 'infinity'::timestamp");
-//        assertSelectQuery("SELECT '-infinity'::timestamp");
-//        assertSelectQuery("SELECT 'today'::timestamp, now()::date");
-//        assertSelectQuery("SELECT 'now'::timestamp, now()");
-//        assertSelectQuery("SELECT 'tomorrow'::timestamp, now()::date");
-//        assertSelectQuery("SELECT 'yesterday'::timestamp, now()::date");
-//        assertSelectQuery("SELECT 'allballs'::time");
-//        assertSelectQuery("SELECT 'allballs'::time");
-    //        // Полезные функции
-//        assertSelectQuery("SELECT (timestamp '2010-06-12 20:11')::date");
-//        assertSelectQuery("SELECT date_trunc('month', timestamp '2010-06-12 20:11')");
-//        assertSelectQuery("SELECT date_trunc('week', timestamp '2010-06-12 20:11')");
-//        assertSelectQuery("SELECT date_trunc('quarter', timestamp '2010-06-12 20:11')");
-//        assertSelectQuery("SELECT date_trunc('year', timestamp '2010-06-12 20:11')");
-    //        // Получение полей времени (года, месяца, недели, дня, часа, минуты, секунды и т. д.)
-//        assertSelectQuery("SELECT EXTRACT(year FROM now()), date_part('year', now()), now()::date");
-//        assertSelectQuery("SELECT EXTRACT(month FROM now()), date_part('month', now()), now()");
-//        assertSelectQuery("SELECT EXTRACT(dow FROM now()), date_part('dow', now()), now()::date");
-//    }
-//
-//    @Test
-//    public void testMySqlDateAndTime() {
-//        assertSelectQuery("SELECT CONVERT(datetime2(0), '2015-03-29T01:01:00', 126) AT TIME ZONE 'Central European Standard Time'");
-//        assertSelectQuery("SELECT SalesOrderID, OrderDate, OrderDate AT TIME ZONE 'Pacific Standard Time' AS OrderDate_TimeZonePST");
-    //    }
 
     @Test
     public void testDoubleArgSelectStatement() {
@@ -286,6 +308,7 @@ public class UTestSqlParser {
         assertSelectQuery("SELECT * FROM (VALUES (1, 2), (2, 3)) v(a, b)");
         assertSelectQuery("SELECT * FROM (VALUES (1, 2), (2, 3)) v");
         assertSelectQuery("SELECT * FROM schemeName.test_clients cl, (VALUES (1), (2), (3)) v(a)");
+        assertSelectQuery("SELECT * FROM schemeName.test_clients INNER JOIN (VALUES (1), (2), (1)) AS v(k) ON k = 1");
     }
 
     @Test
@@ -449,6 +472,16 @@ public class UTestSqlParser {
         assertSelectQuery("SELECT t1 FROM tableName1 ORDER BY t1 LIMIT ALL");
         assertSelectQuery("SELECT t1 FROM tableName1 ORDER BY t1 OFFSET 20");
         assertSelectQuery("SELECT t1 FROM tableName1 OFFSET 20 LIMIT 10", "SELECT t1 FROM tableName1 LIMIT 10 OFFSET 20");
+    }
+
+    @Test
+    public void testBigSelectStatement() {
+        assertSelectQuery("SELECT cg.id, cg.tcl_group FROM schemeName.tcl_groups cg " +
+                "INNER JOIN schemeName.doc_rcpts_groups drg ON drg.doc_id = ? AND drg.group_id = cg.id WHERE cg.tcl_type = 0 AND cg.id " +
+                "IN (SELECT cl2cg.tcl_group_id FROM schemeName.clns2client_groups cl2cg WHERE EXISTS (SELECT 1 FROM schemeName.clns cl " +
+                "WHERE client_id IN (SELECT client_id FROM schemeName.body2clns WHERE operator_id = ?) AND cl.status <> 0 AND " +
+                "(EXISTS (SELECT 1 FROM schemeName.c2accounts c2a, schemeName.accounts a WHERE c2a.tcl_id = cl.tcl_id AND a.id = c2a.account_id " +
+                "AND a.branch_id = 1 AND a.status <> 0) OR cl.branch_id = ?) AND cl.tcl_id = cl2cg.tcl_id)) ORDER BY cg.tcl_group");
     }
 
     private void assertSelectQuery(String query) {

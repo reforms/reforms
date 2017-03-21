@@ -32,6 +32,16 @@ public class SqlWords {
 
     public static String SW_DISTINCT = "DISTINCT";
 
+    public static String SW_TOP = "TOP"; // MSSQL
+
+    public static String SW_PERCENT = "PERCENT"; // MSSQL
+
+    public static String SW_WITH_TIES = "WITH TIES"; // MSSQL
+
+    public static String SW_WITH = "WITH"; // part of MSSQL
+
+    public static String SW_TIES = "TIES"; // part of MSSQL
+
     public static String SW_AS = "AS";
 
     public static String SW_ON = "ON";
@@ -118,8 +128,13 @@ public class SqlWords {
 
     public static String SW_INTERVAL = "INTERVAL";
 
-    // ORACLE
-    public static String SW_MINUS = "MINUS";
+    public static String SW_AT_TIME_ZONE = "AT TIME ZONE";
+
+    public static String SW_AT = "AT";
+
+    public static String SW_ZONE = "ZONE";
+
+    public static String SW_MINUS = "MINUS"; // ORACLE
 
     public static String SW_CORRESPONDING = "CORRESPONDING";
 
@@ -129,11 +144,9 @@ public class SqlWords {
 
     public static String SW_COLLATE = "COLLATE";
 
-    // POSTGRESQL
-    public static String SW_LIMIT = "LIMIT";
+    public static String SW_LIMIT = "LIMIT"; // POSTGRESQL, MSSQL
 
-    // POSTGRESQL
-    public static String SW_OFFSET = "OFFSET";
+    public static String SW_OFFSET = "OFFSET"; // POSTGRESQL, MSSQL
 
     private static final Map<String, Boolean> WORDS = init();
 
@@ -147,6 +160,7 @@ public class SqlWords {
         addWords(words, SW_ORDER_BY);
         addWords(words, SW_ALL);
         addWords(words, SW_DISTINCT);
+        addWords(words, SW_TOP, SW_WITH, SW_TIES);
         addWords(words, SW_AS);
         addWords(words, SW_ON);
         addWords(words, SW_INNER_JOIN);
@@ -171,7 +185,7 @@ public class SqlWords {
         addWords(words, SW_CORRESPONDING);
         addWords(words, SW_ASC, SW_DESC);
         addWords(words, SW_COLLATE);
-        addWords(words, SW_TIME, SW_DATE, SW_TIMESTAMP, SW_INTERVAL);
+        addWords(words, SW_TIME, SW_DATE, SW_TIMESTAMP, SW_INTERVAL, SW_AT_TIME_ZONE, SW_AT, SW_ZONE);
         addWords(words, SW_LIMIT, SW_OFFSET);
         return Collections.unmodifiableMap(words);
     }

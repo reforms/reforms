@@ -2,10 +2,9 @@ package com.reforms.sql.expr.term;
 
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
+import static com.reforms.sql.expr.term.ExpressionType.ET_CAST_EXPRESSION;
 import static com.reforms.sql.parser.SqlWords.SW_AS;
 import static com.reforms.sql.parser.SqlWords.SW_CAST;
-
-import static com.reforms.sql.expr.term.ExpressionType.ET_CAST_EXPRESSION;
 
 public class CastExpression extends SelectableExpression {
 

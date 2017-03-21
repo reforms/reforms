@@ -1,13 +1,13 @@
 package com.reforms.orm.select;
 
-import static com.reforms.orm.dao.column.ColumnAliasType.*;
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Test;
-
 import com.reforms.orm.dao.column.ColumnAlias;
 import com.reforms.orm.dao.column.ColumnAliasParser;
 import com.reforms.orm.dao.column.ColumnAliasType;
+
+import org.junit.Test;
+
+import static com.reforms.orm.dao.column.ColumnAliasType.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Тесты парсера
@@ -31,6 +31,7 @@ public class UTestColumnAliasParser {
         assertColumnAlias("A", null, "A", null);
         assertColumnAlias("n#A", CAT_N_BIGDECIMAL, "A", null);
         assertColumnAlias("n2#A", CAT_N_BIGDECIMAL, "A", "2");
+        assertColumnAlias("I10#A", CAT_I_BIGINTEGER, "A", "10");
         assertColumnAlias("n20#A", CAT_N_BIGDECIMAL, "A", "20");
         assertColumnAlias("d#A", CAT_D_DATE, "A", null);
         assertColumnAlias("d1#A", CAT_D_DATE, "A", "1");

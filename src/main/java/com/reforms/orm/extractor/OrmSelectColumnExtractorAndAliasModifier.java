@@ -5,7 +5,7 @@ import static com.reforms.orm.OrmConfigurator.getInstance;
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.dao.column.SelectedColumn;
-import com.reforms.sql.expr.term.AliasExpression;
+import com.reforms.sql.expr.term.ExtendsSelectableExpression;
 import com.reforms.sql.expr.term.ColumnExpression;
 
 /**
@@ -22,7 +22,7 @@ public class OrmSelectColumnExtractorAndAliasModifier extends SelectColumnExtrac
     }
 
     @Override
-    protected SelectedColumn fromAliasExpression(int index, AliasExpression aliasExpr) {
+    protected SelectedColumn fromAliasExpression(int index, ExtendsSelectableExpression aliasExpr) {
         SelectedColumn selectedColumn = super.fromAliasExpression(index, aliasExpr);
         addFieldName(selectedColumn);
         return selectedColumn;

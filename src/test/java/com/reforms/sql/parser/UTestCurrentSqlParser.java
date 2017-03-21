@@ -23,9 +23,12 @@ public class UTestCurrentSqlParser {
         // assertOrderByStatement("1 ASC, 2 DESC");
         //        assertSelectQuery("SELECT age AS bobj1.bobj2.bobj3");
         //assertSelectQuery("SELECT clientId::real");
-        //assertSelectQuery("SELECT * FROM ibank2.clients cln CROSS JOIN ibank2.accounts acc WHERE cln.client_id = acc.id");
+        //assertSelectQuery("SELECT * FROM schemeName.clients cln CROSS JOIN schemeName.accounts acc WHERE cln.tcl_id = acc.id");
         //        assertSelectQueryWithAsClause("SELECT clientId::real");
-        assertSelectQuery("SELECT NOW()");
+
+
+        assertSelectQuery("SELECT (CASE WHEN client_id = 2 THEN 20 WHEN client_id = 3 THEN 30 ELSE 40 END)::DATE");
+
     }
 
     private void assertSelectQueryWithAsClause(String query) { //AS client_name

@@ -8,9 +8,8 @@ import com.reforms.sql.expr.viewer.SqlBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.reforms.sql.parser.SqlWords.SW_SELECT;
-
 import static com.reforms.sql.expr.term.ExpressionType.ET_SELECT_STATEMENT;
+import static com.reforms.sql.parser.SqlWords.SW_SELECT;
 
 public class SelectStatement extends Expression {
 
@@ -19,6 +18,11 @@ public class SelectStatement extends Expression {
 
     /** ALL | DISTINCT */
     private String modeWord;
+
+    /** maybe TOP for example */
+    private Expression customExpr;
+
+    private List<SelectableExpression> selectExps = new ArrayList<>();
 
     public void setSelectWord(String selectWord) {
         this.selectWord = selectWord;
@@ -36,7 +40,13 @@ public class SelectStatement extends Expression {
         this.modeWord = modeWord;
     }
 
-    private List<SelectableExpression> selectExps = new ArrayList<>();
+    public void setCustomExpr(Expression customExpr) {
+        this.customExpr = customExpr;
+    }
+
+    public Expression getCustomExpr() {
+        return customExpr;
+    }
 
     public void setSelectExps(List<SelectableExpression> selectExps) {
         this.selectExps = selectExps;
@@ -63,6 +73,7 @@ public class SelectStatement extends Expression {
             sqlBuilder.appendSpace();
             sqlBuilder.appendWord(modeWord);
         }
+        sqlBuilder.appendExpression(customExpr);
         sqlBuilder.appendExpressions(selectExps, ",");
     }
 }

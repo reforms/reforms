@@ -18,7 +18,7 @@ import java.util.List;
 
 import static com.reforms.orm.OrmConfigurator.getInstance;
 import static com.reforms.orm.dao.column.ColumnAliasType.CAT_S_STRING;
-import static com.reforms.sql.expr.term.ExpressionType.ET_ALIAS_EXPRESSION;
+import static com.reforms.sql.expr.term.ExpressionType.ET_EXTENDS_SELECTABLE_EXPRESSION;
 import static com.reforms.sql.expr.term.ExpressionType.ET_COLUMN_EXPRESSION;
 
 /**
@@ -51,8 +51,8 @@ class SelectColumnExtractorAndAliasModifier {
             SelectableExpression selectableExpr = selectableExprIterator.next();
             ExpressionType eType = selectableExpr.getType();
             SelectedColumn selectedColumn = null;
-            if (ET_ALIAS_EXPRESSION == eType) {
-                AliasExpression aliasExpr = (AliasExpression) selectableExpr;
+            if (ET_EXTENDS_SELECTABLE_EXPRESSION == eType) {
+                ExtendsSelectableExpression aliasExpr = (ExtendsSelectableExpression) selectableExpr;
                 selectedColumn = fromAliasExpression(index, aliasExpr);
             } else if (ET_COLUMN_EXPRESSION == eType) {
                 ColumnExpression columnExpr = (ColumnExpression) selectableExpr;
@@ -71,6 +71,12 @@ class SelectColumnExtractorAndAliasModifier {
         return columns;
     }
 
+    /**
+     * TODO исправление ошибок:
+     *      Сделать более правильную логику извлечения выбираемых столбцов. Первый из списка может быть * например, а нужно найти реальный список колонок
+     * @param selectQuery
+     * @return
+     */
     private SelectStatement extractFirstSelectStatement(SelectQuery selectQuery) {
         if (selectQuery.getSelectStatement() != null) {
             return selectQuery.getSelectStatement();
@@ -82,7 +88,7 @@ class SelectColumnExtractorAndAliasModifier {
         return null;
     }
 
-    protected SelectedColumn fromAliasExpression(int index, AliasExpression aliasExpr) {
+    protected SelectedColumn fromAliasExpression(int index, ExtendsSelectableExpression aliasExpr) {
         SelectedColumn selectedColumn = new SelectedColumn();
         Expression primaryExpr = aliasExpr.getPrimaryExpr();
         if (primaryExpr instanceof ColumnExpression) {
