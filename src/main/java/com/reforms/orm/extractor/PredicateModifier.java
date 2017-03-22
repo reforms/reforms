@@ -2,19 +2,22 @@ package com.reforms.orm.extractor;
 
 import com.reforms.orm.tree.SelectQueryTree;
 import com.reforms.sql.expr.statement.WhereStatement;
+import com.reforms.sql.expr.term.ArgListExpression;
 import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.SearchGroupExpression;
 import com.reforms.sql.expr.term.casee.CaseExpression;
 import com.reforms.sql.expr.term.casee.ElseExpression;
 import com.reforms.sql.expr.term.casee.WhenThenExpression;
-import com.reforms.sql.expr.term.predicate.*;
+import com.reforms.sql.expr.term.predicate.BetweenPredicateExpression;
+import com.reforms.sql.expr.term.predicate.ComparisonOperator;
+import com.reforms.sql.expr.term.predicate.ComparisonPredicateExpression;
+import com.reforms.sql.expr.term.predicate.NullablePredicateExpression;
 
 import java.util.List;
 
-import static com.reforms.sql.parser.SqlWords.SW_NOT;
-
 import static com.reforms.sql.expr.term.ExpressionType.*;
 import static com.reforms.sql.expr.term.predicate.ComparisonOperator.*;
+import static com.reforms.sql.parser.SqlWords.SW_NOT;
 
 /**
  * TODO доработка - проверить математические операции
@@ -82,16 +85,20 @@ public class PredicateModifier {
             changePredicateExpr(filterExpr, predicateExpr);
             return;
         }
-        if (ET_VALUE_LIST_EXPRESSION == predicateExpr.getType()) {
+        if (ET_ARG_LIST_EXPRESSION == predicateExpr.getType()) {
             Expression parentValueListExpr = queryTree.getParentExpressionFor(predicateExpr);
             if (parentValueListExpr != null) {
                 if (ET_IN_PREDICATE_EXPRESSION == parentValueListExpr.getType()) {
-                    changeInPredicate(filterExpr, (ValueListExpression) predicateExpr, parentValueListExpr);
+                    changeInPredicate(filterExpr, (ArgListExpression) predicateExpr, parentValueListExpr);
                     return;
                 }
                 if (ET_COMPARISON_PREDICATE_EXPRESSION == parentValueListExpr.getType()) {
-                    changeComparisonValuesPredicate(filterExpr, (ValueListExpression) predicateExpr,
+                    changeComparisonValuesPredicate(filterExpr, (ArgListExpression) predicateExpr,
                             (ComparisonPredicateExpression) parentValueListExpr);
+                    return;
+                }
+                if (ET_FUNC_EXPRESSION == parentValueListExpr.getType()) {
+                    changeDynamicFilter(parentValueListExpr);
                     return;
                 }
             }
@@ -102,6 +109,10 @@ public class PredicateModifier {
         }
         if (ET_BETWEEN_PREDICATE_EXPRESSION == predicateExpr.getType()) {
             changeBetweenPredicateExpr(filterExpr, (BetweenPredicateExpression) predicateExpr);
+            return;
+        }
+        if (ET_ARG_EXPRESSION == predicateExpr.getType()) {
+            changeDynamicFilter(predicateExpr);
             return;
         }
         if (ET_FUNC_EXPRESSION == predicateExpr.getType()) {
@@ -191,19 +202,19 @@ public class PredicateModifier {
         }
     }
 
-    private void changeInPredicate(Expression filterExpr, ValueListExpression valueListExpr, Expression inPredicateExpr) {
-        List<Expression> valueExprs = valueListExpr.getValueExprs();
+    private void changeInPredicate(Expression filterExpr, ArgListExpression valueListExpr, Expression inPredicateExpr) {
+        List<Expression> valueExprs = valueListExpr.getArgExprs();
         valueExprs.remove(filterExpr);
         if (valueExprs.isEmpty()) {
             changeDynamicFilter(inPredicateExpr);
         }
     }
 
-    private void changeComparisonValuesPredicate(Expression filterExpr, ValueListExpression valueListExpr,
+    private void changeComparisonValuesPredicate(Expression filterExpr, ArgListExpression valueListExpr,
             ComparisonPredicateExpression compPredicateExpr) {
-        ValueListExpression valueListColumnExpr = (ValueListExpression) getBaseExpressionFromCompExpr(valueListExpr, compPredicateExpr);
-        List<Expression> columnNames = valueListColumnExpr.getValueExprs();
-        List<Expression> columnValues = valueListExpr.getValueExprs();
+        ArgListExpression valueListColumnExpr = (ArgListExpression) getBaseExpressionFromCompExpr(valueListExpr, compPredicateExpr);
+        List<Expression> columnNames = valueListColumnExpr.getArgExprs();
+        List<Expression> columnValues = valueListExpr.getArgExprs();
         int columnValueIndex = columnValues.indexOf(filterExpr);
         if (columnValueIndex == -1) {
             throw new IllegalStateException("Не возможно изменить фильтр '" + filterExpr + "' не найдено выражение '" + filterExpr

@@ -148,6 +148,10 @@ public class SqlWords {
 
     public static String SW_OFFSET = "OFFSET"; // POSTGRESQL, MSSQL
 
+    public static String SW_UPDATE = "UPDATE";
+
+    public static String SW_SET = "SET";
+
     private static final Map<String, Boolean> WORDS = init();
 
     private static Map<String, Boolean> init() {
@@ -187,6 +191,7 @@ public class SqlWords {
         addWords(words, SW_COLLATE);
         addWords(words, SW_TIME, SW_DATE, SW_TIMESTAMP, SW_INTERVAL, SW_AT_TIME_ZONE, SW_AT, SW_ZONE);
         addWords(words, SW_LIMIT, SW_OFFSET);
+        addWords(words, SW_UPDATE, SW_SET);
         return Collections.unmodifiableMap(words);
     }
 

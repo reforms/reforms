@@ -1,6 +1,9 @@
 package com.reforms.sql.parser;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.List;
 
 /**
  * Поток для работы с sql выражениями
@@ -460,7 +463,6 @@ public class SqlStream {
 
     /**
      * Распарсить логически-значимую часть sql выражения - ключевое слово
-     * @param toUpperCase признак того, что результат нужно приводить к верхнему регистру
      * @return логически-значимая часть sql выражения
      *         или NULL, если это не логически-значимая часть sql выражения
      */
@@ -564,7 +566,7 @@ public class SqlStream {
         return query.substring(from, cursor);
     }
 
-    //-------------------------- DELIM AND WHITESPACES API ------------------------- \\
+    //-------------------------- WHITESPACES AND DELIM API ------------------------- \\
     /**
      * Пропустить все текущие пробелы
      */
@@ -573,8 +575,6 @@ public class SqlStream {
             moveCursor();
         }
     }
-
-    public static List<Character> FUNC_DELIMS = Arrays.asList(',', ')');
 
     /**
      * Проверить текущий символ на открывающуюся скобку
@@ -585,12 +585,42 @@ public class SqlStream {
     }
 
     /**
+     * Проверить текущий символ на открывающуюся фигурную скобку
+     * @param throwMode если true кинется ошибка
+     * @return true - текущий символ открывающаяся фигурная скобка, false иначе или throw
+     * @throws IllegalStateException другой символ
+     */
+    public boolean checkIsOpenFigureParen(boolean throwMode) {
+        return checkIsDelim('{', throwMode);
+    }
+
+    /**
      * Проверить текущий символ на открывающуюся скобку
      * @param throwMode если true кинется ошибка
      * @throws IllegalStateException другой символ
      */
     public boolean checkIsOpenParent(boolean throwMode) {
         return checkIsDelim('(', throwMode);
+    }
+
+    /**
+     * Проверить текущий символ на закрывающуюся фигурную скобку
+     * @param throwMode если true кинется ошибка
+     * @return true - текущий символ закрывающаяся фигурная скобка, false иначе или throw
+     * @throws IllegalStateException другой символ
+     */
+    public boolean checkIsCloseFigureParen(boolean throwMode) {
+        return checkIsDelim('}', throwMode);
+    }
+
+    /**
+     * Проверить текущий символ - точка
+     * @param throwMode если true кинется ошибка
+     * @return true - текущий символ точка, false иначе или throw
+     * @throws IllegalStateException другой символ
+     */
+    public boolean checkIsDot(boolean throwMode) {
+        return checkIsDelim('.', throwMode);
     }
 
     /**
@@ -604,6 +634,7 @@ public class SqlStream {
     /**
      * Проверить текущий символ на закрывающуюся скобку
      * @param throwMode если true кинется ошибка
+     * @return true - текущий символ закрывающаяся скобка, false иначе
      * @throws IllegalStateException другой символ
      */
     public boolean checkIsCloseParen(boolean throwMode) {
@@ -611,44 +642,20 @@ public class SqlStream {
     }
 
     /**
-     * Проверить что разделить: '(', ','.
-     * @return true разделить один из '(', ','.
-     * @throws IllegalStateException разделитель указанного типа не найден
+     * Проверить текущий символ на запятую
+     * @return true - текущий символ на запятую, false иначе
      */
-    public boolean checkIsFuncArgsDelim() {
-        skipSpaces();
-        char symbol = getSymbol();
-        return FUNC_DELIMS.contains(symbol);
+    public boolean checkIsComma() {
+        return checkIsDelim(',', false);
     }
 
     /**
-     * Распарсить разделить: '(', ','.
-     * @return один из указанных разделителей
-     * @throws IllegalStateException разделитель указанного типа не найден
+     * Проверить что указанная последовательность - ::
+     * @return true - указанная последовательность - ::, false иначе
      */
-    public char parseFuncArgsDelim() {
-        return parseDelim(FUNC_DELIMS);
-    }
-
-    /**
-     * Распарсить разделить.
-     * @param oneOfDelims допустимые разделители
-     * @return один из указанных разделителей
-     * @throws IllegalStateException разделитель указанного типа не найден
-     */
-    public char parseDelim(List<Character> oneOfDelims) {
+    public boolean checkIsDoubleColon() {
         skipSpaces();
-        char symbol = getSymbol();
-        if (oneOfDelims.contains(symbol)) {
-            return symbol;
-        }
-        List<String> chars = new ArrayList<>();
-        for (char expectedDelim : oneOfDelims) {
-            String charName = getCharName(expectedDelim);
-            chars.add(charName);
-        }
-        String wasCharName = getCharName(symbol);
-        throw createException("Ожидается разделитель один из [" + chars + "], а получен символ [" + wasCharName + "]");
+        return ':' == getSymbol() && ':' == getSymbol(1);
     }
 
     /**
@@ -657,7 +664,7 @@ public class SqlStream {
      * @param throwMode если true кинется ошибка
      * @throws IllegalStateException другой символ
      */
-    public boolean checkIsDelim(char delim, boolean throwMode) {
+    private boolean checkIsDelim(char delim, boolean throwMode) {
         skipSpaces();
         char symbol = getSymbol();
         if (delim != symbol) {

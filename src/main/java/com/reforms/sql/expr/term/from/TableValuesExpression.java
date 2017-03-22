@@ -2,21 +2,20 @@ package com.reforms.sql.expr.term.from;
 
 import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.term.FuncExpression;
-import com.reforms.sql.expr.term.predicate.ValueListExpression;
+import com.reforms.sql.expr.term.ArgListExpression;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.reforms.sql.parser.SqlWords.SW_VALUES;
-
 import static com.reforms.sql.expr.term.ExpressionType.ET_TABLE_VALUES_EXPRESSION;
 
 public class TableValuesExpression extends TableReferenceExpression {
 
     private String valuesWord = SW_VALUES;
 
-    private List<ValueListExpression> valuesExprs = new ArrayList<>();
+    private List<ArgListExpression> valuesExprs = new ArrayList<>();
 
     private String asWord;
 
@@ -30,15 +29,15 @@ public class TableValuesExpression extends TableReferenceExpression {
         this.valuesWord = valuesWord;
     }
 
-    public List<ValueListExpression> getValuesExprs() {
+    public List<ArgListExpression> getValuesExprs() {
         return valuesExprs;
     }
 
-    public boolean addValuesExpr(ValueListExpression valuesExpr) {
+    public boolean addValuesExpr(ArgListExpression valuesExpr) {
         return valuesExprs.add(valuesExpr);
     }
 
-    public void setValuesExprs(List<ValueListExpression> valuesExprs) {
+    public void setValuesExprs(List<ArgListExpression> valuesExprs) {
         this.valuesExprs = valuesExprs;
     }
 

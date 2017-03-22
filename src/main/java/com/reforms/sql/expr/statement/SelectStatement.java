@@ -5,7 +5,7 @@ import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.term.SelectableExpression;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static com.reforms.sql.expr.term.ExpressionType.ET_SELECT_STATEMENT;
@@ -22,7 +22,7 @@ public class SelectStatement extends Expression {
     /** maybe TOP for example */
     private Expression customExpr;
 
-    private List<SelectableExpression> selectExps = new ArrayList<>();
+    private List<SelectableExpression> selectExps = Collections.emptyList();
 
     public void setSelectWord(String selectWord) {
         this.selectWord = selectWord;
@@ -50,10 +50,6 @@ public class SelectStatement extends Expression {
 
     public void setSelectExps(List<SelectableExpression> selectExps) {
         this.selectExps = selectExps;
-    }
-
-    public boolean addSelectExpression(SelectableExpression selectExpr) {
-        return selectExps.add(selectExpr);
     }
 
     public List<SelectableExpression> getSelectExps() {

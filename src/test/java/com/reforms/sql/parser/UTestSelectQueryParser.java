@@ -29,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 
  * @author evgenie
  */
-public class UTestSqlParser {
+public class UTestSelectQueryParser {
 
     @Test
     public void testNumbersSelectStatement() {
@@ -239,6 +239,8 @@ public class UTestSqlParser {
         assertSelectQuery("SELECT age AS b3:t#bobj1.bobj2.bobj3");
         // Результат с алиаса b3, в качестве сетера будет setAge и типом timestamp
         assertSelectQuery("SELECT age AS b3:t#");
+        // Результат в качестве сетера будет setAge и типом timestamp
+        assertSelectQuery("SELECT age AS t#");
     }
 
     @Test

@@ -2,9 +2,6 @@ package com.reforms.sql.expr.term;
 
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static com.reforms.sql.expr.term.ExpressionType.ET_FUNC_EXPRESSION;
 
 /**
@@ -17,9 +14,7 @@ public class FuncExpression extends SelectableExpression {
 
     private String name;
 
-    private String quantifier;
-
-    private List<SelectableExpression> args = new ArrayList<>();
+    private ArgListExpression args;
 
     public boolean isShortStyle() {
         return shortStyle;
@@ -37,24 +32,14 @@ public class FuncExpression extends SelectableExpression {
         this.name = name;
     }
 
-    public String getQuantifier() {
-        return quantifier;
-    }
-
-    public void setQuantifier(String quantifier) {
-        this.quantifier = quantifier;
-    }
-
-    public List<SelectableExpression> getArgs() {
+    public ArgListExpression getArgs() {
         return args;
     }
 
-    public boolean addArg(SelectableExpression arg) {
-        return args.add(arg);
-    }
 
-    public void setArgs(List<SelectableExpression> args) {
+    public void setArgs(ArgListExpression args) {
         this.args = args;
+        args.setSpacable(false);
     }
 
     @Override
@@ -65,14 +50,8 @@ public class FuncExpression extends SelectableExpression {
     @Override
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendWord(name);
-        if (!args.isEmpty() || !shortStyle) {
-            sqlBuilder.append("(");
-            if (quantifier != null) {
-                sqlBuilder.appendSpace();
-                sqlBuilder.appendWord(quantifier);
-            }
-            sqlBuilder.appendExpressions(args, ",");
-            sqlBuilder.append(")");
+        if (args != null && (!args.isEmpty() || !shortStyle)) {
+            sqlBuilder.appendExpression(args);
         }
     }
 }
