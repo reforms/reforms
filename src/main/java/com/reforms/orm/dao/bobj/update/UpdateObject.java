@@ -9,17 +9,17 @@ import com.reforms.orm.reflex.Reflexor;
  */
 public class UpdateObject extends IUpdateValues {
 
-    private Object filter;
+    private Object updateBobj;
     private IReflexor reflexor;
 
-    public UpdateObject(Object filter) {
-        this.filter = filter;
-        reflexor = Reflexor.createReflexor(filter.getClass());
+    public UpdateObject(Object updateBobj) {
+        this.updateBobj = updateBobj;
+        reflexor = Reflexor.createReflexor(updateBobj.getClass());
     }
 
     @Override
     public Object get(String key) {
-        return reflexor.getValue(filter, key);
+        return reflexor.getValue(updateBobj, key);
     }
 
     @Override
