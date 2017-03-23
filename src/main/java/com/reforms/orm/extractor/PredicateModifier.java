@@ -1,6 +1,6 @@
 package com.reforms.orm.extractor;
 
-import com.reforms.orm.tree.SelectQueryTree;
+import com.reforms.orm.tree.QueryTree;
 import com.reforms.sql.expr.statement.WhereStatement;
 import com.reforms.sql.expr.term.ArgListExpression;
 import com.reforms.sql.expr.term.Expression;
@@ -25,9 +25,9 @@ import static com.reforms.sql.parser.SqlWords.SW_NOT;
  */
 public class PredicateModifier {
 
-    private SelectQueryTree queryTree;
+    private QueryTree queryTree;
 
-    public PredicateModifier(SelectQueryTree queryTree) {
+    public PredicateModifier(QueryTree queryTree) {
         this.queryTree = queryTree;
     }
 

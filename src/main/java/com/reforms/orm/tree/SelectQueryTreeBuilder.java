@@ -6,10 +6,10 @@ import com.reforms.sql.expr.viewer.SqlBuilder;
 
 public class SelectQueryTreeBuilder extends SqlBuilder {
 
-    private SelectQueryTree tree = new SelectQueryTree();
+    private QueryTree tree = new QueryTree();
     private LocalStack stack;
 
-    public SelectQueryTree buildTree(SelectQuery selectQuery) {
+    public QueryTree buildTree(SelectQuery selectQuery) {
         stack = new LocalStack();
         stack.push(tree.getHeadExpr());
         selectQuery.view(this);

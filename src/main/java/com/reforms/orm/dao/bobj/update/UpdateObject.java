@@ -1,6 +1,5 @@
-package com.reforms.orm.dao.filter;
+package com.reforms.orm.dao.bobj.update;
 
-import com.reforms.orm.dao.filter.page.IPageFilter;
 import com.reforms.orm.reflex.IReflexor;
 import com.reforms.orm.reflex.Reflexor;
 
@@ -8,22 +7,13 @@ import com.reforms.orm.reflex.Reflexor;
  * TODO оптимизация и рефакторинг
  * @author evgenie
  */
-public class FilterObject extends IFilterValues {
+public class UpdateObject extends IUpdateValues {
 
     private Object filter;
     private IReflexor reflexor;
-    private IPageFilter pageFilter;
 
-    public FilterObject(Object filter) {
-        this(filter, null);
-    }
-
-    public FilterObject(Object filter, IPageFilter pageFilter) {
+    public UpdateObject(Object filter) {
         this.filter = filter;
-        this.pageFilter = pageFilter;
-        if (this.pageFilter == null && filter instanceof IPageFilter) {
-            pageFilter = (IPageFilter) filter;
-        }
         reflexor = Reflexor.createReflexor(filter.getClass());
     }
 
@@ -36,11 +26,6 @@ public class FilterObject extends IFilterValues {
     public Object get(int key) {
         // Я думаю, этот функционал не потребуется в таком виде
         return get("value" + key);
-    }
-
-    @Override
-    public IPageFilter getPageFilter() {
-        return pageFilter;
     }
 
     @Override

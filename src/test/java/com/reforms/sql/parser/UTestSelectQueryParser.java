@@ -484,6 +484,14 @@ public class UTestSelectQueryParser {
                 "WHERE client_id IN (SELECT client_id FROM schemeName.body2clns WHERE operator_id = ?) AND cl.status <> 0 AND " +
                 "(EXISTS (SELECT 1 FROM schemeName.c2accounts c2a, schemeName.accounts a WHERE c2a.tcl_id = cl.tcl_id AND a.id = c2a.account_id " +
                 "AND a.branch_id = 1 AND a.status <> 0) OR cl.branch_id = ?) AND cl.tcl_id = cl2cg.tcl_id)) ORDER BY cg.tcl_group");
+
+        assertSelectQuery("SELECT cl.client_id, cl.last_name, cl.first_name, cl.middle_name "
+                + "FROM test_scheme.pcl cl, test_scheme.o2cl o2c, test_scheme.cdcrc dr "
+                + "WHERE dr.doc_id = ? AND dr.recipient_id = cl.client_id AND cl.status <> 0 AND o2c.client_id = cl.client_id AND o2c.operator_id = ? "
+                + "AND cl.client_id IN (SELECT c2a.client_id FROM test_scheme.ccaa c2a, test_scheme.aaa a "
+                + "WHERE c2a.account_id = a.id AND a.branch_id = ? AND a.account LIKE ?) "
+                + "AND UPPER((CASE WHEN last_name IS NOT NULL THEN last_name ELSE '' END) || ' ' || (CASE WHEN first_name IS NOT NULL THEN first_name ELSE '' END) || ' ' || (CASE WHEN middle_name IS NOT NULL THEN middle_name ELSE '' END)"
+                + ") LIKE ?");
     }
 
     private void assertSelectQuery(String query) {

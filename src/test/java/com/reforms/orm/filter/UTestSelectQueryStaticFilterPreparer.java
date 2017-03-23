@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.dao.filter.FilterMap;
-import com.reforms.orm.extractor.SelectQueryFilterPreparer;
+import com.reforms.orm.extractor.QueryPreparer;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
 
@@ -90,8 +90,8 @@ public class UTestSelectQueryStaticFilterPreparer {
     private void assertStaticFilter(String query, String etalonQuery, FilterMap filters) {
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        SelectQueryFilterPreparer queryPreaprer = OrmConfigurator.getInstance(SelectQueryFilterPreparer.class);
-        queryPreaprer.prepare(selectQuery, filters);
+        QueryPreparer queryPreaprer = OrmConfigurator.getInstance(QueryPreparer.class);
+        queryPreaprer.prepareSelectQuery(selectQuery, filters);
         assertEquals(etalonQuery, selectQuery.toString());
     }
 
@@ -106,9 +106,9 @@ public class UTestSelectQueryStaticFilterPreparer {
     private void assertFailStaticFilter(String query, FilterMap filters) {
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        SelectQueryFilterPreparer queryPreaprer = OrmConfigurator.getInstance(SelectQueryFilterPreparer.class);
+        QueryPreparer queryPreaprer = OrmConfigurator.getInstance(QueryPreparer.class);
         try {
-            queryPreaprer.prepare(selectQuery, filters);
+            queryPreaprer.prepareSelectQuery(selectQuery, filters);
             fail("Ожидается, что выражение '" + query + "' имеет не валидный фильтр");
         } catch (IllegalStateException ise) {
             assertNotNull(ise.getMessage());

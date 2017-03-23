@@ -8,10 +8,10 @@ import com.reforms.orm.dao.report.model.Report;
  */
 interface IReportDao {
 
-    Report loadReport(DaoContext daoCtx) throws Exception;
+    Report loadReport(DaoSelectContext daoCtx) throws Exception;
 
-    ReportIterator iterate(DaoContext daoCtx) throws Exception;
+    ReportIterator iterate(DaoSelectContext daoCtx) throws Exception;
 
-    void handle(DaoContext daoCtx, ReportRecordHandler handler) throws Exception;
+    void handle(DaoSelectContext daoCtx, ReportRecordHandler handler) throws Exception;
 
 }

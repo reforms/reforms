@@ -1,10 +1,9 @@
 package com.reforms.orm.dao;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import com.reforms.orm.dao.filter.*;
+import com.reforms.orm.dao.filter.FilterMap;
+import com.reforms.orm.dao.filter.FilterObject;
+import com.reforms.orm.dao.filter.FilterSequence;
+import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.filter.column.CompositeSelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.IndexSelectFilter;
@@ -12,6 +11,10 @@ import com.reforms.orm.dao.filter.page.IPageFilter;
 import com.reforms.orm.dao.filter.page.PageFilter;
 import com.reforms.orm.dao.report.IReportDaoAdapter;
 import com.reforms.orm.dao.report.model.Report;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Адаптер к dao
@@ -155,23 +158,18 @@ public class ReportDaoAdapter implements IReportDaoAdapter {
     private IFilterValues buildFilterValues() {
         IPageFilter pageFilter = buildPageFilter();
         if (simpleFilterValues != null) {
-            FilterSequence filterValues = new FilterSequence(simpleFilterValues.toArray());
             if (pageFilter != null) {
-                filterValues.applyPageFilter(pageFilter);
+                simpleFilterValues.add(pageFilter);
             }
+            FilterSequence filterValues = new FilterSequence(simpleFilterValues.toArray());
             return filterValues;
         }
         if (filterBobj != null) {
-            FilterObject filterValues = new FilterObject(filterBobj);
-            if (pageFilter != null) {
-                filterValues.applyPageFilter(pageFilter);
-            }
+            FilterObject filterValues = new FilterObject(filterBobj, pageFilter);
             return filterValues;
         }
         if (filterMap != null) {
-            if (pageFilter != null) {
-                filterMap.applyPageFilter(pageFilter);
-            }
+            filterMap.setPageFilter(pageFilter);
             return filterMap;
         }
         return filter;
@@ -184,8 +182,8 @@ public class ReportDaoAdapter implements IReportDaoAdapter {
         return pageFilter;
     }
 
-    private DaoContext buildDaoContext() {
-        DaoContext daoCtx = new DaoContext();
+    private DaoSelectContext buildDaoContext() {
+        DaoSelectContext daoCtx = new DaoSelectContext();
         daoCtx.setConnectionHolder(connectionHolder);
         daoCtx.setQuery(query);
         daoCtx.setSelectedColumnFilter(buildSelectedColumnFilter());
@@ -195,21 +193,21 @@ public class ReportDaoAdapter implements IReportDaoAdapter {
 
     @Override
     public Report loadReport() throws Exception {
-        DaoContext daoCtx = buildDaoContext();
+        DaoSelectContext daoCtx = buildDaoContext();
         ReportDao reportDao = new ReportDao();
         return reportDao.loadReport(daoCtx);
     }
 
     @Override
     public ReportIterator iterate() throws Exception {
-        DaoContext daoCtx = buildDaoContext();
+        DaoSelectContext daoCtx = buildDaoContext();
         ReportDao reportDao = new ReportDao();
         return reportDao.iterate(daoCtx);
     }
 
     @Override
     public void handle(ReportRecordHandler handler) throws Exception {
-        DaoContext daoCtx = buildDaoContext();
+        DaoSelectContext daoCtx = buildDaoContext();
         ReportDao reportDao = new ReportDao();
         reportDao.handle(daoCtx, handler);
     }

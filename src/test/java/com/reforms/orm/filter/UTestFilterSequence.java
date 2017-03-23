@@ -1,13 +1,14 @@
 package com.reforms.orm.filter;
 
-import static org.junit.Assert.*;
-
-import java.math.BigDecimal;
+import com.reforms.orm.dao.filter.FilterSequence;
+import com.reforms.orm.dao.filter.page.IPageFilter;
+import com.reforms.orm.dao.filter.page.PageFilter;
 
 import org.junit.Test;
 
-import com.reforms.orm.dao.filter.FilterSequence;
-import com.reforms.orm.dao.filter.page.PageFilter;
+import java.math.BigDecimal;
+
+import static org.junit.Assert.*;
 
 public class UTestFilterSequence {
 
@@ -20,9 +21,10 @@ public class UTestFilterSequence {
         assertEquals(price, filters.get("price"));
         assertEquals(1L, filters.get("id"));
         assertEquals("Тапочки", filters.get("name"));
-        assertTrue(filters.hasPageFilter());
-        assertEquals(Integer.valueOf(25), filters.getPageLimit());
-        assertEquals(Integer.valueOf(50), filters.getPageOffset());
+        IPageFilter pageFilter = filters.getPageFilter();
+        assertTrue(pageFilter.hasPageFilter());
+        assertEquals(Integer.valueOf(25), pageFilter.getPageLimit());
+        assertEquals(Integer.valueOf(50), pageFilter.getPageOffset());
         assertEquals(price, filters.get("price"));
         assertNull(filters.get("empty"));
     }

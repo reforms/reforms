@@ -1,6 +1,5 @@
 package com.reforms.orm.extractor;
 
-import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.from.TableExpression;
 import com.reforms.sql.expr.viewer.SqlBuilder;
@@ -18,7 +17,7 @@ public class TableExpressionExtractor extends SqlBuilder {
 
     private List<TableExpression> tableExprs;
 
-    public List<TableExpression> extractTableExpressions(SelectQuery selectQuery) {
+    public List<TableExpression> extractTableExpressions(Expression selectQuery) {
         tableExprs = new ArrayList<>();
         selectQuery.view(this);
         return tableExprs;

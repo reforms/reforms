@@ -27,7 +27,13 @@ public class UTestCurrentSqlParser {
         //        assertSelectQueryWithAsClause("SELECT clientId::real");
 
 
-        assertSelectQuery("SELECT (CASE WHEN client_id = 2 THEN 20 WHEN client_id = 3 THEN 30 ELSE 40 END)::DATE");
+        assertSelectQuery("SELECT cl.client_id, cl.last_name, cl.first_name, cl.middle_name "
+                + "FROM test_scheme.pcl cl, test_scheme.o2cl o2c, test_scheme.cdcrc dr "
+                + "WHERE dr.doc_id = ? AND dr.recipient_id = cl.client_id AND cl.status <> 0 AND o2c.client_id = cl.client_id AND o2c.operator_id = ? "
+                + "AND cl.client_id IN (SELECT c2a.client_id FROM test_scheme.ccaa c2a, test_scheme.aaa a "
+                + "WHERE c2a.account_id = a.id AND a.branch_id = ? AND a.account LIKE ?) "
+                + "AND UPPER((CASE WHEN last_name IS NOT NULL THEN last_name ELSE '' END) || ' ' || (CASE WHEN first_name IS NOT NULL THEN first_name ELSE '' END) || ' ' || (CASE WHEN middle_name IS NOT NULL THEN middle_name ELSE '' END)"
+                + ") LIKE ?");
 
     }
 

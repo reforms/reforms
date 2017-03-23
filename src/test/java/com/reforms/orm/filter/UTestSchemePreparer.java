@@ -9,7 +9,7 @@ import org.junit.Test;
 import com.reforms.orm.CreateNewInstance;
 import com.reforms.orm.IOrmContext;
 import com.reforms.orm.OrmConfigurator;
-import com.reforms.orm.extractor.SelectQueryFilterPreparer;
+import com.reforms.orm.extractor.QueryPreparer;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.scheme.SchemeManager;
 import com.reforms.sql.expr.query.SelectQuery;
@@ -49,10 +49,10 @@ public class UTestSchemePreparer {
     }
 
     private void assertScheme(String query, String expectedQuery) {
-        SelectQueryFilterPreparer queryPreaprer = OrmConfigurator.getInstance(SelectQueryFilterPreparer.class);
+        QueryPreparer queryPreaprer = OrmConfigurator.getInstance(QueryPreparer.class);
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        queryPreaprer.prepare(selectQuery, EMPTY_FILTER_MAP);
+        queryPreaprer.prepareSelectQuery(selectQuery, EMPTY_FILTER_MAP);
         assertEquals(expectedQuery, selectQuery.toString());
     }
 

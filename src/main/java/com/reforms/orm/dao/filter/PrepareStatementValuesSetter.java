@@ -1,24 +1,21 @@
 package com.reforms.orm.dao.filter;
 
-import static com.reforms.orm.dao.column.ColumnAliasType.*;
-
-import java.lang.reflect.Array;
-import java.math.BigDecimal;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.*;
-
 import com.reforms.orm.dao.column.ColumnAliasType;
 import com.reforms.orm.dao.filter.param.ParamSetter;
 import com.reforms.orm.dao.filter.param.ParamSetterFactory;
+
+import java.lang.reflect.Array;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Устанавливает значения с заданного индекса в PrepareStatement
  * @author evgenie
  */
-public class FilterPrepareStatementSetter {
+public class PrepareStatementValuesSetter {
 
     private int index;
 
@@ -26,11 +23,11 @@ public class FilterPrepareStatementSetter {
     private List<Object> filterValues = new ArrayList<>();
     private ParamSetterFactory paramSetterFactory;
 
-    public FilterPrepareStatementSetter(ParamSetterFactory paramSetterFactory) {
+    public PrepareStatementValuesSetter(ParamSetterFactory paramSetterFactory) {
         this(1, paramSetterFactory);
     }
 
-    public FilterPrepareStatementSetter(int index, ParamSetterFactory paramSetterFactory) {
+    public PrepareStatementValuesSetter(int index, ParamSetterFactory paramSetterFactory) {
         this.index = index;
         this.paramSetterFactory = paramSetterFactory;
     }

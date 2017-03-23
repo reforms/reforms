@@ -2,7 +2,7 @@ package com.reforms.orm.filter;
 
 import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.dao.filter.FilterMap;
-import com.reforms.orm.extractor.SelectQueryFilterPreparer;
+import com.reforms.orm.extractor.QueryPreparer;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
 
@@ -75,8 +75,8 @@ public class UTestSearchGroupDynamicFilter {
     private void assertDynamicFilter(String query, String etalonQuery, FilterMap filters) {
         SqlParser sqlParser = new SqlParser(query);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
-        SelectQueryFilterPreparer queryPreaprer = OrmConfigurator.getInstance(SelectQueryFilterPreparer.class);
-        queryPreaprer.prepare(selectQuery, filters);
+        QueryPreparer queryPreaprer = OrmConfigurator.getInstance(QueryPreparer.class);
+        queryPreaprer.prepareSelectQuery(selectQuery, filters);
         assertEquals(etalonQuery, selectQuery.toString());
     }
 

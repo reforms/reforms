@@ -1,18 +1,25 @@
 package com.reforms.orm.dao;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
-import com.reforms.orm.dao.filter.*;
+import com.reforms.orm.dao.bobj.update.IUpdateValues;
+import com.reforms.orm.dao.bobj.update.UpdateMap;
+import com.reforms.orm.dao.bobj.update.UpdateObject;
+import com.reforms.orm.dao.bobj.update.UpdateSequence;
+import com.reforms.orm.dao.filter.FilterMap;
+import com.reforms.orm.dao.filter.FilterObject;
+import com.reforms.orm.dao.filter.FilterSequence;
+import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.filter.column.CompositeSelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.IndexSelectFilter;
 import com.reforms.orm.dao.filter.page.IPageFilter;
 import com.reforms.orm.dao.filter.page.PageFilter;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Адаптер к dao
@@ -20,20 +27,30 @@ import com.reforms.orm.dao.filter.page.PageFilter;
  */
 public class OrmDaoAdapter implements IOrmDaoAdapter {
 
+    // base info
     private final Object connectionHolder;
     private final String query;
 
+    // selected info
     private List<Integer> selectedColumnIndexes;
     private ISelectedColumnFilter selectedColumnFilter;
 
+    // filters info
     private List<Object> simpleFilterValues;
     private Object filterBobj;
     private FilterMap filterMap;
     private IFilterValues filter;
 
+    // paging info
     private Integer pageLimit;
     private Integer pageOffset;
     private IPageFilter pageFilter;
+
+    // updates info
+    private List<Object> simpleUpdateValues;
+    private Object updateBobj;
+    private UpdateMap updateMap;
+    private IUpdateValues updateValues;
 
     public OrmDaoAdapter(Object connectionHolder, String query) {
         this.connectionHolder = connectionHolder;
@@ -138,6 +155,57 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         return this;
     }
 
+    @Override
+    public IOrmDaoAdapter addUpdateValue(Object updateValue) {
+        return addUpdateValue0(updateValue);
+    }
+
+    @Override
+    public IOrmDaoAdapter addUpdateValues(Object ... updateValues) {
+        for (Object updateValue : updateValues) {
+            addUpdateValue0(updateValue);
+        }
+        return this;
+    }
+
+    private IOrmDaoAdapter addUpdateValue0(Object updateValue) {
+        if (simpleUpdateValues == null) {
+            simpleUpdateValues = new ArrayList<>();
+        }
+        simpleUpdateValues.add(updateValue);
+        return this;
+    }
+
+    @Override
+    public IOrmDaoAdapter setUpdateObject(Object updateBobj) {
+        this.updateBobj = updateBobj;
+        return this;
+    }
+
+    @Override
+    public IOrmDaoAdapter addUpdatePair(String paramName, Object updateValue) {
+        if (updateMap == null) {
+            updateMap = new UpdateMap();
+        }
+        updateMap.putValue(paramName, updateValue);
+        return this;
+    }
+
+    @Override
+    public IOrmDaoAdapter addUpdatePairs(Map<String, Object> updateValues) {
+        if (updateMap == null) {
+            updateMap = new UpdateMap();
+        }
+        updateMap.putValues(updateValues);
+        return this;
+    }
+
+    @Override
+    public IOrmDaoAdapter setUpdateValue(IUpdateValues updateValues) {
+        this.updateValues = updateValues;
+        return this;
+    }
+
     private ISelectedColumnFilter buildSelectedColumnFilter() {
         ISelectedColumnFilter firstFilter = null;
         if (selectedColumnIndexes != null) {
@@ -156,26 +224,36 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     private IFilterValues buildFilterValues() {
         IPageFilter pageFilter = buildPageFilter();
         if (simpleFilterValues != null) {
-            FilterSequence filterValues = new FilterSequence(simpleFilterValues.toArray());
             if (pageFilter != null) {
-                filterValues.applyPageFilter(pageFilter);
+                simpleFilterValues.add(pageFilter);
             }
+            FilterSequence filterValues = new FilterSequence(simpleFilterValues.toArray());
             return filterValues;
         }
         if (filterBobj != null) {
-            FilterObject filterValues = new FilterObject(filterBobj);
-            if (pageFilter != null) {
-                filterValues.applyPageFilter(pageFilter);
-            }
+            FilterObject filterValues = new FilterObject(filterBobj, pageFilter);
             return filterValues;
         }
         if (filterMap != null) {
-            if (pageFilter != null) {
-                filterMap.applyPageFilter(pageFilter);
-            }
+            filterMap.setPageFilter(pageFilter);
             return filterMap;
         }
         return filter;
+    }
+
+    private IUpdateValues buildUpdateValues() {
+        if (simpleUpdateValues != null) {
+            UpdateSequence updateValues = new UpdateSequence(simpleUpdateValues.toArray());
+            return updateValues;
+        }
+        if (updateBobj != null) {
+            UpdateObject updateValues = new UpdateObject(updateBobj);
+            return updateValues;
+        }
+        if (updateMap != null) {
+            return updateMap;
+        }
+        return updateValues;
     }
 
     private IPageFilter buildPageFilter() {
@@ -185,8 +263,8 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         return pageFilter;
     }
 
-    private DaoContext buildDaoContext(Class<?> ormClass) {
-        DaoContext daoCtx = new DaoContext();
+    private DaoSelectContext buildDaoSelectContext(Class<?> ormClass) {
+        DaoSelectContext daoCtx = new DaoSelectContext();
         daoCtx.setConnectionHolder(connectionHolder);
         daoCtx.setQuery(query);
         daoCtx.setOrmType(ormClass);
@@ -195,24 +273,33 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         return daoCtx;
     }
 
+    private DaoUpdateContext buildDaoUpdateContext() {
+        DaoUpdateContext daoCtx = new DaoUpdateContext();
+        daoCtx.setConnectionHolder(connectionHolder);
+        daoCtx.setQuery(query);
+        daoCtx.setUpateValues(buildUpdateValues());
+        daoCtx.setFilterValues(buildFilterValues());
+        return daoCtx;
+    }
+
     @Override
     public <OrmType> OrmType load(Class<OrmType> ormClass) throws Exception {
         IOrmDao dao = new OrmDao();
-        DaoContext daoCtx = buildDaoContext(ormClass);
+        DaoSelectContext daoCtx = buildDaoSelectContext(ormClass);
         return dao.load(daoCtx);
     }
 
     @Override
     public <OrmType> List<OrmType> loads(Class<OrmType> ormClass) throws Exception {
         IOrmDao dao = new OrmDao();
-        DaoContext daoCtx = buildDaoContext(ormClass);
+        DaoSelectContext daoCtx = buildDaoSelectContext(ormClass);
         return dao.loads(daoCtx);
     }
 
     @Override
     public <OrmType> OrmIterator<OrmType> iterate(Class<OrmType> ormClass) throws Exception {
         IOrmDao dao = new OrmDao();
-        DaoContext daoCtx = buildDaoContext(ormClass);
+        DaoSelectContext daoCtx = buildDaoSelectContext(ormClass);
         return dao.iterate(daoCtx);
     }
 
@@ -220,7 +307,14 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     @Override
     public <OrmType> void handle(Class<OrmType> ormClass, OrmHandler<OrmType> handler) throws Exception {
         IOrmDao dao = new OrmDao();
-        DaoContext daoCtx = buildDaoContext(ormClass);
+        DaoSelectContext daoCtx = buildDaoSelectContext(ormClass);
         dao.handle(daoCtx, (OrmHandler<Object>) handler);
+    }
+
+    @Override
+    public int update() throws Exception {
+        IOrmDao dao = new OrmDao();
+        DaoUpdateContext daoCtx = buildDaoUpdateContext();
+        return dao.update(daoCtx);
     }
 }

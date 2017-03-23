@@ -1,20 +1,13 @@
-package com.reforms.orm.dao.filter;
+package com.reforms.orm.dao.bobj.update;
 
 import com.reforms.orm.dao.IPriorityValues;
 import com.reforms.orm.dao.IValues;
-import com.reforms.orm.dao.filter.page.IPageFilter;
 
 /**
- * Контракт на получение значения фильтра по ключу
+ * Именованный контракт на обновление
  * @author evgenie
  */
-public abstract class IFilterValues implements IValues, IPriorityValues {
-
-    /**
-     * Получить фильтр постраничной загрузки
-     * @return фильтр постраничной загрузки
-     */
-    public abstract IPageFilter getPageFilter();
+public abstract class IUpdateValues implements IValues, IPriorityValues {
 
     /**
      * Получить значение именнованного параметра

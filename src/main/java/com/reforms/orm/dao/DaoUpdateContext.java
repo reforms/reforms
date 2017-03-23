@@ -1,13 +1,13 @@
 package com.reforms.orm.dao;
 
+import com.reforms.orm.dao.bobj.update.IUpdateValues;
 import com.reforms.orm.dao.filter.IFilterValues;
-import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 
 /**
- * Контекст данных для совершения определенной операции
+ * Контекст данных для совершения определенной операции обновления
  * @author evgenie
  */
-class DaoContext {
+class DaoUpdateContext {
 
     /** Объект, который содержит доступ к БД */
     private Object connectionHolder;
@@ -15,11 +15,7 @@ class DaoContext {
     /** Запрос к БД */
     private String query;
 
-    /** Выбираемый тип */
-    private Class<?> ormType;
-
-    /** Фильтр выбираемых колонок */
-    private ISelectedColumnFilter selectedColumnFilter;
+    private IUpdateValues upateValues;
 
     /** Фильтр данных */
     private IFilterValues filterValues;
@@ -40,20 +36,12 @@ class DaoContext {
         this.query = query;
     }
 
-    Class<?> getOrmType() {
-        return ormType;
+    IUpdateValues getUpateValues() {
+        return upateValues;
     }
 
-    void setOrmType(Class<?> ormType) {
-        this.ormType = ormType;
-    }
-
-    ISelectedColumnFilter getSelectedColumnFilter() {
-        return selectedColumnFilter;
-    }
-
-    void setSelectedColumnFilter(ISelectedColumnFilter selectedColumnFilter) {
-        this.selectedColumnFilter = selectedColumnFilter;
+    void setUpateValues(IUpdateValues upateValues) {
+        this.upateValues = upateValues;
     }
 
     IFilterValues getFilterValues() {
@@ -63,5 +51,4 @@ class DaoContext {
     void setFilterValues(IFilterValues filterValues) {
         this.filterValues = filterValues;
     }
-
 }

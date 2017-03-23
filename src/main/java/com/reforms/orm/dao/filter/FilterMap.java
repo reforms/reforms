@@ -1,10 +1,11 @@
 package com.reforms.orm.dao.filter;
 
+import com.reforms.orm.dao.filter.page.IPageFilter;
+import com.reforms.orm.dao.filter.page.PageFilter;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.reforms.orm.dao.filter.page.IPageFilter;
 
 /**
  * Вспомогательный класс для фильтров
@@ -13,7 +14,7 @@ import com.reforms.orm.dao.filter.page.IPageFilter;
  *              например, putLongValue(String key, Long longValue)
  * @author evgenie
  */
-public class FilterMap implements IFilterValues {
+public class FilterMap extends IFilterValues {
 
     public static final String PAGE_LIMIT_KEY = "__PAGE_LIMIT__";
     public static final String PAGE_OFFSET_KEY = "__PAGE_OFFSET__";
@@ -70,6 +71,21 @@ public class FilterMap implements IFilterValues {
         return get(String.valueOf(key));
     }
 
+    @Override
+    public IPageFilter getPageFilter() {
+        Integer pageLimit = (Integer) get(PAGE_LIMIT_KEY);
+        Integer pageOffset = (Integer) get(PAGE_OFFSET_KEY);
+        if (pageLimit != null && pageOffset != null) {
+            return new PageFilter(pageLimit, pageOffset);
+        }
+        return null;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return filters.isEmpty();
+    }
+
     public FilterMap putValue(String key, Object value) {
         put(key, value);
         return this;
@@ -107,46 +123,18 @@ public class FilterMap implements IFilterValues {
         filters.putAll(filterPairs);
     }
 
-    @Override
-    public boolean hasPageFilter() {
-        return getPageLimit() != null && getPageOffset() != null;
-    }
-
-    @Override
-    public Integer getPageLimit() {
-        Object pageLimit = getValue(PAGE_LIMIT_KEY, null);
-        if (pageLimit instanceof Integer) {
-            return (Integer) pageLimit;
-        }
-        return null;
-    }
-
     public void setPageLimit(int pageLimit) {
         putValue(PAGE_LIMIT_KEY, pageLimit);
     }
 
-    @Override
-    public void applyPageFilter(IPageFilter newPageFiler) {
-        if (newPageFiler != null) {
-            if (newPageFiler.getPageLimit() != null) {
-                setPageLimit(newPageFiler.getPageLimit());
-            }
-            if (newPageFiler.getPageOffset() != null) {
-                setPageOffset(newPageFiler.getPageOffset());
-            }
-        }
-    }
-
-    @Override
-    public Integer getPageOffset() {
-        Object pageOffset = getValue(PAGE_OFFSET_KEY, null);
-        if (pageOffset instanceof Integer) {
-            return (Integer) pageOffset;
-        }
-        return null;
-    }
-
     public void setPageOffset(int pageOffset) {
         putValue(PAGE_OFFSET_KEY, pageOffset);
+    }
+
+    public void setPageFilter(IPageFilter pageFilter) {
+        if (pageFilter != null) {
+            put(PAGE_LIMIT_KEY, pageFilter.getPageLimit());
+            put(PAGE_OFFSET_KEY, pageFilter.getPageOffset());
+        }
     }
 }

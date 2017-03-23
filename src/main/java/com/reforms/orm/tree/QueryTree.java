@@ -1,6 +1,5 @@
 package com.reforms.orm.tree;
 
-import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.value.StringExpression;
 import com.reforms.sql.expr.viewer.SqlBuilder;
@@ -11,7 +10,7 @@ import java.util.IdentityHashMap;
  * Дерево выражений
  * @author evgenie
  */
-public class SelectQueryTree extends IdentityHashMap<Expression, ChildExpressions> {
+public class QueryTree extends IdentityHashMap<Expression, ChildExpressions> {
 
     private StringExpression headExpr = new StringExpression("HEAD");
 
@@ -34,11 +33,11 @@ public class SelectQueryTree extends IdentityHashMap<Expression, ChildExpression
         return parentExprs.get(childExpr);
     }
 
-    public static SelectQueryTree build(SelectQuery selectQuery) {
-        final SelectQueryTree tree = new SelectQueryTree();
+    public static QueryTree build(Expression query) {
+        final QueryTree tree = new QueryTree();
         final LocalStack stack = new LocalStack();
         stack.push(tree.getHeadExpr());
-        selectQuery.view(new SqlBuilder() {
+        query.view(new SqlBuilder() {
 
             @Override
             public SqlBuilder appendExpression(Expression childExpr) {
