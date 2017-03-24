@@ -1,5 +1,6 @@
 package com.reforms.orm;
 
+import com.reforms.orm.dao.IParamNameConverter;
 import com.reforms.orm.dao.IResultSetReaderFactory;
 import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.dao.bobj.IResultSetValueAdapter;
@@ -29,6 +30,10 @@ public interface IOrmContext {
     public void changeColumnToFieldNameConverter(CreateNewInstance<IColumnToFieldNameConverter> creator);
 
     public void setColumnToFieldNameConverter(IColumnToFieldNameConverter newColumnToFieldNameConverter);
+
+    public void changeParamNameConverter(CreateNewInstance<IParamNameConverter> creator);
+
+    public void setParamNameConverter(IParamNameConverter newParamNameConverter);
 
     public void changeConnectionHolder(CreateNewInstance<IConnectionHolder> creator);
 

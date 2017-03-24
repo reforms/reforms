@@ -1,5 +1,6 @@
 package com.reforms.orm;
 
+import com.reforms.orm.dao.IParamNameConverter;
 import com.reforms.orm.dao.IResultSetReaderFactory;
 import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.dao.bobj.IResultSetValueAdapter;
@@ -67,6 +68,20 @@ class OrmContext implements IOrmContext {
     @Override
     public void setColumnToFieldNameConverter(IColumnToFieldNameConverter newColumnToFieldNameConverter) {
         putInstance(IColumnToFieldNameConverter.class, newColumnToFieldNameConverter);
+    }
+
+    @Override
+    public void changeParamNameConverter(CreateNewInstance<IParamNameConverter> creator) {
+        IParamNameConverter currentParamNameConverter = getInstance(IParamNameConverter.class);
+        IParamNameConverter newParamNameConverter = creator.createNew(currentParamNameConverter);
+        if (newParamNameConverter != null) {
+            putInstance(IParamNameConverter.class, newParamNameConverter);
+        }
+    }
+
+    @Override
+    public void setParamNameConverter(IParamNameConverter newParamNameConverter) {
+        putInstance(IParamNameConverter.class, newParamNameConverter);
     }
 
     @Override
