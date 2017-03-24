@@ -61,4 +61,9 @@ public class FilterSequence extends IFilterValues {
     public boolean isEmpty() {
         return sequenses.length == 0;
     }
+
+    @Override
+    public int getParamNameType() {
+        return PNT_SEQUENCE;
+    }
 }

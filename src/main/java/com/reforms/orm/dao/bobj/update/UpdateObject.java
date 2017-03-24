@@ -32,4 +32,9 @@ public class UpdateObject extends IUpdateValues {
     public boolean isEmpty() {
         return false;
     }
+
+    @Override
+    public int getParamNameType() {
+        return PNT_BOBJ;
+    }
 }

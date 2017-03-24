@@ -43,6 +43,18 @@ public class SetClauseStatement extends Expression {
         this.setClauseList = setClauseList;
     }
 
+    public int getExprIndex(Expression expr) {
+        return setClauseList.indexOf(expr);
+    }
+
+    public boolean removeExpr(int exprIndex) {
+        return setClauseList.remove(exprIndex) != null;
+    }
+
+    public boolean isEmpty() {
+        return setClauseList.isEmpty();
+    }
+
     @Override
     public ExpressionType getType() {
         return ET_SET_CLAUSE_STATEMENT;

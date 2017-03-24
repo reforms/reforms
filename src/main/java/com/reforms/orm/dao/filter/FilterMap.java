@@ -86,6 +86,11 @@ public class FilterMap extends IFilterValues {
         return filters.isEmpty();
     }
 
+    @Override
+    public int getParamNameType() {
+        return PNT_MAP;
+    }
+
     public FilterMap putValue(String key, Object value) {
         put(key, value);
         return this;

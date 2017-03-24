@@ -89,7 +89,7 @@ public class UTestPageFilterOrmDao extends GoodsDbTest {
 
     private void loadAndAssertOrm(String query, IFilterValues filters, GoodsOrm... expectedGoodsOrms) throws Exception {
         OrmDao ormDao = new OrmDao(h2ds);
-        List<GoodsOrm> actualGoodsOrms = ormDao.loadOrms(GoodsOrm.class, query, filters);
+        List<GoodsOrm> actualGoodsOrms = ormDao.selectOrms(GoodsOrm.class, query, filters);
         assertEquals(expectedGoodsOrms.length, actualGoodsOrms.size());
         for (int index = 0; index < expectedGoodsOrms.length; index++) {
             GoodsOrm expectedGoodsOrm = expectedGoodsOrms[index];

@@ -29,7 +29,7 @@ public class ClientDao {
      * @return
      */
     public ClientOrm loadClient(ClientType clientType) throws Exception {
-        return ormDao.loadSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_1, clientType);
+        return ormDao.selectSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_1, clientType);
     }
 
     private static final String LOAD_CLIENT_QUERY_2 =
@@ -47,7 +47,7 @@ public class ClientDao {
      * @return
      */
     public ClientOrm loadClient(ClientType clientType, ClientMode clientMode) throws Exception {
-        return ormDao.loadSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_2, clientType, clientMode);
+        return ormDao.selectSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_2, clientType, clientMode);
     }
 
     private static final String LOAD_CLIENT_QUERY_3 =
@@ -65,7 +65,7 @@ public class ClientDao {
      * @return
      */
     public ClientOrm loadClient(ClientState clientState, ClientMode clientMode) throws Exception {
-        return ormDao.loadSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_3, clientState, clientMode);
+        return ormDao.selectSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_3, clientState, clientMode);
     }
 
     private static final String LOAD_CLIENT_QUERY_4 =
@@ -82,7 +82,7 @@ public class ClientDao {
      * @return
      */
     public ClientOrm loadClient2(ClientType clientType) throws Exception {
-        return ormDao.loadSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_4, clientType);
+        return ormDao.selectSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_4, clientType);
     }
 
     private static final String LOAD_CLIENT_QUERY_5 =
@@ -100,7 +100,7 @@ public class ClientDao {
      * @return
      */
     public ClientOrm loadClient2(ClientType clientType, ClientMode clientMode) throws Exception {
-        return ormDao.loadSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_5, clientType, clientMode);
+        return ormDao.selectSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_5, clientType, clientMode);
     }
 
     private static final String LOAD_CLIENT_QUERY_6 =
@@ -118,7 +118,7 @@ public class ClientDao {
      * @return
      */
     public ClientOrm loadClient2(ClientState clientState, ClientMode clientMode) throws Exception {
-        return ormDao.loadSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_6, clientState, clientMode);
+        return ormDao.selectSimpleOrm(ClientOrm.class, LOAD_CLIENT_QUERY_6, clientState, clientMode);
     }
 
 }

@@ -26,7 +26,7 @@ public class ClientDao {
      * @return
      */
     public List<Long> loadClientIds() throws Exception {
-        return ormDao.loadSimpleOrms(Long.class, LOAD_CLIENT_IDS_QUERY);
+        return ormDao.selectSimpleOrms(Long.class, LOAD_CLIENT_IDS_QUERY);
     }
 
     private static final String LOAD_CLIENT_NAMES_QUERY =
@@ -38,7 +38,7 @@ public class ClientDao {
      * @return
      */
     public List<String> loadClientNames() throws Exception {
-        return ormDao.loadOrms(String.class, LOAD_CLIENT_NAMES_QUERY);
+        return ormDao.selectOrms(String.class, LOAD_CLIENT_NAMES_QUERY);
     }
 
     private static final String LOAD_CLIENT_CLIENT_ORDER_QUERY =
@@ -50,6 +50,6 @@ public class ClientDao {
      * @return
      */
     public List<ClientOrder> loadClientOrders() throws Exception {
-        return ormDao.loadOrms(ClientOrder.class, LOAD_CLIENT_CLIENT_ORDER_QUERY);
+        return ormDao.selectOrms(ClientOrder.class, LOAD_CLIENT_CLIENT_ORDER_QUERY);
     }
 }

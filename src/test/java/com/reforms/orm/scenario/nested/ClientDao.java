@@ -35,10 +35,10 @@ public class ClientDao {
      * @return
      */
     public ClientOrm loadClient(long clientId) throws Exception {
-        return ormDao.loadSimpleOrm(ClientOrm.class, LOAD_CLIENTS_QUERY, clientId);
+        return ormDao.selectSimpleOrm(ClientOrm.class, LOAD_CLIENTS_QUERY, clientId);
     }
 
     public List<ClientOrm> loadClients() throws Exception {
-        return ormDao.loadOrms(ClientOrm.class, LOAD_CLIENTS_QUERY);
+        return ormDao.selectOrms(ClientOrm.class, LOAD_CLIENTS_QUERY);
     }
 }

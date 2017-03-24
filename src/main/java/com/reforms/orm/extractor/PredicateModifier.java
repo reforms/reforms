@@ -1,6 +1,7 @@
 package com.reforms.orm.extractor;
 
 import com.reforms.orm.tree.QueryTree;
+import com.reforms.sql.expr.statement.SetClauseStatement;
 import com.reforms.sql.expr.statement.WhereStatement;
 import com.reforms.sql.expr.term.ArgListExpression;
 import com.reforms.sql.expr.term.Expression;
@@ -143,6 +144,14 @@ public class PredicateModifier {
             changeWhenThenExpr(filterExpr, (WhenThenExpression) predicateExpr);
             return;
         }
+        if (ET_SET_CLAUSE_STATEMENT == predicateExpr.getType()) {
+            changeSetClauseStatement(filterExpr, (SetClauseStatement) predicateExpr);
+            return;
+        }
+        if (ET_SET_CLAUSE_EXPRESSION == predicateExpr.getType()) {
+            changeDynamicFilter(predicateExpr);
+            return;
+        }
 
         throw new IllegalStateException("Не поддерживаемое выражение для изменения фильтра '" + filterExpr + "' в '" + predicateExpr
                 + "' с типом '" + predicateExpr.getType() + "'");
@@ -199,6 +208,18 @@ public class PredicateModifier {
             } else {
                 changeDynamicFilter(caseExpr);
             }
+        }
+    }
+
+    private void changeSetClauseStatement(Expression setClasueExpr, SetClauseStatement setClauseStatement) {
+        int index = setClauseStatement.getExprIndex(setClasueExpr);
+        if (index == -1) {
+            throw new IllegalStateException("Не возможно изменить фильтр - не найдено выражение '" + setClasueExpr + "' в '"
+                    + setClauseStatement + "'");
+        }
+        setClauseStatement.removeExpr(index);
+        if (setClauseStatement.isEmpty()) {
+            throw new IllegalStateException("Не осталось данных обновления в '" + queryTree.getParentExpressionFor(setClauseStatement) + "'");
         }
     }
 

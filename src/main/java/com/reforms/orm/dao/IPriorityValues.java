@@ -29,4 +29,11 @@ public interface IPriorityValues {
      * @param key - порядковый номер значения
      */
     public Object getPriorityValue(int priority, int key);
+
+    /**
+     * Получить тип параметра
+     * @param priority приоритет
+     * @return тип параметра
+     */
+    public int getParamNameType(int priority);
 }

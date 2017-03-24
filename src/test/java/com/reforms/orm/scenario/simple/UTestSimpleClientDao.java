@@ -1,12 +1,12 @@
 package com.reforms.orm.scenario.simple;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
+import com.reforms.orm.scenario.TestScenarioDao;
 
 import org.junit.Test;
 
-import com.reforms.orm.scenario.TestScenarioDao;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Тестируем выборку для вложенных объектов
@@ -23,18 +23,18 @@ public class UTestSimpleClientDao extends TestScenarioDao {
         ClientDao clientDao = new ClientDao(h2ds);
         ClientOrm clientOrm1 = clientDao.loadClient(1L);
         assertEquals("[id=1, " +
-                      "name=Пупкин Иван Иванович, " +
+                "name=Пупкин Иван Иванович, " +
                       "addressId=1, " +
-                      "city=Москва, " +
-                      "street=Лужники, " +
-                      "actTime=2017-01-01 19:12:01.69]", clientOrm1.toString());
+                "city=Москва, " +
+                "street=Лужники, " +
+                "actTime=Sun Jan 01 19:12:01 MSK 2017]", clientOrm1.toString());
         ClientOrm clientOrm2 = clientDao.loadClient(2L);
         assertEquals("[id=2, " +
-                      "name=Остапов Никалай Сергеевич, " +
+                "name=Остапов Никалай Сергеевич, " +
                       "addressId=2, " +
-                      "city=Москва, " +
-                      "street=Конова, " +
-                      "actTime=2017-01-01 19:12:01.69]", clientOrm2.toString());
+                "city=Москва, " +
+                "street=Конова, " +
+                "actTime=Sun Jan 01 19:12:01 MSK 2017]", clientOrm2.toString());
     }
 
     @Test
@@ -43,17 +43,17 @@ public class UTestSimpleClientDao extends TestScenarioDao {
         List<ClientOrm> clientsOrm = clientDao.loadClients();
         ClientOrm clientOrm1 = clientsOrm.get(0);
         assertEquals("[id=1, " +
-                      "name=Пупкин Иван Иванович, " +
+                "name=Пупкин Иван Иванович, " +
                       "addressId=1, " +
-                      "city=Москва, " +
-                      "street=Лужники, " +
-                      "actTime=2017-01-01 19:12:01.69]", clientOrm1.toString());
+                "city=Москва, " +
+                "street=Лужники, " +
+                "actTime=Sun Jan 01 19:12:01 MSK 2017]", clientOrm1.toString());
         ClientOrm clientOrm2 = clientsOrm.get(1);
         assertEquals("[id=2, " +
-                      "name=Остапов Никалай Сергеевич, " +
+                "name=Остапов Никалай Сергеевич, " +
                       "addressId=2, " +
-                      "city=Москва, " +
-                      "street=Конова, " +
-                      "actTime=2017-01-01 19:12:01.69]", clientOrm2.toString());
+                "city=Москва, " +
+                "street=Конова, " +
+                "actTime=Sun Jan 01 19:12:01 MSK 2017]", clientOrm2.toString());
     }
 }

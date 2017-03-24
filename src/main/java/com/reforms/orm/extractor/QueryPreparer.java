@@ -2,6 +2,7 @@ package com.reforms.orm.extractor;
 
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.OrmConfigurator;
+import com.reforms.orm.dao.IParamNameConverter;
 import com.reforms.orm.dao.IPriorityValues;
 import com.reforms.orm.dao.PriorityValues;
 import com.reforms.orm.dao.bobj.update.IUpdateValues;
@@ -29,6 +30,7 @@ import static com.reforms.orm.OrmConfigurator.getInstance;
 import static com.reforms.orm.dao.IPriorityValues.PV_FILTER;
 import static com.reforms.orm.dao.IPriorityValues.PV_UPDATE;
 import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
+import static com.reforms.sql.expr.term.ExpressionType.ET_SET_CLAUSE_EXPRESSION;
 import static com.reforms.sql.expr.term.value.ValueExpressionType.*;
 
 /**
@@ -119,9 +121,10 @@ public class QueryPreparer {
         int questionCount = 0;
         QueryTree queryTree = QueryTree.build(query);
         PredicateModifier predicateModifier = new PredicateModifier(queryTree);
-        ColumnAliasParser filterValueParser = OrmConfigurator.getInstance(ColumnAliasParser.class);
+        ColumnAliasParser filterValueParser = getInstance(ColumnAliasParser.class);
+        IParamNameConverter paramNameConverter = getInstance(IParamNameConverter.class);
         for (ValueExpression valueFilterExpr : filterExprs) {
-            int priority = PV_FILTER;
+            int priority = getPriorType(valueFilterExpr, queryTree);
             if (VET_FILTER == valueFilterExpr.getValueExprType()) {
                 FilterExpression filterExpr = (FilterExpression) valueFilterExpr;
                 String filterName = filterExpr.getFilterName();
@@ -146,7 +149,9 @@ public class QueryPreparer {
                     }
                 } else {
                     String shortFilterName = filterDetails.getJavaAliasKey();
-                    Object filterValue = values.getPriorityValue(priority, shortFilterName);
+                    int paramNameType = values.getParamNameType(priority);
+                    String preapredName = paramNameConverter.convertName(paramNameType, shortFilterName);
+                    Object filterValue = values.getPriorityValue(priority, preapredName);
                     if (filterValue == null) {
                         filterValue = values.getPriorityValue(priority, filterName);
                     }
@@ -173,17 +178,19 @@ public class QueryPreparer {
                     throw new IllegalStateException("Значение null недопустимо для 'QuestionExpression'");
                 }
                 fpss.addFilterValue(filterValue);
-            } else if (VET_PAGE_QUESTION == valueFilterExpr.getValueExprType() && values instanceof IFilterValues) {
-                IFilterValues filters = (IFilterValues) values;
-                IPageFilter pageFilter = filters.getPageFilter();
+            } else if (VET_PAGE_QUESTION == valueFilterExpr.getValueExprType()) {
                 Object filterValue = null;
-                if (pageFilter != null) {
-                    PageQuestionExpression pageQuestionExpr = (PageQuestionExpression) valueFilterExpr;
-                    if (pageQuestionExpr.isLimitType()) {
-                        filterValue = pageFilter.getPageLimit();
-                    }
-                    if (pageQuestionExpr.isOffsetType()) {
-                        filterValue = pageFilter.getPageOffset();
+                if (values instanceof IFilterValues) {
+                    IFilterValues filters = (IFilterValues) values;
+                    IPageFilter pageFilter = filters.getPageFilter();
+                    if (pageFilter != null) {
+                        PageQuestionExpression pageQuestionExpr = (PageQuestionExpression) valueFilterExpr;
+                        if (pageQuestionExpr.isLimitType()) {
+                            filterValue = pageFilter.getPageLimit();
+                        }
+                        if (pageQuestionExpr.isOffsetType()) {
+                            filterValue = pageFilter.getPageOffset();
+                        }
                     }
                 }
                 if (filterValue == null) {
@@ -195,6 +202,21 @@ public class QueryPreparer {
             }
         }
         return fpss;
+    }
+
+    private int getPriorType(Expression expr, QueryTree queryTree) {
+        Expression parentExpr = queryTree.getParentExpressionFor(expr);
+        if (parentExpr != null) {
+            if (ET_SET_CLAUSE_EXPRESSION == parentExpr.getType()) {
+                return PV_UPDATE;
+            }
+            // TODO проверить.
+            Expression parentOfParentExpr = queryTree.getParentExpressionFor(parentExpr);
+            if (parentOfParentExpr != null && ET_SET_CLAUSE_EXPRESSION == parentOfParentExpr.getType()) {
+                return PV_UPDATE;
+            }
+        }
+        return PV_FILTER;
     }
 
     private boolean isEmptyValue(Object filterValue) {

@@ -70,6 +70,11 @@ public class UpdateMap extends IUpdateValues {
         return values.isEmpty();
     }
 
+    @Override
+    public int getParamNameType() {
+        return PNT_MAP;
+    }
+
     public UpdateMap putValue(String key, Object value) {
         put(key, value);
         return this;

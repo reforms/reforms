@@ -39,4 +39,9 @@ public class UpdateSequence extends IUpdateValues {
     public boolean isEmpty() {
         return sequenses.length == 0;
     }
+
+    @Override
+    public int getParamNameType() {
+        return PNT_SEQUENCE;
+    }
 }

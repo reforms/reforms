@@ -4,7 +4,7 @@ package com.reforms.orm.dao;
  * Контракт на получение значения по ключу и индексу
  * @author evgenie
  */
-public interface IValues {
+public interface IValues extends IParamNameType {
 
     /**
      * Получить значение именнованного параметра

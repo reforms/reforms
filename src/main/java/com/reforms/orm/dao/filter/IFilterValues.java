@@ -33,4 +33,9 @@ public abstract class IFilterValues implements IValues, IPriorityValues {
     public Object getPriorityValue(int priority, int key) {
         return get(key);
     }
+
+    @Override
+    public int getParamNameType(int priority) {
+        return getParamNameType();
+    }
 }

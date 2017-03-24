@@ -43,6 +43,11 @@ public class PriorityValues implements IPriorityValues {
         return get(newKey, currentValues);
     }
 
+    @Override
+    public int getParamNameType(int priority) {
+        return priority == basePriorType ? baseValues.getParamNameType() : anyValues.getParamNameType();
+    }
+
     private Object get(String key, IValues currentValues) {
         return currentValues.get(key);
     }

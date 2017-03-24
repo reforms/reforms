@@ -68,13 +68,13 @@ public class UTestOrmDao extends GoodsDbTest {
     @Test
     public void runOrmDao_Handle() throws Exception {
         OrmDao ormDao = new OrmDao(h2ds);
-        ormDao.handleOrms(GoodsOrm.class, SELECT_GOODS_ALL_QUERY, new GoodsOrmHandler(), new FilterSequence(-1L));
+        ormDao.handleSelectedOrms(GoodsOrm.class, SELECT_GOODS_ALL_QUERY, new GoodsOrmHandler(), new FilterSequence(-1L));
     }
 
     @Test
     public void runOrmDao_SimpleHandle() throws Exception {
         OrmDao ormDao = new OrmDao(h2ds);
-        ormDao.handleSimpleOrms(GoodsOrm.class, SELECT_GOODS_ALL_QUERY, new GoodsOrmHandler(), -1L);
+        ormDao.handleSelectedSimpleOrms(GoodsOrm.class, SELECT_GOODS_ALL_QUERY, new GoodsOrmHandler(), -1L);
     }
 
     private class GoodsOrmHandler implements OrmHandler<GoodsOrm> {
@@ -109,7 +109,7 @@ public class UTestOrmDao extends GoodsDbTest {
     @Test
     public void runTestOrmDao_loadOrmIterator() throws Exception {
         OrmDao ormDao = new OrmDao(h2ds);
-        try (OrmIterator<GoodsOrm> loader = ormDao.loadOrmIterator(GoodsOrm.class, SELECT_GOODS_ALL_QUERY, new FilterSequence(-1L))) {
+        try (OrmIterator<GoodsOrm> loader = ormDao.selectOrmIterator(GoodsOrm.class, SELECT_GOODS_ALL_QUERY, new FilterSequence(-1L))) {
             assertTrue(loader.hasNext());
             assertOrm(GOODS_1, loader.next());
             assertTrue(loader.hasNext());
@@ -122,7 +122,7 @@ public class UTestOrmDao extends GoodsDbTest {
 
     private void loadAndAssertOrm(String query, IFilterValues filters, GoodsOrm... expectedGoodsOrms) throws Exception {
         OrmDao ormDao = new OrmDao(h2ds);
-        List<GoodsOrm> actualGoodsOrms = ormDao.loadOrms(GoodsOrm.class, query, filters);
+        List<GoodsOrm> actualGoodsOrms = ormDao.selectOrms(GoodsOrm.class, query, filters);
         assertEquals(expectedGoodsOrms.length, actualGoodsOrms.size());
         for (int index = 0; index < expectedGoodsOrms.length; index++) {
             GoodsOrm expectedGoodsOrm = expectedGoodsOrms[index];

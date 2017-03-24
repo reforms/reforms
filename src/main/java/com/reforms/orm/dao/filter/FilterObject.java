@@ -47,4 +47,9 @@ public class FilterObject extends IFilterValues {
     public boolean isEmpty() {
         return false;
     }
+
+    @Override
+    public int getParamNameType() {
+        return PNT_BOBJ;
+    }
 }
