@@ -1,5 +1,6 @@
 package com.reforms.sql.parser;
 
+import com.reforms.sql.expr.query.DeleteQuery;
 import com.reforms.sql.expr.query.LinkingSelectQuery;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.query.UpdateQuery;
@@ -68,13 +69,25 @@ public class SqlParser {
         SetClauseStatement setClauseStatement = parseSetClauseStatement();
         WhereStatement whereStatement = parseWhereStatement();
         if (!stream.finished()) {
-            throw stream.createException("Не удалось до конца разобрать SELECT запрос");
+            throw stream.createException("Не удалось до конца разобрать UPDATE запрос");
         }
         UpdateQuery updateQuery = new UpdateQuery();
         updateQuery.setUpdateStatement(updateStatement);
         updateQuery.setSetClauseStatement(setClauseStatement);
         updateQuery.setWhereStatement(whereStatement);
         return updateQuery;
+    }
+
+    public DeleteQuery parseDeleteQuery() {
+        DeleteStatement deleteStatement = parseDeleteStatement();
+        WhereStatement whereStatement = parseWhereStatement();
+        if (!stream.finished()) {
+            throw stream.createException("Не удалось до конца разобрать DELETE FROM запрос");
+        }
+        DeleteQuery deleteQuery = new DeleteQuery();
+        deleteQuery.setDeleteStatement(deleteStatement);
+        deleteQuery.setWhereStatement(whereStatement);
+        return deleteQuery;
     }
 
     /**
@@ -284,6 +297,19 @@ public class SqlParser {
         setClauseStatement.setSetWord(setWord);
         setClauseStatement.setSetClauseList(setClauseList);
         return setClauseStatement;
+    }
+
+    /** TODO для мускула между DELETE FROM может быть выражение имени DELETE aliasName FROM tableName as aliasName */
+    private DeleteStatement parseDeleteStatement() {
+        String deleteFromWords = stream.parseSpecialWordSequents(OW_R_DELETE, OW_R_FROM);
+        if (deleteFromWords == null) {
+            throw stream.createException("Ожидается DELETE FROM");
+        }
+        TableExpression tableExpr = parseTableExpression();
+        DeleteStatement deleteStatement = new DeleteStatement();
+        deleteStatement.setDeleteFromWords(deleteFromWords);
+        deleteStatement.setTableExpr(tableExpr);
+        return deleteStatement;
     }
 
     private List<SetClauseExpression> parseSetClauseExpressions() {
