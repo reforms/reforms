@@ -1,5 +1,11 @@
 package com.reforms.orm;
 
+import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
+import static com.reforms.orm.dao.filter.column.AllSelectedColumnFilter.ALL_COLUMNS_FILTER;
+
+import java.util.List;
+import java.util.Map;
+
 import com.reforms.orm.dao.OrmDaoAdapter;
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
@@ -14,23 +20,156 @@ import com.reforms.orm.dao.filter.FilterSequence;
 import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 
-import java.util.List;
-import java.util.Map;
-
-import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
-import static com.reforms.orm.dao.filter.column.AllSelectedColumnFilter.ALL_COLUMNS_FILTER;
-
 /**
  * Фасадные методы для доступа к БД
  * @author evgenie
  */
 public class OrmDao {
 
+    /** Container for java.sql.Connection */
     private Object connectionHolder;
 
+    /**
+     * Constructor with your container for java.sql.Connection.<br>
+     * <code>connectionHolder</code> - it's one of classes:<br>
+     *  1. java.sql.Connection<br>
+     *  2. javax.sql.DataSource<br>
+     *  3. any Class with 'java.sql.Connection getConnection()' method<br>
+     * @param connectionHolder - your container for java.sql.Connection;
+     */
     public OrmDao(Object connectionHolder) {
         this.connectionHolder = connectionHolder;
     }
+
+    /**
+     * Select single object with <code>sqlQuery</code> by <code>filters</code>.<br>
+     * Example of usage:<pre><code>
+     * // Your Orm class
+     * public class Client {
+     *     private long clientId;
+     *     private String clientName;
+     *     // get/set method ...
+     * }
+     * // Your Dao class
+     * public class ClientDao {
+     *
+     *     // Reform api - dao
+     *     private OrmDao ormDao;
+     *
+     *     public ClientDao(Connection connection) {
+     *         ormDao = new OrmDao(connection);
+     *     }
+     *     // SQL SELECT QUERY to find client
+     *     private static final String FIND_CLIENT_QUERY = "SELECT client_id, client_name FROM clients WHERE client_id = ?";
+     *
+     *     public Client findClient(long clientId) {
+     *         return ormDao.select(Client.class, FIND_CLIENT_QUERY, clientId);
+     *     }
+     * }
+     * </code></pre>
+     *
+     * @param ormClass - type of object. Supported types:<br>
+     *        Boolean.class, boolean.class, Byte.class, byte.class, Short.class, short.class, Integer.class, int.class,
+     *        Float.class, float.class, Double.class, double.class, Long.class, long.class, Enum.class, String.class,
+     *        BigInteger.class, BigDecimal.class, java.sql.Date.class, java.sql.Timestamp.class, java.sql.Time.class, java.util.Date.class
+     *        byte[].class, <i>YourOrm.class</i><br>
+     *
+     * @param sqlQuery - sql select query. For example: '<code>SELECT client_id, client_name FROM clients WHERE client_id = ?</code>';
+     * @param filters - filter values for select query. In the example above clientId in <code>findClient</code> method is filter value
+     * @return single object of ormClass type
+     * @throws Exception any exception, SQLException, ReflectiveOperationException and other
+     */
+    public <OrmType> OrmType select(Class<OrmType> ormClass, String sqlQuery, Object ... filters) throws Exception {
+        return selectOrm(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterSequence(filters));
+    }
+
+    /**
+     * Update records with <code>sqlQuery</code> by <code>values</code>.
+     * Example of usage:<pre><code>
+     * // Your Dao class
+     * public class ClientDao {
+     *
+     *     // Reform api - dao
+     *     private OrmDao ormDao;
+     *
+     *     public ClientDao(Connection connection) {
+     *         ormDao = new OrmDao(connection);
+     *     }
+     *     // SQL UPDATE QUERY update client name
+     *     private static final String UPDATE_CLIENT_NAME_QUERY = "UPDATE clients SET client_name = ? WHERE client_id = ?";
+     *
+     *     public int updateClientName(long clientId, String clientName) {
+     *         return ormDao.update(UPDATE_CLIENT_NAME_QUERY, clientName, clientId);
+     *     }
+     * }
+     * </code></pre>
+     * @param sqlQuery - sql update query. For example: '<code>UPDATE clients SET client_name = ? WHERE client_id = ?</code>';
+     * @param values   - values to update AND filter records. In the example above in <code>updateClientName</code> method clientName is update source, clientId is filter value
+     * @return count of updating records
+     * @throws Exception any exception, SQLException, ReflectiveOperationException and other
+     */
+    public int update(String sqlQuery, Object ... values) throws Exception {
+        return updateOrm(sqlQuery, new UpdateSequence(values), EMPTY_FILTER_MAP);
+    }
+
+    /**
+     * Delete records with <code>sqlQuery</code> by <code>filters</code>.
+     * Example of usage:<pre><code>
+     * // Your Dao class
+     * public class ClientDao {
+     *
+     *     // Reform api - dao
+     *     private OrmDao ormDao;
+     *
+     *     public ClientDao(Connection connection) {
+     *         ormDao = new OrmDao(connection);
+     *     }
+     *     // SQL DELETE QUERY delete client by id
+     *     private static final String DELETE_CLIENT_QUERY = "DELETE FROM clients WHERE client_id = ?";
+     *
+     *     public int deleteClient(long clientId) {
+     *         return ormDao.delete(DELETE_CLIENT_QUERY, clientId);
+     *     }
+     * }
+     * </code></pre>
+     * @param sqlQuery - sql delete query. For example: '<code>DELETE FROM clients WHERE client_id = ?</code>';
+     * @param filters  - filter values for delete query.
+     * @return count of deleting records
+     * @throws Exception any exception, SQLException, ReflectiveOperationException and other
+     */
+    public int delete(String sqlQuery, Object ... filters) throws Exception {
+        return deleteOrm(sqlQuery, new FilterSequence(filters));
+    }
+
+    /**
+     * Insert record with <code>sqlQuery</code> by <code>values</code>.
+     * Example of usage:<pre><code>
+     * // Your Dao class
+     * public class ClientDao {
+     *
+     *     // Reform api - dao
+     *     private OrmDao ormDao;
+     *
+     *     public ClientDao(Connection connection) {
+     *         ormDao = new OrmDao(connection);
+     *     }
+     *     // SQL INSERT QUERY insert client
+     *     private static final String INSERT_CLIENT_QUERY = "INSERT INTO clients (client_id, client_name) VALUES(?, ?)";
+     *
+     *     public void insertClient(long clientId, String clientName) {
+     *         return ormDao.insert(INSERT_CLIENT_QUERY, clientId, clientName);
+     *     }
+     * }
+     * </code></pre>
+     * @param sqlQuery - sql insert query. For example: '<code>INSERT INTO clients (client_id, client_name) VALUES(?, ?)</code>';
+     * @param filters  - filter values for insert query.
+     * @return count of deleting records
+     * @throws Exception any exception, SQLException, ReflectiveOperationException and other
+     */
+    public void insert(String sqlQuery, Object ... values) throws Exception {
+        throw new IllegalStateException("Not implemented yet");
+    }
+
 
     public <OrmType> OrmType selectOrm(Class<OrmType> ormClass, String sqlQuery, Object filterBobj) throws Exception {
         return selectOrm(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
@@ -259,8 +398,13 @@ public class OrmDao {
         return daoAdapter.update();
     }
 
+    public int deleteOrm(String sqlQuery, IFilterValues filters) throws Exception {
+        IOrmDaoAdapter daoAdapter = createDao(connectionHolder, sqlQuery);
+        daoAdapter.setFilterValue(filters);
+        return daoAdapter.delete();
+    }
+
     public static IOrmDaoAdapter createDao(Object connectionHolder, String sqlQuery) {
         return new OrmDaoAdapter(connectionHolder, sqlQuery);
     }
-
 }

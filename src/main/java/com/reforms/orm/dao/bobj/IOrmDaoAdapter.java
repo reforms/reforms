@@ -21,4 +21,6 @@ public interface IOrmDaoAdapter extends ISelectedColumnFilterAdapter<IOrmDaoAdap
     <OrmType> void handle(Class<OrmType> ormClass, OrmHandler<OrmType> handler) throws Exception;
 
     int update() throws Exception;
+
+    int delete() throws Exception;
 }

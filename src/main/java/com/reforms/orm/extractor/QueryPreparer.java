@@ -14,6 +14,7 @@ import com.reforms.orm.dao.filter.page.IPageFilter;
 import com.reforms.orm.dao.filter.param.ParamSetterFactory;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.tree.QueryTree;
+import com.reforms.sql.expr.query.DeleteQuery;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.query.UpdateQuery;
 import com.reforms.sql.expr.term.Expression;
@@ -78,6 +79,15 @@ public class QueryPreparer {
             priorValues = new PriorityValues(PV_UPDATE, updateValues, filters);
         }
         return prepareValues(updateQuery, priorValues);
+    }
+
+    public PrepareStatementValuesSetter prepareDeleteQuery(DeleteQuery deleteQuery, IFilterValues filters) {
+        if (filters == null) {
+            filters = EMPTY_FILTER_MAP;
+        }
+        // TODO: порядок важен.
+        prepareScheme(deleteQuery);
+        return prepareValues(deleteQuery, filters);
     }
 
     private void preparePage(SelectQuery selectQuery, IFilterValues filters) {

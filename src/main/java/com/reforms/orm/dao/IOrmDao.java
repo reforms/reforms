@@ -20,4 +20,6 @@ interface IOrmDao {
     void handle(DaoSelectContext daoCtx, OrmHandler<Object> handler) throws Exception;
 
     int update(DaoUpdateContext daoCtx) throws Exception;
+
+    int delete(DaoDeleteContext daoCtx) throws Exception;
 }

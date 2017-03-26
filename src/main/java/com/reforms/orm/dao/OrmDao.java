@@ -9,6 +9,7 @@ import com.reforms.orm.dao.column.SelectedColumn;
 import com.reforms.orm.dao.filter.PrepareStatementValuesSetter;
 import com.reforms.orm.extractor.OrmSelectColumnExtractorAndAliasModifier;
 import com.reforms.orm.extractor.QueryPreparer;
+import com.reforms.sql.expr.query.DeleteQuery;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.query.UpdateQuery;
 import com.reforms.sql.parser.SqlParser;
@@ -143,6 +144,20 @@ class OrmDao implements IOrmDao {
         }
     }
 
+    @Override
+    public int delete(DaoDeleteContext daoCtx) throws Exception {
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
+        Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
+        DeleteQuery updateQuery = parseDeleteQuery(daoCtx.getQuery());
+        QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
+        PrepareStatementValuesSetter paramSetterEngine = filterPreparer.prepareDeleteQuery(updateQuery, daoCtx.getFilterValues());
+        String preparedSqlQuery = updateQuery.toString();
+        try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
+            paramSetterEngine.setParamsTo(ps);
+            return ps.executeUpdate();
+        }
+    }
+
     private SelectQuery parseSelectQuery(String sqlQuery) {
         SqlParser sqlParser = new SqlParser(sqlQuery);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
@@ -152,6 +167,12 @@ class OrmDao implements IOrmDao {
     private UpdateQuery parseUpdateQuery(String sqlQuery) {
         SqlParser sqlParser = new SqlParser(sqlQuery);
         UpdateQuery updateQuery = sqlParser.parseUpdateQuery();
+        return updateQuery;
+    }
+
+    private DeleteQuery parseDeleteQuery(String sqlQuery) {
+        SqlParser sqlParser = new SqlParser(sqlQuery);
+        DeleteQuery updateQuery = sqlParser.parseDeleteQuery();
         return updateQuery;
     }
 

@@ -1,5 +1,9 @@
 package com.reforms.orm.dao;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
@@ -16,10 +20,6 @@ import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.IndexSelectFilter;
 import com.reforms.orm.dao.filter.page.IPageFilter;
 import com.reforms.orm.dao.filter.page.PageFilter;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Адаптер к dao
@@ -282,6 +282,14 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         return daoCtx;
     }
 
+    private DaoDeleteContext buildDaoDeleteContext() {
+        DaoDeleteContext daoCtx = new DaoDeleteContext();
+        daoCtx.setConnectionHolder(connectionHolder);
+        daoCtx.setQuery(query);
+        daoCtx.setFilterValues(buildFilterValues());
+        return daoCtx;
+    }
+
     @Override
     public <OrmType> OrmType load(Class<OrmType> ormClass) throws Exception {
         IOrmDao dao = new OrmDao();
@@ -316,5 +324,12 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         IOrmDao dao = new OrmDao();
         DaoUpdateContext daoCtx = buildDaoUpdateContext();
         return dao.update(daoCtx);
+    }
+
+    @Override
+    public int delete() throws Exception {
+        IOrmDao dao = new OrmDao();
+        DaoDeleteContext daoCtx = buildDaoDeleteContext();
+        return dao.delete(daoCtx);
     }
 }
