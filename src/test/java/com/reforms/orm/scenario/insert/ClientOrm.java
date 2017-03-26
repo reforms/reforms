@@ -1,4 +1,4 @@
-package com.reforms.orm.scenario.delete;
+package com.reforms.orm.scenario.insert;
 
 import java.util.Date;
 

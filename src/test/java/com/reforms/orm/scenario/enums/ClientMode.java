@@ -3,7 +3,7 @@ package com.reforms.orm.scenario.enums;
 import com.reforms.ann.TargetField;
 import com.reforms.ann.TargetMethod;
 
-public enum ClientMode {
+enum ClientMode {
 
     ONLINE("online"),
     OFFLINE("offline");

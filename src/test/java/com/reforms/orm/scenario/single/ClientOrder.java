@@ -7,7 +7,7 @@ import com.reforms.ann.TargetMethod;
  *
  * @author evgenie
  */
-public enum ClientOrder {
+enum ClientOrder {
     FIRST(1L),
     SECOND(2L);
 

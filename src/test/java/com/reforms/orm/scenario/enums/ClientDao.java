@@ -7,7 +7,7 @@ import com.reforms.orm.OrmDao;
  * Слой доступа к данным по клиенту
  * @author evgenie
  */
-public class ClientDao {
+class ClientDao {
 
     private OrmDao ormDao;
 

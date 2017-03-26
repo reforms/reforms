@@ -2,7 +2,7 @@ package com.reforms.orm.scenario.enums;
 
 import com.reforms.ann.TargetMethod;
 
-public enum ClientType {
+enum ClientType {
 
     PERSON,
     COMPANY;

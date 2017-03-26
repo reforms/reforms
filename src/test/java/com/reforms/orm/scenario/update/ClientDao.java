@@ -13,7 +13,7 @@ import java.util.Map;
  * Слой доступа к данным по
  * @author evgenie
  */
-public class ClientDao {
+class ClientDao {
 
     private OrmDao ormDao;
 

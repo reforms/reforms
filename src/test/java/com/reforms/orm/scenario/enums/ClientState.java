@@ -2,7 +2,7 @@ package com.reforms.orm.scenario.enums;
 
 import com.reforms.ann.TargetMethod;
 
-public enum ClientState {
+enum ClientState {
 
     ACTIVE(1),
     BLOCKED(2),

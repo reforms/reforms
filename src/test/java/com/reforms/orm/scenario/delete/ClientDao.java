@@ -8,7 +8,7 @@ import com.reforms.orm.dao.filter.FilterObject;
  * Слой доступа к данным по
  * @author evgenie
  */
-public class ClientDao {
+class ClientDao {
 
     private OrmDao ormDao;
 
