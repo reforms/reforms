@@ -91,6 +91,24 @@ public class UTestDeleteQueryParser {
         assertDeleteQuery("DELETE FROM schemeKey.tableName " + whereStatement);
     }
 
+    @Test
+    public void deleteFullQuery() {
+        /**
+        String deleteQuery =
+        "DELETE a " +
+        "FROM product_pictures AS a " +
+          "JOIN " +
+            "(SELECT DISTINCT picture " +
+              "FROM product_pictures " +
+              "WHERE id = ?" +
+            ") AS b" +
+            "ON b.picture = a.picture";
+        assertDeleteQuery(deleteQuery);
+        deleteQuery = "DELETE \"deadline\", \"job\" FROM \"deadline\" LEFT JOIN \"job\" ON deadline.job_id = job.job_id";
+        assertDeleteQuery(deleteQuery);
+        */
+    }
+
     private void assertDeleteQuery(String query) {
         assertDeleteQuery(query, null);
     }
