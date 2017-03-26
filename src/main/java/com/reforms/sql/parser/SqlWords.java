@@ -156,6 +156,12 @@ public class SqlWords {
 
     public static String SW_DELETE_FROM = "DELETE FROM";
 
+    public static String SW_INSERT = "INSERT";
+
+    public static String SW_INTO = "INTO";
+
+    public static String SW_INSERT_INTO = "INSERT INTO";
+
     private static final Map<String, Boolean> WORDS = init();
 
     private static Map<String, Boolean> init() {
@@ -197,6 +203,7 @@ public class SqlWords {
         addWords(words, SW_LIMIT, SW_OFFSET);
         addWords(words, SW_UPDATE, SW_SET);
         addWords(words, SW_DELETE);
+        addWords(words, SW_INSERT, SW_INTO);
         return Collections.unmodifiableMap(words);
     }
 

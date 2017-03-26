@@ -1,12 +1,12 @@
 package com.reforms.sql.expr.query;
 
+import static com.reforms.sql.expr.term.ExpressionType.ET_DELETE_QUERY;
+
 import com.reforms.sql.expr.statement.DeleteStatement;
 import com.reforms.sql.expr.statement.WhereStatement;
 import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.viewer.SqlBuilder;
-
-import static com.reforms.sql.expr.term.ExpressionType.ET_UPDATE_QUERY;
 
 /**
  * GRAMMAR:
@@ -37,7 +37,7 @@ public class DeleteQuery extends Expression {
 
     @Override
     public ExpressionType getType() {
-        return ET_UPDATE_QUERY;
+        return ET_DELETE_QUERY;
     }
 
     @Override

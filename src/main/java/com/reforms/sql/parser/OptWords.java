@@ -51,4 +51,9 @@ public class OptWords {
     public static final OptWord OW_R_DELETE = new OptWord(true, SW_DELETE);
 
     public static final OptWord OW_R_FROM = new OptWord(true, SW_FROM);
+
+    public static final OptWord OW_R_INSERT = new OptWord(true, SW_INSERT);
+
+    public static final OptWord OW_R_INTO = new OptWord(true, SW_INTO);
+
 }

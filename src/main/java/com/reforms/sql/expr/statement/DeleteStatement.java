@@ -1,12 +1,12 @@
 package com.reforms.sql.expr.statement;
 
+import static com.reforms.sql.expr.term.ExpressionType.ET_DELETE_STATEMENT;
+import static com.reforms.sql.parser.SqlWords.SW_DELETE_FROM;
+
 import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.term.from.TableExpression;
 import com.reforms.sql.expr.viewer.SqlBuilder;
-
-import static com.reforms.sql.expr.term.ExpressionType.ET_SET_CLAUSE_STATEMENT;
-import static com.reforms.sql.parser.SqlWords.SW_DELETE_FROM;
 
 /**
  * DELETE FROM tableName
@@ -40,7 +40,7 @@ public class DeleteStatement extends Expression {
 
     @Override
     public ExpressionType getType() {
-        return ET_SET_CLAUSE_STATEMENT;
+        return ET_DELETE_STATEMENT;
     }
 
     @Override

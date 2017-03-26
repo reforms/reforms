@@ -1,9 +1,6 @@
 package com.reforms.sql.parser;
 
-import com.reforms.sql.expr.query.DeleteQuery;
-import com.reforms.sql.expr.query.LinkingSelectQuery;
-import com.reforms.sql.expr.query.SelectQuery;
-import com.reforms.sql.expr.query.UpdateQuery;
+import com.reforms.sql.expr.query.*;
 import com.reforms.sql.expr.statement.*;
 import com.reforms.sql.expr.term.*;
 import com.reforms.sql.expr.term.casee.CaseExpression;
@@ -88,6 +85,16 @@ public class SqlParser {
         deleteQuery.setDeleteStatement(deleteStatement);
         deleteQuery.setWhereStatement(whereStatement);
         return deleteQuery;
+    }
+
+    public InsertQuery parseInsertQuery() {
+        InsertStatement insertStatement = parseInsertStatement();
+        if (!stream.finished()) {
+            throw stream.createException("Не удалось до конца разобрать INSERT INTO запрос");
+        }
+        InsertQuery insertQuery = new InsertQuery();
+        insertQuery.setInsertStatement(insertStatement);
+        return insertQuery;
     }
 
     /**
@@ -310,6 +317,56 @@ public class SqlParser {
         deleteStatement.setDeleteFromWords(deleteFromWords);
         deleteStatement.setTableExpr(tableExpr);
         return deleteStatement;
+    }
+
+    private InsertStatement parseInsertStatement() {
+        String insertIntoWords = stream.parseSpecialWordSequents(OW_R_INSERT, OW_R_INTO);
+        if (insertIntoWords == null) {
+            throw stream.createException("Ожидается INSERT INTO");
+        }
+        TableExpression tableExpr = parseTableExpression();
+        ValueListExpression insertColumnNamesExpr = parseInsertColumnNamesExpression();
+        Expression insertValuesExpr = parseInsertValuesExpression();
+        InsertStatement insertStatement = new InsertStatement();
+        insertStatement.setInsertIntoWords(insertIntoWords);
+        insertStatement.setTableExpr(tableExpr);
+        insertStatement.setInsertColumnNamesExpr(insertColumnNamesExpr);
+        insertStatement.setInsertValuesExpr(insertValuesExpr);
+        return insertStatement;
+    }
+
+    private ValueListExpression parseInsertColumnNamesExpression() {
+        stream.keepParserState();
+        if (stream.checkIsOpenParent(false)) {
+            if (checkIsSubSelectQuery()) {
+                stream.rollbackParserState();
+                return null;
+            }
+            stream.rollbackParserState();
+            return parseValueListExpression();
+        }
+        stream.rollbackParserState();
+        return null;
+    }
+
+    private Expression parseInsertValuesExpression() {
+        if (checkIsInsertSimpleValuesExpression()) {
+            return parseInsertSimpleValuesExpression();
+        }
+        return parseVariantOfSelectQuery();
+    }
+
+    private boolean checkIsInsertSimpleValuesExpression() {
+        return stream.checkIsSpecialWordValueSame(SW_VALUES);
+    }
+
+    private ValuesExpression parseInsertSimpleValuesExpression() {
+        String valuesWord = stream.parseSpecialWordValueAndCheck(SW_VALUES);
+        ValueListExpression valueListExpr = parseValueListExpression();
+        ValuesExpression valuesExpr = new ValuesExpression();
+        valuesExpr.setValuesWord(valuesWord);
+        valuesExpr.setValueListExpr(valueListExpr);
+        return valuesExpr;
     }
 
     private List<SetClauseExpression> parseSetClauseExpressions() {
@@ -641,7 +698,7 @@ public class SqlParser {
         if (funcName == null) {
             throw stream.createException("Ожидается наименование функции");
         }
-        ArgListExpression funcArgs = parseFuncArgListExpression();
+        ValueListExpression funcArgs = parseFuncArgListExpression();
         FuncExpression funcExpr = new FuncExpression();
         funcExpr.setName(funcName);
         funcExpr.setArgs(funcArgs);
@@ -649,25 +706,25 @@ public class SqlParser {
     }
 
     // 2.1
-    private ArgListExpression parseFuncArgListExpression() {
-        return parseArgListExpression(false);
+    private ValueListExpression parseFuncArgListExpression() {
+        return parseValueListOrArgListExpression(false);
     }
 
     // 2.1
-    private ArgListExpression parseSimpleArgListExpression() {
-        return parseArgListExpression(true);
+    private ValueListExpression parseValueListExpression() {
+        return parseValueListOrArgListExpression(true);
     }
 
     // 2.1
-    private ArgListExpression parseArgListExpression(boolean simpleArg) {
-        ArgListExpression argListExpr = new ArgListExpression();
+    private ValueListExpression parseValueListOrArgListExpression(boolean isValue) {
+        ValueListExpression argListExpr = new ValueListExpression();
         stream.checkIsOpenParent();
         stream.moveCursor();
         if (!stream.checkIsCloseParen(false)) {
             boolean argFlag = true;
             while (argFlag) {
-                Expression argExpr = parseArgExpression(simpleArg);
-                argListExpr.addArgExpr(argExpr);
+                Expression argExpr = parseValueOrArgExpression(isValue);
+                argListExpr.addValueExpr(argExpr);
                 argFlag = stream.checkIsComma();
                 if (argFlag) {
                     stream.moveCursor();
@@ -680,13 +737,13 @@ public class SqlParser {
     }
 
     // 2.1
-    private ArgListExpression parseArgListExpressionFromSecondExpression(boolean simpleArg, Expression firstArgExpr) {
-        ArgListExpression argListExpr = new ArgListExpression();
-        argListExpr.addArgExpr(firstArgExpr);
+    private ValueListExpression parseValueListExpressionFromSecondExpression(boolean simpleArg, Expression firstArgExpr) {
+        ValueListExpression argListExpr = new ValueListExpression();
+        argListExpr.addValueExpr(firstArgExpr);
         while (stream.checkIsComma()) {
             stream.moveCursor();
-            Expression argExpr = parseArgExpression(simpleArg);
-            argListExpr.addArgExpr(argExpr);
+            Expression argExpr = parseValueOrArgExpression(simpleArg);
+            argListExpr.addValueExpr(argExpr);
         }
         stream.checkIsCloseParen();
         stream.moveCursor();
@@ -694,8 +751,8 @@ public class SqlParser {
     }
 
     // 2.1.1
-    private Expression parseArgExpression(boolean simpleArg) {
-        if (simpleArg) {
+    private Expression parseValueOrArgExpression(boolean isValue) {
+        if (isValue) {
             return parseSimpleArgExpression();
         }
         return parseFuncArgExpression();
@@ -1221,11 +1278,11 @@ public class SqlParser {
         String valuesWord = stream.parseSpecialWordValueAndCheck(SW_VALUES);
         TableValuesExpression tableValuesExpr = new TableValuesExpression();
         tableValuesExpr.setValuesWord(valuesWord);
-        ArgListExpression valueExpr = parseSimpleArgListExpression();
+        ValueListExpression valueExpr = parseValueListExpression();
         tableValuesExpr.addValuesExpr(valueExpr);
         while (stream.checkIsComma()) {
             stream.moveCursor();
-            valueExpr = parseSimpleArgListExpression();
+            valueExpr = parseValueListExpression();
             tableValuesExpr.addValuesExpr(valueExpr);
             stream.skipSpaces();
         }
@@ -1567,7 +1624,7 @@ public class SqlParser {
         if (checkIsSubSelectQuery()) {
             return parseSubSelectQuery();
         }
-        return parseSimpleArgListExpression();
+        return parseValueListExpression();
     }
 
     private LikePredicateExpression completeLikePredicateExpression(Expression baseExpression) {
@@ -1639,14 +1696,14 @@ public class SqlParser {
         if (levels.isEmpty()) {
             throw stream.createException("Нарушен баланс открывающихся и закрывающихся скобок", from);
         }
-        ArgListExpression leftValuesExpr = parseArgListExpressionFromSecondExpression(true, firstExpr);
+        ValueListExpression leftValuesExpr = parseValueListExpressionFromSecondExpression(true, firstExpr);
         ParenLevel level = levels.pop();
         if (!level.isEmpty()) {
             throw stream.createException("Нарушен баланс открывающихся и закрывающихся скобок", from);
         }
         levels.decDepth();
         ComparisonOperator operType = parseComparisonOperatorType();
-        ArgListExpression rightExpr = parseSimpleArgListExpression();
+        ValueListExpression rightExpr = parseValueListExpression();
         ComparisonPredicateExpression compPredicateExpr = new ComparisonPredicateExpression();
         compPredicateExpr.setLeftExpr(leftValuesExpr);
         compPredicateExpr.setCompOperatorType(operType);

@@ -13,7 +13,7 @@ import static org.junit.Assert.assertEquals;
 public class UTestDeleteQueryParser {
 
     @Test
-    public void testUpdateStatementParsing() {
+    public void testDeleteStatementParsing() {
         assertDeleteQuery("DELETE FROM tableName");
         assertDeleteQuery("DELETE FROM schemeName.tableName");
         assertDeleteQuery("DELETE FROM \"tableName\"");

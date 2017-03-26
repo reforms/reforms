@@ -14,7 +14,7 @@ public class FuncExpression extends SelectableExpression {
 
     private String name;
 
-    private ArgListExpression args;
+    private ValueListExpression args;
 
     public boolean isShortStyle() {
         return shortStyle;
@@ -32,12 +32,12 @@ public class FuncExpression extends SelectableExpression {
         this.name = name;
     }
 
-    public ArgListExpression getArgs() {
+    public ValueListExpression getArgs() {
         return args;
     }
 
 
-    public void setArgs(ArgListExpression args) {
+    public void setArgs(ValueListExpression args) {
         this.args = args;
         args.setSpacable(false);
     }
