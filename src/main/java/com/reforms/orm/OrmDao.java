@@ -10,10 +10,7 @@ import com.reforms.orm.dao.OrmDaoAdapter;
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
-import com.reforms.orm.dao.bobj.update.IUpdateValues;
-import com.reforms.orm.dao.bobj.update.UpdateMap;
-import com.reforms.orm.dao.bobj.update.UpdateObject;
-import com.reforms.orm.dao.bobj.update.UpdateSequence;
+import com.reforms.orm.dao.bobj.update.*;
 import com.reforms.orm.dao.filter.FilterMap;
 import com.reforms.orm.dao.filter.FilterObject;
 import com.reforms.orm.dao.filter.FilterSequence;
@@ -167,7 +164,7 @@ public class OrmDao {
      * @throws Exception any exception, SQLException, ReflectiveOperationException and other
      */
     public void insert(String sqlQuery, Object ... values) throws Exception {
-        throw new IllegalStateException("Not implemented yet");
+        insertOrm(sqlQuery, new UpdateSequence(values));
     }
 
 
@@ -402,6 +399,12 @@ public class OrmDao {
         IOrmDaoAdapter daoAdapter = createDao(connectionHolder, sqlQuery);
         daoAdapter.setFilterValue(filters);
         return daoAdapter.delete();
+    }
+
+    public void insertOrm(String sqlQuery, IUpdateValues values) throws Exception {
+        IOrmDaoAdapter daoAdapter = createDao(connectionHolder, sqlQuery);
+        daoAdapter.setInsertValue(values);
+        daoAdapter.insert();
     }
 
     public static IOrmDaoAdapter createDao(Object connectionHolder, String sqlQuery) {

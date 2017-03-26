@@ -1,5 +1,13 @@
 package com.reforms.orm.dao;
 
+import static com.reforms.orm.OrmConfigurator.getInstance;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.IConnectionHolder;
 import com.reforms.orm.OrmConfigurator;
@@ -10,17 +18,10 @@ import com.reforms.orm.dao.filter.PrepareStatementValuesSetter;
 import com.reforms.orm.extractor.OrmSelectColumnExtractorAndAliasModifier;
 import com.reforms.orm.extractor.QueryPreparer;
 import com.reforms.sql.expr.query.DeleteQuery;
+import com.reforms.sql.expr.query.InsertQuery;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.query.UpdateQuery;
 import com.reforms.sql.parser.SqlParser;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.reforms.orm.OrmConfigurator.getInstance;
 
 /**
  *
@@ -158,6 +159,20 @@ class OrmDao implements IOrmDao {
         }
     }
 
+    @Override
+    public void insert(DaoInsertContext daoCtx) throws Exception {
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
+        Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
+        InsertQuery insertQuery = parseInsertQuery(daoCtx.getQuery());
+        QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
+        PrepareStatementValuesSetter paramSetterEngine = filterPreparer.prepareInsertQuery(insertQuery, daoCtx.getInsertValues());
+        String preparedSqlQuery = insertQuery.toString();
+        try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
+            paramSetterEngine.setParamsTo(ps);
+            ps.executeUpdate();
+        }
+    }
+
     private SelectQuery parseSelectQuery(String sqlQuery) {
         SqlParser sqlParser = new SqlParser(sqlQuery);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
@@ -174,6 +189,12 @@ class OrmDao implements IOrmDao {
         SqlParser sqlParser = new SqlParser(sqlQuery);
         DeleteQuery updateQuery = sqlParser.parseDeleteQuery();
         return updateQuery;
+    }
+
+    private InsertQuery parseInsertQuery(String sqlQuery) {
+        SqlParser sqlParser = new SqlParser(sqlQuery);
+        InsertQuery insertQuery = sqlParser.parseInsertQuery();
+        return insertQuery;
     }
 
 }

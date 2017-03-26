@@ -22,4 +22,6 @@ interface IOrmDao {
     int update(DaoUpdateContext daoCtx) throws Exception;
 
     int delete(DaoDeleteContext daoCtx) throws Exception;
+
+    void insert(DaoInsertContext daoCtx) throws Exception;
 }

@@ -7,10 +7,7 @@ import java.util.Map;
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
-import com.reforms.orm.dao.bobj.update.IUpdateValues;
-import com.reforms.orm.dao.bobj.update.UpdateMap;
-import com.reforms.orm.dao.bobj.update.UpdateObject;
-import com.reforms.orm.dao.bobj.update.UpdateSequence;
+import com.reforms.orm.dao.bobj.update.*;
 import com.reforms.orm.dao.filter.FilterMap;
 import com.reforms.orm.dao.filter.FilterObject;
 import com.reforms.orm.dao.filter.FilterSequence;
@@ -46,7 +43,7 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     private Integer pageOffset;
     private IPageFilter pageFilter;
 
-    // updates info
+    // updates OR insert info
     private List<Object> simpleUpdateValues;
     private Object updateBobj;
     private UpdateMap updateMap;
@@ -206,6 +203,40 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         return this;
     }
 
+
+    @Override
+    public IOrmDaoAdapter addInsertValue(Object insertValue) {
+        return addUpdateValue(insertValue);
+    }
+
+    @Override
+    public IOrmDaoAdapter addInsertValues(Object... insertValues) {
+        return addUpdateValues(insertValues);
+    }
+
+    @Override
+    public IOrmDaoAdapter setInsertObject(Object insertBobj) {
+        return setUpdateObject(insertBobj);
+    }
+
+    @Override
+    public IOrmDaoAdapter addInsertPair(String paramName, Object insertValue) {
+        return addUpdatePair(paramName, insertValue);
+    }
+
+    @Override
+    public IOrmDaoAdapter addInsertPairs(Map<String, Object> insertValues) {
+        return addUpdatePairs(insertValues);
+    }
+
+    @Override
+    public IOrmDaoAdapter setInsertValue(IInsertValues insertValues) {
+        if (insertValues instanceof IUpdateValues) {
+            return setUpdateValue((IUpdateValues) insertValues);
+        }
+        throw new IllegalStateException("Неизвестная реализация '" + IInsertValues.class + "'");
+    }
+
     private ISelectedColumnFilter buildSelectedColumnFilter() {
         ISelectedColumnFilter firstFilter = null;
         if (selectedColumnIndexes != null) {
@@ -256,6 +287,10 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         return updateValues;
     }
 
+    private IInsertValues buildInsertValues() {
+        return buildUpdateValues();
+    }
+
     private IPageFilter buildPageFilter() {
         if (pageLimit != null || pageOffset != null) {
             return new PageFilter(pageLimit, pageOffset);
@@ -287,6 +322,14 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         daoCtx.setConnectionHolder(connectionHolder);
         daoCtx.setQuery(query);
         daoCtx.setFilterValues(buildFilterValues());
+        return daoCtx;
+    }
+
+    private DaoInsertContext buildDaoInsertContext() {
+        DaoInsertContext daoCtx = new DaoInsertContext();
+        daoCtx.setConnectionHolder(connectionHolder);
+        daoCtx.setQuery(query);
+        daoCtx.setInsertValues(buildInsertValues());
         return daoCtx;
     }
 
@@ -332,4 +375,12 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         DaoDeleteContext daoCtx = buildDaoDeleteContext();
         return dao.delete(daoCtx);
     }
+
+    @Override
+    public void insert() throws Exception {
+        IOrmDao dao = new OrmDao();
+        DaoInsertContext daoCtx = buildDaoInsertContext();
+        dao.insert(daoCtx);
+    }
+
 }

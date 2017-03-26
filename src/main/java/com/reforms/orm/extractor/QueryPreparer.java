@@ -5,6 +5,7 @@ import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.dao.IParamNameConverter;
 import com.reforms.orm.dao.IPriorityValues;
 import com.reforms.orm.dao.PriorityValues;
+import com.reforms.orm.dao.bobj.update.IInsertValues;
 import com.reforms.orm.dao.bobj.update.IUpdateValues;
 import com.reforms.orm.dao.column.ColumnAlias;
 import com.reforms.orm.dao.column.ColumnAliasParser;
@@ -15,6 +16,7 @@ import com.reforms.orm.dao.filter.param.ParamSetterFactory;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.tree.QueryTree;
 import com.reforms.sql.expr.query.DeleteQuery;
+import com.reforms.sql.expr.query.InsertQuery;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.query.UpdateQuery;
 import com.reforms.sql.expr.term.Expression;
@@ -88,6 +90,12 @@ public class QueryPreparer {
         // TODO: порядок важен.
         prepareScheme(deleteQuery);
         return prepareValues(deleteQuery, filters);
+    }
+
+    public PrepareStatementValuesSetter prepareInsertQuery(InsertQuery insertQuery, IInsertValues values) {
+        // TODO: порядок важен.
+        prepareScheme(insertQuery);
+        return prepareValues(insertQuery, values);
     }
 
     private void preparePage(SelectQuery selectQuery, IFilterValues filters) {
