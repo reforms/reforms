@@ -4,6 +4,9 @@ import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.dao.column.ColumnAlias;
 import com.reforms.orm.dao.column.SelectedColumn;
 
+import static com.reforms.orm.dao.filter.column.FilterState.FS_ACCEPT;
+import static com.reforms.orm.dao.filter.column.FilterState.FS_NOT_ACCEPT;
+
 /**
  * Фильтрует все колонки с алиасом ~.
  * Это может понадобиться в запросах, когда требуется выбирать колонку для фильтрации, но без необходимости ее выборки.
@@ -17,14 +20,14 @@ public class DefaultSelectedColumnFilter implements ISelectedColumnFilter {
     public static final ISelectedColumnFilter DEFAULT_COLUMNS_FILTER = new DefaultSelectedColumnFilter();
 
     @Override
-    public boolean acceptSelectedColumn(SelectedColumn selectedColumn) {
+    public FilterState acceptSelectedColumn(SelectedColumn selectedColumn) {
         ColumnAlias cAlias = selectedColumn.getColumnAlias();
         if (cAlias != null) {
             String fieldName = cAlias.getJavaAliasKey();
             if ("!".equals(fieldName)) {
-                return false;
+                return FS_NOT_ACCEPT;
             }
         }
-        return true;
+        return FS_ACCEPT;
     }
 }

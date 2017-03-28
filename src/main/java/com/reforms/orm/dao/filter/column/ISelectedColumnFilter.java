@@ -11,7 +11,9 @@ public interface ISelectedColumnFilter {
     /**
      * Проверить, необходимо ли выбирать колонку указанного типа
      * @param selectedColumn конкретная колонка
-     * @return true - выбирать необходимо, false -  иначе
+     * @return FS_ACCEPT     - участвует и в выборке и в sql-выражении,
+     *         FS_NOT_ACCEPT - не участвует в выборке, но есть в sql-выражении
+     *         FS_REMOVE     - не участвует ни в выборке, ни в sql-выражении
      */
-    public boolean acceptSelectedColumn(SelectedColumn selectedColumn);
+    public FilterState acceptSelectedColumn(SelectedColumn selectedColumn);
 }

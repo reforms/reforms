@@ -2,6 +2,8 @@ package com.reforms.orm.dao.filter.column;
 
 import com.reforms.orm.dao.column.SelectedColumn;
 
+import static com.reforms.orm.dao.filter.column.FilterState.FS_REMOVE;
+
 /**
  * Фильтр на основе двух других
  * @author evgenie
@@ -26,8 +28,18 @@ public class CompositeSelectedColumnFilter implements ISelectedColumnFilter {
     }
 
     @Override
-    public boolean acceptSelectedColumn(SelectedColumn selectedColumn) {
-        return (firstFilter != null && firstFilter.acceptSelectedColumn(selectedColumn)) ||
-                (secondFilter != null && secondFilter.acceptSelectedColumn(selectedColumn));
+    public FilterState acceptSelectedColumn(SelectedColumn selectedColumn) {
+        if (firstFilter != null && secondFilter != null) {
+            FilterState firstState = firstFilter.acceptSelectedColumn(selectedColumn);
+            FilterState secondState = secondFilter.acceptSelectedColumn(selectedColumn);
+            return firstState.getPrior() < secondState.getPrior() ? firstState : secondState;
+        }
+        if (firstFilter != null) {
+            return firstFilter.acceptSelectedColumn(selectedColumn);
+        }
+        if (secondFilter != null) {
+            return secondFilter.acceptSelectedColumn(selectedColumn);
+        }
+        return FS_REMOVE;
     }
 }

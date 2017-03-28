@@ -6,6 +6,7 @@ import com.reforms.orm.dao.column.ColumnAlias;
 import com.reforms.orm.dao.column.ColumnAliasParser;
 import com.reforms.orm.dao.column.SelectedColumn;
 import com.reforms.orm.dao.filter.column.DefaultSelectedColumnFilter;
+import com.reforms.orm.dao.filter.column.FilterState;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.statement.SelectStatement;
@@ -60,9 +61,11 @@ class SelectColumnExtractorAndAliasModifier {
             } else {
                 selectedColumn = fromAnyExpression(index, selectableExpr);
             }
-            if (selectedColumnFilter.acceptSelectedColumn(selectedColumn)) {
+            FilterState filterState = selectedColumnFilter.acceptSelectedColumn(selectedColumn);
+            if (filterState == FilterState.FS_ACCEPT) {
                 columns.add(selectedColumn);
-            } else {
+            }
+            if (filterState == FilterState.FS_REMOVE) {
                 // bad design code
                 selectableExprIterator.remove();
             }
