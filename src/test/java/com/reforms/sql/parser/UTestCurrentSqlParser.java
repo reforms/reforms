@@ -1,6 +1,8 @@
 package com.reforms.sql.parser;
 
+import com.reforms.sql.expr.query.DeleteQuery;
 import com.reforms.sql.expr.query.SelectQuery;
+import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
 import org.junit.Test;
@@ -27,13 +29,7 @@ public class UTestCurrentSqlParser {
         //        assertSelectQueryWithAsClause("SELECT clientId::real");
 
 
-        assertSelectQuery("SELECT cl.client_id, cl.last_name, cl.first_name, cl.middle_name "
-                + "FROM test_scheme.pcl cl, test_scheme.o2cl o2c, test_scheme.cdcrc dr "
-                + "WHERE dr.doc_id = ? AND dr.recipient_id = cl.client_id AND cl.status <> 0 AND o2c.client_id = cl.client_id AND o2c.operator_id = ? "
-                + "AND cl.client_id IN (SELECT c2a.client_id FROM test_scheme.ccaa c2a, test_scheme.aaa a "
-                + "WHERE c2a.account_id = a.id AND a.branch_id = ? AND a.account LIKE ?) "
-                + "AND UPPER((CASE WHEN last_name IS NOT NULL THEN last_name ELSE '' END) || ' ' || (CASE WHEN first_name IS NOT NULL THEN first_name ELSE '' END) || ' ' || (CASE WHEN middle_name IS NOT NULL THEN middle_name ELSE '' END)"
-                + ") LIKE ?");
+        assertDeleteQuery("DELETE \"deadline\", \"job\" FROM \"deadline\" LEFT JOIN \"job\" ON deadline.job_id = job.job_id");
 
     }
 
@@ -51,6 +47,16 @@ public class UTestCurrentSqlParser {
         }) {
             assertSelectQuery(query + asClause);
         }
+    }
+
+    private void assertDeleteQuery(String query) {
+        assertDeleteQuery(query, null);
+    }
+
+    private void assertDeleteQuery(String query, String expectedQuery) {
+        SqlParser sqlParser = new SqlParser(query);
+        DeleteQuery deleteQuery = sqlParser.parseDeleteQuery();
+        assertQuery(expectedQuery != null ? expectedQuery : query, deleteQuery);
     }
 
     private void assertWhereStatement(String whereStatement) {
@@ -71,14 +77,14 @@ public class UTestCurrentSqlParser {
         assertQuery(query, selectQuery);
     }
 
-    private void assertQuery(String query, SelectQuery selectQuery) {
+    private void assertQuery(String query, Expression queryExpr) {
         // assertEquals(query.replace(" ", ""), queryToString(selectQuery).replace(" ", ""));
-        assertEquals(query, queryToString(selectQuery));
+        assertEquals(query, queryToString(queryExpr));
     }
 
-    private String queryToString(SelectQuery selectQuery) {
+    private String queryToString(Expression queryExpr) {
         SqlBuilder builder = new SqlBuilder();
-        selectQuery.view(builder);
+        queryExpr.view(builder);
         return builder.getQuery();
     }
 }

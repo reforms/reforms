@@ -17,7 +17,6 @@ import java.util.List;
 
 import static com.reforms.sql.expr.term.ConditionFlowType.resolveConditionFlowType;
 import static com.reforms.sql.expr.term.MathOperator.resolveMathOperator;
-import static com.reforms.sql.expr.term.from.TableJoinTypes.TJT_CROSS_JOIN;
 import static com.reforms.sql.expr.term.predicate.ComparisonOperator.COT_EQUALS;
 import static com.reforms.sql.expr.term.predicate.ComparisonOperator.resolveComparisonOperatorType;
 import static com.reforms.sql.parser.OptWords.*;
@@ -77,13 +76,24 @@ public class SqlParser {
 
     public DeleteQuery parseDeleteQuery() {
         DeleteStatement deleteStatement = parseDeleteStatement();
+        FromStatement fromStatement = parseFromStatement();
+        if (fromStatement == null) {
+            throw stream.createException("Ожидается FROM секция в DELETE выражении");
+        }
+        UsingStatement usingStatement = parseUsingStatement();
         WhereStatement whereStatement = parseWhereStatement();
+        OrderByStatement orderByStatement = parseOrderByStatement();
+        LimitExpression limitExpr = parseLimitExpression();
         if (!stream.finished()) {
             throw stream.createException("Не удалось до конца разобрать DELETE FROM запрос");
         }
         DeleteQuery deleteQuery = new DeleteQuery();
         deleteQuery.setDeleteStatement(deleteStatement);
+        deleteQuery.setFromStatement(fromStatement);
+        deleteQuery.setUsingStatement(usingStatement);
         deleteQuery.setWhereStatement(whereStatement);
+        deleteQuery.setOrderByStatement(orderByStatement);
+        deleteQuery.setLimitExpr(limitExpr);
         return deleteQuery;
     }
 
@@ -169,29 +179,47 @@ public class SqlParser {
     private FromStatement parseFromStatement() {
         if (stream.checkIsSpecialWordValue()) {
             String fromWord = stream.parseSpecialWordValueAndCheck(SW_FROM);
+            List<TableReferenceExpression> tableRefExprs = parseTableReferenceExpressions(SW_FROM);
             FromStatement fromStatement = new FromStatement();
             fromStatement.setFromWord(fromWord);
-            List<TableReferenceExpression> tableRefExprs = fromStatement.getTableRefExprs();
-            while (checkIsTableReferenceExpression(!tableRefExprs.isEmpty())) {
-                TableReferenceExpression tableRefExpr = parseTableReferenceExpression(!tableRefExprs.isEmpty());
-                fromStatement.addTableRefExpr(tableRefExpr);
-                if (stream.checkIsComma()) {
-                    tableRefExpr.setSeparator(", ");
-                    stream.moveCursor();
-                } else if (tableRefExprs.size() > 1) {
-                    int prevIndex = tableRefExprs.size() - 2;
-                    TableReferenceExpression prevTableRefExpr = tableRefExprs.get(prevIndex);
-                    if (prevTableRefExpr.getSeparator() == null) {
-                        prevTableRefExpr.setSeparator(" ");
-                    }
-                }
-            }
-            if (tableRefExprs.isEmpty()) {
-                throw stream.createException("Ожидается в секции 'FROM' блок данных о таблицах", stream.getCursor());
-            }
+            fromStatement.setTableRefExprs(tableRefExprs);
             return fromStatement;
         }
         return null;
+    }
+
+    private UsingStatement parseUsingStatement() {
+        if (stream.checkIsSpecialWordValueSame(SW_USING)) {
+            String usingWord = stream.parseSpecialWordValueAndCheck(SW_USING);
+            List<TableReferenceExpression> tableRefExprs = parseTableReferenceExpressions(SW_USING);
+            UsingStatement usingStatement = new UsingStatement();
+            usingStatement.setUsingWord(usingWord);
+            usingStatement.setTableRefExprs(tableRefExprs);
+            return usingStatement;
+        }
+        return null;
+    }
+
+    private List<TableReferenceExpression> parseTableReferenceExpressions(String statementName) {
+        List<TableReferenceExpression> tableRefExprs = new ArrayList<>();
+        while (checkIsTableReferenceExpression(!tableRefExprs.isEmpty())) {
+            TableReferenceExpression tableRefExpr = parseTableReferenceExpression(!tableRefExprs.isEmpty());
+            tableRefExprs.add(tableRefExpr);
+            if (stream.checkIsComma()) {
+                tableRefExpr.setSeparator(", ");
+                stream.moveCursor();
+            } else if (tableRefExprs.size() > 1) {
+                int prevIndex = tableRefExprs.size() - 2;
+                TableReferenceExpression prevTableRefExpr = tableRefExprs.get(prevIndex);
+                if (prevTableRefExpr.getSeparator() == null) {
+                    prevTableRefExpr.setSeparator(" ");
+                }
+            }
+        }
+        if (tableRefExprs.isEmpty()) {
+            throw stream.createException("Ожидается в секции '" + statementName + "' блок данных о таблицах");
+        }
+        return tableRefExprs;
     }
 
     private WhereStatement parseWhereStatement() {
@@ -308,14 +336,20 @@ public class SqlParser {
 
     /** TODO для мускула между DELETE FROM может быть выражение имени DELETE aliasName FROM tableName as aliasName */
     private DeleteStatement parseDeleteStatement() {
-        String deleteFromWords = stream.parseSpecialWordSequents(OW_R_DELETE, OW_R_FROM);
-        if (deleteFromWords == null) {
-            throw stream.createException("Ожидается DELETE FROM");
+        String deleteWord = stream.parseSpecialWordValueAndCheck(SW_DELETE);
+        List<TableExpression> tableExprs = new ArrayList<>();
+        if (checkIsTableExpression()) {
+            TableExpression tableExpr = parseTableExpression();
+            tableExprs.add(tableExpr);
+            while (stream.checkIsComma()) {
+                stream.moveCursor();
+                tableExpr = parseTableExpression();
+                tableExprs.add(tableExpr);
+            }
         }
-        TableExpression tableExpr = parseTableExpression();
         DeleteStatement deleteStatement = new DeleteStatement();
-        deleteStatement.setDeleteFromWords(deleteFromWords);
-        deleteStatement.setTableExpr(tableExpr);
+        deleteStatement.setDeleteWord(deleteWord);
+        deleteStatement.setTableExprs(tableExprs);
         return deleteStatement;
     }
 
@@ -1199,7 +1233,7 @@ public class SqlParser {
         TableJoinTypes joinType = resolveJoinType(joinWords);
         tableJoinExpr.setJoinType(joinType);
         tableJoinExpr.setTableRefExpr(parseTableReferenceExpression(false));
-        if (TJT_CROSS_JOIN != joinType) {
+        if (stream.checkIsSpecialWordValueSame(SW_ON)) {
             String onWord = stream.parseSpecialWordValueAndCheck(SW_ON);
             Expression condExpr = parseOnConditionExpr();
             tableJoinExpr.setOnWord(onWord);

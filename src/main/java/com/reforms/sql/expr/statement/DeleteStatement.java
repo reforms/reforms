@@ -1,41 +1,42 @@
 package com.reforms.sql.expr.statement;
 
-import static com.reforms.sql.expr.term.ExpressionType.ET_DELETE_STATEMENT;
-import static com.reforms.sql.parser.SqlWords.SW_DELETE_FROM;
-
 import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.term.from.TableExpression;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
+import java.util.List;
+
+import static com.reforms.sql.expr.term.ExpressionType.ET_DELETE_STATEMENT;
+import static com.reforms.sql.parser.SqlWords.SW_DELETE;
+
 /**
- * DELETE FROM tableName
+ * DELETE [tableAlias1, tableAlias2]
  * GRAMMAR:
- * DELETE FROM <table name>
+ * DELETE [tableAlias1, tableAlias2]
  * @author evgenie
  */
 public class DeleteStatement extends Expression {
 
-    /** DELETE FROM */
-    private String deleteFromWords = SW_DELETE_FROM;
+    /** DELETE */
+    private String deleteWord = SW_DELETE;
 
-    /** TABLE INFO */
-    private TableExpression tableExpr;
+    private List<TableExpression> tableExprs;
 
-    public String getDeleteFromWords() {
-        return deleteFromWords;
+    public String getDeleteWord() {
+        return deleteWord;
     }
 
-    public void setDeleteFromWords(String deleteFromWords) {
-        this.deleteFromWords = deleteFromWords;
+    public void setDeleteWord(String deleteWord) {
+        this.deleteWord = deleteWord;
     }
 
-    public TableExpression getTableExpr() {
-        return tableExpr;
+    public List<TableExpression> getTableExprs() {
+        return tableExprs;
     }
 
-    public void setTableExpr(TableExpression tableExpr) {
-        this.tableExpr = tableExpr;
+    public void setTableExprs(List<TableExpression> tableExprs) {
+        this.tableExprs = tableExprs;
     }
 
     @Override
@@ -46,7 +47,7 @@ public class DeleteStatement extends Expression {
     @Override
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendSpace();
-        sqlBuilder.appendWord(deleteFromWords);
-        sqlBuilder.appendExpression(tableExpr);
+        sqlBuilder.appendWord(deleteWord);
+        sqlBuilder.appendExpressions(tableExprs, ",");
     }
 }

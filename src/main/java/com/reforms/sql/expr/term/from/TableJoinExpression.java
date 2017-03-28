@@ -4,8 +4,6 @@ import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
-import static com.reforms.sql.parser.SqlWords.SW_ON;
-
 import static com.reforms.sql.expr.term.ExpressionType.ET_TABLE_JOIN_EXPRESSION;
 
 /**
@@ -20,7 +18,7 @@ public class TableJoinExpression extends TableReferenceExpression {
 
     private TableReferenceExpression tableRefExpr;
 
-    private String onWord = SW_ON;
+    private String onWord;
 
     private Expression onConditionExpr;
 
@@ -74,7 +72,7 @@ public class TableJoinExpression extends TableReferenceExpression {
         sqlBuilder.appendSpace();
         sqlBuilder.appendWord(joinWords);
         sqlBuilder.appendExpression(tableRefExpr);
-        if (TableJoinTypes.TJT_CROSS_JOIN != joinType) {
+        if (onWord != null) {
             sqlBuilder.appendSpace();
             sqlBuilder.appendWord(onWord);
             sqlBuilder.appendExpression(onConditionExpr);

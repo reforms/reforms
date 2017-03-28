@@ -162,6 +162,8 @@ public class SqlWords {
 
     public static String SW_INSERT_INTO = "INSERT INTO";
 
+    public static String SW_USING = "USING"; // MSSQL
+
     private static final Map<String, Boolean> WORDS = init();
 
     private static Map<String, Boolean> init() {
@@ -204,6 +206,7 @@ public class SqlWords {
         addWords(words, SW_UPDATE, SW_SET);
         addWords(words, SW_DELETE);
         addWords(words, SW_INSERT, SW_INTO);
+        addWords(words, SW_USING);
         return Collections.unmodifiableMap(words);
     }
 

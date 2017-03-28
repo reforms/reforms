@@ -20,7 +20,7 @@ public class UTestDeleteQueryParser {
         assertDeleteQuery("DELETE FROM \"schemeName\".\"tableName\"");
         assertDeleteQuery("DELETE FROM \"schemeName\".[tableName]");
         assertDeleteQuery("DELETE FROM [schemeName].[tableName]");
-        //assertDeleteQuery("DELETE aliasName FROM tableName AS aliasName");
+        assertDeleteQuery("DELETE aliasName FROM tableName AS aliasName");
     }
 
     @Test
@@ -93,20 +93,21 @@ public class UTestDeleteQueryParser {
 
     @Test
     public void deleteFullQuery() {
-        /**
-        String deleteQuery =
+        assertDeleteQuery(
         "DELETE a " +
         "FROM product_pictures AS a " +
-          "JOIN " +
+        "INNER JOIN " +
             "(SELECT DISTINCT picture " +
               "FROM product_pictures " +
               "WHERE id = ?" +
-            ") AS b" +
-            "ON b.picture = a.picture";
-        assertDeleteQuery(deleteQuery);
-        deleteQuery = "DELETE \"deadline\", \"job\" FROM \"deadline\" LEFT JOIN \"job\" ON deadline.job_id = job.job_id";
-        assertDeleteQuery(deleteQuery);
-        */
+            ") AS b " +
+            "ON b.picture = a.picture");
+        assertDeleteQuery("DELETE \"deadline\", \"job\" FROM \"deadline\" LEFT JOIN \"job\" ON deadline.job_id = job.job_id");
+        assertDeleteQuery("DELETE t.* FROM test t WHERE t.name = 'foo' LIMIT 1");
+        assertDeleteQuery("DELETE FROM somelog WHERE user = 'jcole' ORDER BY timestamp_column LIMIT 1");
+        assertDeleteQuery("DELETE FROM a1, a2 USING t1 AS a1 INNER JOIN t2 AS a2 WHERE a1.id = a2.id");
+        assertDeleteQuery("DELETE a1, a2 FROM t1 AS a1 INNER JOIN t2 AS a2 WHERE a1.id = a2.id");
+        assertDeleteQuery("DELETE FROM posts USING posts, projects WHERE projects.project_id = posts.project_id AND projects.client_id = :client_id");
     }
 
     private void assertDeleteQuery(String query) {
