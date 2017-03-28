@@ -1,7 +1,5 @@
 package com.reforms.orm.dao.column;
 
-import static com.reforms.orm.dao.column.ColumnAliasType.*;
-
 import com.reforms.ann.ThreadSafe;
 
 /**
@@ -54,6 +52,9 @@ import com.reforms.ann.ThreadSafe;
  *  age AS b3:t#bobj1.bobj2.bobj3
  *  age AS b3:t#
  *  age AS t#
+ *  ------- Особые случаи -----------
+ *  age !   - выбор колонки игнорируется
+ *
  * @author evgenie
  */
 @ThreadSafe

@@ -55,6 +55,10 @@ public class UTestColumnAliasParser {
         assertColumnAlias("b3:t#bobj1.bobj2.bobj3", CAT_T_TIMESTAMP, "bobj1.bobj2.bobj3", null, "b3");
         assertColumnAlias("b3:t#", CAT_T_TIMESTAMP, null, null, "b3");
         assertColumnAlias("t#", CAT_T_TIMESTAMP, null, null, null);
+        // TODO разобраться
+        assertColumnAlias("b3:?", null, "?", null, "b3");
+        assertColumnAlias("b3:!", null, "!", null, "b3");
+        assertColumnAlias("!", null, "!", null, null);
     }
 
     private void assertColumnAlias(String expectedAlias, ColumnAliasType expectedAliasType, String expectedFieldName, Object expecetedExtra) {

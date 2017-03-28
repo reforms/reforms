@@ -5,9 +5,8 @@ import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.dao.column.ColumnAlias;
 import com.reforms.orm.dao.column.ColumnAliasParser;
 import com.reforms.orm.dao.column.SelectedColumn;
-import com.reforms.orm.dao.filter.column.AllSelectedColumnFilter;
+import com.reforms.orm.dao.filter.column.DefaultSelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
-import com.reforms.sql.expr.query.LinkingSelectQuery;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.statement.SelectStatement;
 import com.reforms.sql.expr.term.*;
@@ -18,8 +17,8 @@ import java.util.List;
 
 import static com.reforms.orm.OrmConfigurator.getInstance;
 import static com.reforms.orm.dao.column.ColumnAliasType.CAT_S_STRING;
-import static com.reforms.sql.expr.term.ExpressionType.ET_EXTENDS_SELECTABLE_EXPRESSION;
 import static com.reforms.sql.expr.term.ExpressionType.ET_COLUMN_EXPRESSION;
+import static com.reforms.sql.expr.term.ExpressionType.ET_EXTENDS_SELECTABLE_EXPRESSION;
 
 /**
  * Изменяет SelectQuery
@@ -37,10 +36,11 @@ class SelectColumnExtractorAndAliasModifier {
 
     public List<SelectedColumn> extractSelectedColumns(SelectQuery selectQuery, ISelectedColumnFilter selectedColumnFilter) {
         if (selectedColumnFilter == null) {
-            selectedColumnFilter = getInstance(AllSelectedColumnFilter.class);
+            selectedColumnFilter = getInstance(DefaultSelectedColumnFilter.class);
         }
         List<SelectedColumn> columns = new ArrayList<>();
-        SelectStatement selectStatement = extractFirstSelectStatement(selectQuery);
+        SelectStatementExtractor selectStatementExtractor = getInstance(SelectStatementExtractor.class);
+        SelectStatement selectStatement = selectStatementExtractor.extractFirstSelectStatement(selectQuery);
         if (selectStatement == null) {
             throw new IllegalStateException("Не удалось извлечь список полей для выборки у запроса '" + selectQuery + "'");
         }
@@ -69,23 +69,6 @@ class SelectColumnExtractorAndAliasModifier {
             index++;
         }
         return columns;
-    }
-
-    /**
-     * TODO исправление ошибок:
-     *      Сделать более правильную логику извлечения выбираемых столбцов. Первый из списка может быть * например, а нужно найти реальный список колонок
-     * @param selectQuery
-     * @return
-     */
-    private SelectStatement extractFirstSelectStatement(SelectQuery selectQuery) {
-        if (selectQuery.getSelectStatement() != null) {
-            return selectQuery.getSelectStatement();
-        }
-        LinkingSelectQuery linkingSelectQuery = selectQuery.getLinkingQueryAt(0);
-        if (linkingSelectQuery != null) {
-            return extractFirstSelectStatement(linkingSelectQuery.getLinkedSelectQuery());
-        }
-        return null;
     }
 
     protected SelectedColumn fromAliasExpression(int index, ExtendsSelectableExpression aliasExpr) {

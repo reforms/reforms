@@ -1,7 +1,7 @@
 package com.reforms.orm;
 
 import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
-import static com.reforms.orm.dao.filter.column.AllSelectedColumnFilter.ALL_COLUMNS_FILTER;
+import static com.reforms.orm.dao.filter.column.DefaultSelectedColumnFilter.DEFAULT_COLUMNS_FILTER;
 
 import com.reforms.orm.dao.ReportDaoAdapter;
 import com.reforms.orm.dao.ReportIterator;
@@ -29,7 +29,7 @@ public class ReportDao {
     }
 
     public Report loadReport(String sqlQuery) throws Exception {
-        return loadReport(sqlQuery, ALL_COLUMNS_FILTER, EMPTY_FILTER_MAP);
+        return loadReport(sqlQuery, DEFAULT_COLUMNS_FILTER, EMPTY_FILTER_MAP);
     }
 
     public Report loadReport(String sqlQuery, ISelectedColumnFilter solumnFilter) throws Exception {
@@ -37,11 +37,11 @@ public class ReportDao {
     }
 
     public Report loadReport(String sqlQuery, Object filterBobj) throws Exception {
-        return loadReport(sqlQuery, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
+        return loadReport(sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterObject(filterBobj));
     }
 
     public Report loadReport(String sqlQuery, IFilterValues filter) throws Exception {
-        return loadReport(sqlQuery, ALL_COLUMNS_FILTER, filter);
+        return loadReport(sqlQuery, DEFAULT_COLUMNS_FILTER, filter);
     }
 
     /**
@@ -53,7 +53,7 @@ public class ReportDao {
      * @throws Exception
      */
     public Report loadSimpleReport(String sqlQuery, Object... filters) throws Exception {
-        return loadReport(sqlQuery, ALL_COLUMNS_FILTER, new FilterSequence(filters));
+        return loadReport(sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterSequence(filters));
     }
 
     public Report loadSimpleReport(String sqlQuery, ISelectedColumnFilter solumnFilter, Object... filters) throws Exception {
@@ -66,7 +66,7 @@ public class ReportDao {
     }
 
     public void handleReport(String sqlQuery, ReportRecordHandler handler) throws Exception {
-        handleReport(sqlQuery, handler, ALL_COLUMNS_FILTER, EMPTY_FILTER_MAP);
+        handleReport(sqlQuery, handler, DEFAULT_COLUMNS_FILTER, EMPTY_FILTER_MAP);
     }
 
     public void handleReport(String sqlQuery, ReportRecordHandler handler, ISelectedColumnFilter solumnFilter) throws Exception {
@@ -74,11 +74,11 @@ public class ReportDao {
     }
 
     public void handleReport(String sqlQuery, ReportRecordHandler handler, Object filterBobj) throws Exception {
-        handleReport(sqlQuery, handler, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
+        handleReport(sqlQuery, handler, DEFAULT_COLUMNS_FILTER, new FilterObject(filterBobj));
     }
 
     public void handleReport(String sqlQuery, ReportRecordHandler handler, IFilterValues filter) throws Exception {
-        handleReport(sqlQuery, handler, ALL_COLUMNS_FILTER, filter);
+        handleReport(sqlQuery, handler, DEFAULT_COLUMNS_FILTER, filter);
     }
 
     public void handleReport(String sqlQuery, ReportRecordHandler handler, ISelectedColumnFilter solumnFilter, Object filterBobj) throws Exception {
@@ -86,7 +86,7 @@ public class ReportDao {
     }
 
     public void handleSimpleReport(String sqlQuery, ReportRecordHandler handler, Object... filters) throws Exception {
-        handleReport(sqlQuery, handler, ALL_COLUMNS_FILTER, new FilterSequence(filters));
+        handleReport(sqlQuery, handler, DEFAULT_COLUMNS_FILTER, new FilterSequence(filters));
     }
 
     public void handleSimpleReport(String sqlQuery, ReportRecordHandler handler, ISelectedColumnFilter solumnFilter, Object... filters) throws Exception {
@@ -99,7 +99,7 @@ public class ReportDao {
     }
 
     public ReportIterator loadReportIterator(String sqlQuery) throws Exception {
-        return loadReportIterator(sqlQuery, ALL_COLUMNS_FILTER, EMPTY_FILTER_MAP);
+        return loadReportIterator(sqlQuery, DEFAULT_COLUMNS_FILTER, EMPTY_FILTER_MAP);
     }
 
     public ReportIterator loadReportIterator(String sqlQuery, ISelectedColumnFilter solumnFilter) throws Exception {
@@ -107,11 +107,11 @@ public class ReportDao {
     }
 
     public ReportIterator loadReportIterator(String sqlQuery, Object filterBobj) throws Exception {
-        return loadReportIterator(sqlQuery, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
+        return loadReportIterator(sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterObject(filterBobj));
     }
 
     public ReportIterator loadReportIterator(String sqlQuery, IFilterValues filter) throws Exception {
-        return loadReportIterator(sqlQuery, ALL_COLUMNS_FILTER, filter);
+        return loadReportIterator(sqlQuery, DEFAULT_COLUMNS_FILTER, filter);
     }
 
     public ReportIterator loadReportIterator(String sqlQuery, ISelectedColumnFilter solumnFilter, Object filterBobj) throws Exception {
@@ -119,7 +119,7 @@ public class ReportDao {
     }
 
     public ReportIterator loadSimpleReportIterator(String sqlQuery, Object... filters) throws Exception {
-        return loadReportIterator(sqlQuery, ALL_COLUMNS_FILTER, new FilterSequence(filters));
+        return loadReportIterator(sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterSequence(filters));
     }
 
     public ReportIterator loadSimpleReportIterator(String sqlQuery, ISelectedColumnFilter solumnFilter, Object... filters) throws Exception {

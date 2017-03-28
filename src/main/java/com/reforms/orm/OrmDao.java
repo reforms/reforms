@@ -1,7 +1,7 @@
 package com.reforms.orm;
 
 import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
-import static com.reforms.orm.dao.filter.column.AllSelectedColumnFilter.ALL_COLUMNS_FILTER;
+import static com.reforms.orm.dao.filter.column.DefaultSelectedColumnFilter.DEFAULT_COLUMNS_FILTER;
 
 import java.util.List;
 import java.util.Map;
@@ -77,7 +77,7 @@ public class OrmDao {
      * @throws Exception any exception, SQLException, ReflectiveOperationException and other
      */
     public <OrmType> OrmType select(Class<OrmType> ormClass, String sqlQuery, Object ... filters) throws Exception {
-        return selectOrm(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterSequence(filters));
+        return selectOrm(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterSequence(filters));
     }
 
     /**
@@ -169,11 +169,11 @@ public class OrmDao {
 
 
     public <OrmType> OrmType selectOrm(Class<OrmType> ormClass, String sqlQuery, Object filterBobj) throws Exception {
-        return selectOrm(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
+        return selectOrm(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterObject(filterBobj));
     }
 
     public <OrmType> OrmType selectOrm(Class<OrmType> ormClass, String sqlQuery, Map<String, Object> filterMap) throws Exception {
-        return selectOrm(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterMap(filterMap));
+        return selectOrm(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterMap(filterMap));
     }
 
     public <OrmType> OrmType selectOrm(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter, Object filterBobj)
@@ -187,11 +187,11 @@ public class OrmDao {
     }
 
     public <OrmType> OrmType selectOrm(Class<OrmType> ormClass, String sqlQuery, IFilterValues filters) throws Exception {
-        return selectOrm(ormClass, sqlQuery, ALL_COLUMNS_FILTER, filters);
+        return selectOrm(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, filters);
     }
 
     public <OrmType> OrmType selectSimpleOrm(Class<OrmType> ormClass, String sqlQuery, Object... filters) throws Exception {
-        return selectOrm(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterSequence(filters));
+        return selectOrm(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterSequence(filters));
     }
 
     public <OrmType> OrmType selectSimpleOrm(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter, Object... filters)
@@ -208,7 +208,7 @@ public class OrmDao {
     }
 
     public <OrmType> List<OrmType> selectOrms(Class<OrmType> ormClass, String sqlQuery) throws Exception {
-        return selectOrms(ormClass, sqlQuery, ALL_COLUMNS_FILTER, EMPTY_FILTER_MAP);
+        return selectOrms(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, EMPTY_FILTER_MAP);
     }
 
     public <OrmType> List<OrmType> selectOrms(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter) throws Exception {
@@ -216,15 +216,15 @@ public class OrmDao {
     }
 
     public <OrmType> List<OrmType> selectOrms(Class<OrmType> ormClass, String sqlQuery, Object filterBobj) throws Exception {
-        return selectOrms(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
+        return selectOrms(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterObject(filterBobj));
     }
 
     public <OrmType> List<OrmType> selectOrms(Class<OrmType> ormClass, String sqlQuery, Map<String, Object> filterMap) throws Exception {
-        return selectOrms(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterMap(filterMap));
+        return selectOrms(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterMap(filterMap));
     }
 
     public <OrmType> List<OrmType> selectOrms(Class<OrmType> ormClass, String sqlQuery, IFilterValues filter) throws Exception {
-        return selectOrms(ormClass, sqlQuery, ALL_COLUMNS_FILTER, filter);
+        return selectOrms(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, filter);
     }
 
     public <OrmType> List<OrmType> selectOrms(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter, Object filterBobj)
@@ -238,7 +238,7 @@ public class OrmDao {
     }
 
     public <OrmType> List<OrmType> selectSimpleOrms(Class<OrmType> ormClass, String sqlQuery, Object... filters) throws Exception {
-        return selectOrms(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterSequence(filters));
+        return selectOrms(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterSequence(filters));
     }
 
     public <OrmType> List<OrmType> selectSimpleOrms(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter,
@@ -256,17 +256,17 @@ public class OrmDao {
 
     public <OrmType> void handleSelectedOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, Object filterBobj)
             throws Exception {
-        handleSelectedOrms(ormClass, sqlQuery, handler, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
+        handleSelectedOrms(ormClass, sqlQuery, handler, DEFAULT_COLUMNS_FILTER, new FilterObject(filterBobj));
     }
 
     public <OrmType> void handleSelectedOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, Map<String, Object> filterMap)
             throws Exception {
-        handleSelectedOrms(ormClass, sqlQuery, handler, ALL_COLUMNS_FILTER, new FilterMap(filterMap));
+        handleSelectedOrms(ormClass, sqlQuery, handler, DEFAULT_COLUMNS_FILTER, new FilterMap(filterMap));
     }
 
     public <OrmType> void handleSelectedOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, IFilterValues filter)
             throws Exception {
-        handleSelectedOrms(ormClass, sqlQuery, handler, ALL_COLUMNS_FILTER, filter);
+        handleSelectedOrms(ormClass, sqlQuery, handler, DEFAULT_COLUMNS_FILTER, filter);
     }
 
     public <OrmType> void handleSelectedOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler,
@@ -282,7 +282,7 @@ public class OrmDao {
     }
 
     public <OrmType> void handleSelectedOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler) throws Exception {
-        handleSelectedOrms(ormClass, sqlQuery, handler, ALL_COLUMNS_FILTER, EMPTY_FILTER_MAP);
+        handleSelectedOrms(ormClass, sqlQuery, handler, DEFAULT_COLUMNS_FILTER, EMPTY_FILTER_MAP);
     }
 
     public <OrmType> void handleSelectedOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler,
@@ -292,7 +292,7 @@ public class OrmDao {
 
     public <OrmType> void handleSelectedSimpleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, Object... filters)
             throws Exception {
-        handleSelectedOrms(ormClass, sqlQuery, handler, ALL_COLUMNS_FILTER, new FilterSequence(filters));
+        handleSelectedOrms(ormClass, sqlQuery, handler, DEFAULT_COLUMNS_FILTER, new FilterSequence(filters));
     }
 
     public <OrmType> void handleSelectedSimpleOrms(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler,
@@ -311,15 +311,15 @@ public class OrmDao {
     }
 
     public <OrmType> OrmIterator<OrmType> selectOrmIterator(Class<OrmType> ormClass, String sqlQuery, Object filterBobj) throws Exception {
-        return selectOrmIterator(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterObject(filterBobj));
+        return selectOrmIterator(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterObject(filterBobj));
     }
 
     public <OrmType> OrmIterator<OrmType> selectOrmIterator(Class<OrmType> ormClass, String sqlQuery, Map<String, Object> filterMap) throws Exception {
-        return selectOrmIterator(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterMap(filterMap));
+        return selectOrmIterator(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterMap(filterMap));
     }
 
     public <OrmType> OrmIterator<OrmType> selectOrmIterator(Class<OrmType> ormClass, String sqlQuery, IFilterValues filter) throws Exception {
-        return selectOrmIterator(ormClass, sqlQuery, ALL_COLUMNS_FILTER, filter);
+        return selectOrmIterator(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, filter);
     }
 
     public <OrmType> OrmIterator<OrmType> selectOrmIterator(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter,
@@ -333,7 +333,7 @@ public class OrmDao {
     }
 
     public <OrmType> OrmIterator<OrmType> selectOrmIterator(Class<OrmType> ormClass, String sqlQuery) throws Exception {
-        return selectOrmIterator(ormClass, sqlQuery, ALL_COLUMNS_FILTER, EMPTY_FILTER_MAP);
+        return selectOrmIterator(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, EMPTY_FILTER_MAP);
     }
 
     public <OrmType> OrmIterator<OrmType> selectOrmIterator(Class<OrmType> ormClass, String sqlQuery, ISelectedColumnFilter solumnFilter)
@@ -343,7 +343,7 @@ public class OrmDao {
 
     public <OrmType> OrmIterator<OrmType> selectSimpleOrmIterator(Class<OrmType> ormClass, String sqlQuery, Object... filters)
             throws Exception {
-        return selectOrmIterator(ormClass, sqlQuery, ALL_COLUMNS_FILTER, new FilterSequence(filters));
+        return selectOrmIterator(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterSequence(filters));
     }
 
     public <OrmType> OrmIterator<OrmType> selectSimpleOrmIterator(Class<OrmType> ormClass, String sqlQuery,

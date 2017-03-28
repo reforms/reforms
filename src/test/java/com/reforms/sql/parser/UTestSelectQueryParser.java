@@ -492,6 +492,9 @@ public class UTestSelectQueryParser {
                 + "WHERE c2a.account_id = a.id AND a.branch_id = ? AND a.account LIKE ?) "
                 + "AND UPPER((CASE WHEN last_name IS NOT NULL THEN last_name ELSE '' END) || ' ' || (CASE WHEN first_name IS NOT NULL THEN first_name ELSE '' END) || ' ' || (CASE WHEN middle_name IS NOT NULL THEN middle_name ELSE '' END)"
                 + ") LIKE ?");
+        // Oracle
+        assertSelectQuery("SELECT * FROM (SELECT c1, c2, ROWNUM RN FROM (SELECT c1, c2 FROM schemaName.tableName WHERE c1 > 0 ORDER BY 1)) WHERE RN > ? AND RN <= ?");
+        assertSelectQuery("SELECT c1, c2 FROM (SELECT c1, c2, ROWNUM RN FROM (SELECT c1, c2 FROM schemaName.tableName WHERE c2 != TRUE ORDER BY 2)) WHERE RN > ? AND RN <= ?");
     }
 
     private void assertSelectQuery(String query) {

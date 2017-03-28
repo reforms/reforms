@@ -68,6 +68,10 @@ public class ColumnAlias {
         return javaAliasKey;
     }
 
+    public boolean isQuestionAliasKey() {
+        return "?".equals(javaAliasKey);
+    }
+
     public void setJavaAliasKey(String javaAliasKey) {
         this.javaAliasKey = javaAliasKey;
     }
