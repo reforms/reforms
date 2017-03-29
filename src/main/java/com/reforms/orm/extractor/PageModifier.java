@@ -36,6 +36,9 @@ public class PageModifier {
     }
 
     public IPageFilter changeSelectQuery(SelectQuery selectQuery, IPageFilter pageFilter) {
+        if (!pageFilter.hasPageFilter()) {
+            return pageFilter;
+        }
         DbTypeExtractor dbTypeExtractor = OrmConfigurator.getInstance(DbTypeExtractor.class);
         DbType dbType = dbTypeExtractor.extractDbType(selectQuery);
         if (DBT_POSTGRESQL == dbType || DBT_MIX == dbType) {

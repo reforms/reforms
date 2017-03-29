@@ -20,7 +20,7 @@ public class PageFilter implements IPageFilter {
 
     @Override
     public boolean hasPageFilter() {
-        return pageLimit != null && pageOffset != null;
+        return pageLimit != null || pageOffset != null;
     }
 
     @Override

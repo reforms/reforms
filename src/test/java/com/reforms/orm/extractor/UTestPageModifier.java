@@ -25,14 +25,32 @@ public class UTestPageModifier {
 
     @Test
     public void testModifyPostreSql() {
-        String etalonQuery = SIMPLE_SELECT_QUERY + " LIMIT ? OFFSET ?";
-        assertSelectQuery(DBT_POSTGRESQL, 10, 20, etalonQuery, SIMPLE_SELECT_QUERY, 10, 20);
+        assertPostreSqlModifier(10, 20);
+        assertPostreSqlModifier(10, null);
+        assertPostreSqlModifier(null, null);
+    }
+
+    private void assertPostreSqlModifier(Integer limit, Integer offset) {
+        String etalonQuery = SIMPLE_SELECT_QUERY;
+        if (limit != null) {
+            etalonQuery += " LIMIT ?";
+        }
+        if (offset != null) {
+            etalonQuery += " OFFSET ?";
+        }
+        assertSelectQuery(DBT_POSTGRESQL, limit, offset, etalonQuery, SIMPLE_SELECT_QUERY, limit, offset);
     }
 
     @Test
     public void testModifyOracleSql() {
         String etalonQuery = "SELECT * FROM (SELECT c1, c2, ROWNUM __RN__ FROM (" + SIMPLE_SELECT_QUERY + ")) WHERE __RN__ > ? AND __RN__ <= ?";
         assertSelectQuery(DBT_ORACLE, 10, 20, etalonQuery, SIMPLE_SELECT_QUERY, 30, 20);
+        etalonQuery = "SELECT * FROM (SELECT c1, c2, ROWNUM __RN__ FROM (" + SIMPLE_SELECT_QUERY + ")) WHERE __RN__ <= ?";
+        assertSelectQuery(DBT_ORACLE, 10, null, etalonQuery, SIMPLE_SELECT_QUERY, 10, null);
+        etalonQuery = "SELECT * FROM (SELECT c1, c2, ROWNUM __RN__ FROM (" + SIMPLE_SELECT_QUERY + ")) WHERE __RN__ > ?";
+        assertSelectQuery(DBT_ORACLE, null, 20, etalonQuery, SIMPLE_SELECT_QUERY, null, 20);
+        etalonQuery = SIMPLE_SELECT_QUERY;
+        assertSelectQuery(DBT_ORACLE, null, null, etalonQuery, SIMPLE_SELECT_QUERY, null, null);
     }
 
     @AfterClass
