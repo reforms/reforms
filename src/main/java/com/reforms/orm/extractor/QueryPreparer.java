@@ -62,9 +62,9 @@ public class QueryPreparer {
             filters = EMPTY_FILTER_MAP;
         }
         // TODO: порядок важен.
-        preparePage(selectQuery, filters);
+        IPageFilter newPageFilter = preparePage(selectQuery, filters);
         prepareScheme(selectQuery);
-        return prepareValues(selectQuery, filters);
+        return prepareValues(selectQuery, filters, newPageFilter);
     }
 
     public PrepareStatementValuesSetter prepareUpdateQuery(UpdateQuery updateQuery, IUpdateValues updateValues, IFilterValues filters) {
@@ -98,12 +98,13 @@ public class QueryPreparer {
         return prepareValues(insertQuery, values);
     }
 
-    private void preparePage(SelectQuery selectQuery, IFilterValues filters) {
+    private IPageFilter preparePage(SelectQuery selectQuery, IFilterValues filters) {
         IPageFilter pageFilter = filters.getPageFilter();
         if (pageFilter != null && pageFilter.hasPageFilter()) {
             PageModifier pageModifer = OrmConfigurator.getInstance(PageModifier.class);
-            pageModifer.changeSelectQuery(selectQuery, pageFilter);
+            return pageModifer.changeSelectQuery(selectQuery, pageFilter);
         }
+        return null;
     }
 
     private void prepareScheme(Expression query) {
@@ -122,12 +123,16 @@ public class QueryPreparer {
         }
     }
 
+    private PrepareStatementValuesSetter prepareValues(Expression query, IPriorityValues values) {
+        return prepareValues(query, values, null);
+    }
+
     /**
      * @param query
      * @param values
      * @return
      */
-    private PrepareStatementValuesSetter prepareValues(Expression query, IPriorityValues values) {
+    private PrepareStatementValuesSetter prepareValues(Expression query, IPriorityValues values, IPageFilter pageFilter) {
         ParamSetterFactory paramSetterFactory = getInstance(ParamSetterFactory.class);
         PrepareStatementValuesSetter fpss = new PrepareStatementValuesSetter(paramSetterFactory);
         ValueExpressionExtractor filterExprExtractor = new ValueExpressionExtractor();
@@ -198,17 +203,13 @@ public class QueryPreparer {
                 fpss.addFilterValue(filterValue);
             } else if (VET_PAGE_QUESTION == valueFilterExpr.getValueExprType()) {
                 Object filterValue = null;
-                if (values instanceof IFilterValues) {
-                    IFilterValues filters = (IFilterValues) values;
-                    IPageFilter pageFilter = filters.getPageFilter();
-                    if (pageFilter != null) {
-                        PageQuestionExpression pageQuestionExpr = (PageQuestionExpression) valueFilterExpr;
-                        if (pageQuestionExpr.isLimitType()) {
-                            filterValue = pageFilter.getPageLimit();
-                        }
-                        if (pageQuestionExpr.isOffsetType()) {
-                            filterValue = pageFilter.getPageOffset();
-                        }
+                if (pageFilter != null) {
+                    PageQuestionExpression pageQuestionExpr = (PageQuestionExpression) valueFilterExpr;
+                    if (pageQuestionExpr.isLimitType()) {
+                        filterValue = pageFilter.getPageLimit();
+                    }
+                    if (pageQuestionExpr.isOffsetType()) {
+                        filterValue = pageFilter.getPageOffset();
                     }
                 }
                 if (filterValue == null) {

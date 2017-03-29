@@ -26,9 +26,9 @@ import static com.reforms.sql.expr.term.ExpressionType.ET_EXTENDS_SELECTABLE_EXP
  * @author evgenie
  */
 @ThreadSafe
-class SelectColumnExtractorAndAliasModifier {
+public class SelectColumnExtractorAndAliasModifier {
 
-    SelectColumnExtractorAndAliasModifier() {
+    public SelectColumnExtractorAndAliasModifier() {
     }
 
     public List<SelectedColumn> extractSelectedColumns(SelectQuery selectQuery) {
@@ -39,12 +39,16 @@ class SelectColumnExtractorAndAliasModifier {
         if (selectedColumnFilter == null) {
             selectedColumnFilter = getInstance(DefaultSelectedColumnFilter.class);
         }
-        List<SelectedColumn> columns = new ArrayList<>();
         SelectStatementExtractor selectStatementExtractor = getInstance(SelectStatementExtractor.class);
         SelectStatement selectStatement = selectStatementExtractor.extractFirstSelectStatement(selectQuery);
         if (selectStatement == null) {
             throw new IllegalStateException("Не удалось извлечь список полей для выборки у запроса '" + selectQuery + "'");
         }
+        return extractSelectedColumns(selectStatement, selectedColumnFilter);
+    }
+
+    public List<SelectedColumn> extractSelectedColumns(SelectStatement selectStatement, ISelectedColumnFilter selectedColumnFilter) {
+        List<SelectedColumn> columns = new ArrayList<>();
         List<SelectableExpression> selectableExprs = selectStatement.getSelectExps();
         int index = 1;
         Iterator<SelectableExpression> selectableExprIterator = selectableExprs.iterator();

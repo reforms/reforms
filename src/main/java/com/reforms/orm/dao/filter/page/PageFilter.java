@@ -1,8 +1,12 @@
 package com.reforms.orm.dao.filter.page;
 
+/**
+ * @author evgenie
+ */
 public class PageFilter implements IPageFilter {
 
     private Integer pageLimit;
+
     private Integer pageOffset;
 
     public PageFilter() {
@@ -29,4 +33,8 @@ public class PageFilter implements IPageFilter {
         return pageOffset;
     }
 
+    @Override
+    public String toString() {
+        return "[pageLimit=" + pageLimit + ", pageOffset=" + pageOffset + "]";
+    }
 }

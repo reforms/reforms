@@ -59,7 +59,7 @@ public abstract class Expression implements ISqlViewer, IExpressionChanger {
     @Override
     public String toString() {
         SqlBuilder builder = new SqlBuilder();
-        view(builder);
+        builder.appendExpression(this);
         return builder.getQuery();
     }
 }

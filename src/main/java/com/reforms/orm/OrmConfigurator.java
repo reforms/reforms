@@ -47,7 +47,7 @@ public class OrmConfigurator {
         putInstance(IResultSetReaderFactory.class, new ResultSetReaderFactory());
         putInstance(LocalCache.class, new LocalCache());
         SchemeManager schemeManager = new SchemeManager();
-        schemeManager.setDefaultDbType(DbType.MIX);
+        schemeManager.setDefaultDbType(DbType.DBT_MIX);
         putInstance(ISchemeManager.class, schemeManager);
     }
 

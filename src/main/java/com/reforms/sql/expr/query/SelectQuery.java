@@ -115,6 +115,25 @@ public class SelectQuery extends SelectableExpression {
         return ET_SELECT_QUERY;
     }
 
+    public static SelectQuery softCopyFrom(SelectQuery prototype) {
+        SelectQuery selectQuery = new SelectQuery();
+        softCopyTo(selectQuery, prototype);
+        return selectQuery;
+    }
+
+    public static void softCopyTo(SelectQuery targetSelectQuery, SelectQuery sourceSelectQuery) {
+        targetSelectQuery.setSelectStatement(sourceSelectQuery.selectStatement);
+        targetSelectQuery.setFromStatement(sourceSelectQuery.fromStatement);
+        targetSelectQuery.setWhereStatement(sourceSelectQuery.whereStatement);
+        targetSelectQuery.setGroupByStatement(sourceSelectQuery.groupByStatement);
+        targetSelectQuery.setHavingStatement(sourceSelectQuery.havingStatement);
+        targetSelectQuery.setLinkingQueries(sourceSelectQuery.linkingQueries);
+        targetSelectQuery.setOrderByStatement(sourceSelectQuery.orderByStatement);
+        targetSelectQuery.setPageStatement(sourceSelectQuery.pageStatement);
+        targetSelectQuery.setWrapped(sourceSelectQuery.isWrapped());
+        targetSelectQuery.setSpacable(sourceSelectQuery.isSpacable());
+    }
+
     @Override
     public void view(SqlBuilder sqlBuilder) {
         sqlBuilder.appendExpression(selectStatement);

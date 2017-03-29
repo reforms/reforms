@@ -19,6 +19,8 @@ import static com.reforms.sql.expr.term.ConditionFlowType.resolveConditionFlowTy
 import static com.reforms.sql.expr.term.MathOperator.resolveMathOperator;
 import static com.reforms.sql.expr.term.predicate.ComparisonOperator.COT_EQUALS;
 import static com.reforms.sql.expr.term.predicate.ComparisonOperator.resolveComparisonOperatorType;
+import static com.reforms.sql.expr.term.value.PageQuestionExpression.PQE_LIMIT;
+import static com.reforms.sql.expr.term.value.PageQuestionExpression.PQE_OFFSET;
 import static com.reforms.sql.parser.OptWords.*;
 import static com.reforms.sql.parser.SqlWords.*;
 
@@ -997,8 +999,18 @@ public class SqlParser {
     }
 
     // 3.5
-    private QuestionExpression parseQuestionExpression() {
+    private ValueExpression parseQuestionExpression() {
         stream.parseQuestionValueAndCheck();
+        if (stream.getSymbol() == ':') {
+            if ('O' == stream.getSymbol(1)) {
+                stream.moveCursor(2);
+                return new PageQuestionExpression(PQE_OFFSET);
+            }
+            if ('L' == stream.getSymbol(1)) {
+                stream.moveCursor(2);
+                return new PageQuestionExpression(PQE_LIMIT);
+            }
+        }
         return new QuestionExpression();
     }
 
