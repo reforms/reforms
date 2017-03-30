@@ -288,17 +288,30 @@ public class SqlParser {
         if (checkIsOrderByStatement()) {
             String orderWord = stream.parseSpecialWordValueAndCheck(SW_ORDER);
             String byWord = stream.parseSpecialWordValueAndCheck(SW_BY);
+            List<SortKeyExpression> sortKeyExprs = parseSortKeyExpressions();
             OrderByStatement orderByStatement = new OrderByStatement();
             orderByStatement.setOrderWord(orderWord);
             orderByStatement.setByWord(byWord);
-            SortKeyExpression firstSortKeyExpr = parseSortKeyExpression();
-            orderByStatement.addSortKeyExpr(firstSortKeyExpr);
-            while (stream.checkIsComma()) {
-                stream.moveCursor();
-                SortKeyExpression nextSortKeyExpr = parseSortKeyExpression();
-                orderByStatement.addSortKeyExpr(nextSortKeyExpr);
-            }
+            orderByStatement.setSortKeyExprs(sortKeyExprs);
             return orderByStatement;
+        }
+        return null;
+    }
+
+    private FetchStatement parseFetchStatement() {
+        if (checkIsFetchStatement()) {
+            String fetchWord = stream.parseSpecialWordValueAndCheck(SW_FETCH);
+            String portionWord = stream.parseSpecialWordValueAndCheckOneOf(SW_FIRST, SW_NEXT);
+            Expression valueExpr = parseSimpleArgExpression();
+            String rowsWord = stream.parseSpecialWordValueAndCheckOneOf(SW_ROWS, SW_ROW);
+            String onlyWord = stream.parseSpecialWordValueAndCheck(SW_ONLY);
+            FetchStatement fetchStatement = new FetchStatement();
+            fetchStatement.setFetchWord(fetchWord);
+            fetchStatement.setPortionWord(portionWord);
+            fetchStatement.setValueExpr(valueExpr);
+            fetchStatement.setRowsWord(rowsWord);
+            fetchStatement.setOnlyWord(onlyWord);
+            return fetchStatement;
         }
         return null;
     }
@@ -338,6 +351,7 @@ public class SqlParser {
     private PageStatement parsePageStatement() {
         LimitExpression limitExpr = parseLimitExpression();
         OffsetExpression offsetExpr = parseOffsetExpression();
+        FetchStatement fetchStatement = parseFetchStatement();
         if (offsetExpr != null && limitExpr == null) {
             limitExpr = parseLimitExpression();
         }
@@ -347,6 +361,7 @@ public class SqlParser {
         PageStatement pageStatement = new PageStatement();
         pageStatement.setLimitExpr(limitExpr);
         pageStatement.setOffsetExpr(offsetExpr);
+        pageStatement.setFetchStatement(fetchStatement);
         return pageStatement;
     }
 
@@ -1809,6 +1824,18 @@ public class SqlParser {
         return refColumnExpr;
     }
 
+    private List<SortKeyExpression> parseSortKeyExpressions() {
+        List<SortKeyExpression> sortKeyExprs = new ArrayList<>();
+        SortKeyExpression firstSortKeyExpr = parseSortKeyExpression();
+        sortKeyExprs.add(firstSortKeyExpr);
+        while (stream.checkIsComma()) {
+            stream.moveCursor();
+            SortKeyExpression nextSortKeyExpr = parseSortKeyExpression();
+            sortKeyExprs.add(nextSortKeyExpr);
+        }
+        return sortKeyExprs;
+    }
+
     private SortKeyExpression parseSortKeyExpression() {
         int from = stream.getCursor();
         Expression sortKeyValueExpr = parseSimpleArgExpression();
@@ -1876,6 +1903,8 @@ public class SqlParser {
         } else {
             throw stream.createException("Ожидается выражение значения в секции 'OFFSET'", from);
         }
+        String rowsWord = stream.parseSpecialWordValueVariants(SW_ROWS, SW_ROW);
+        offsetExpr.setRowsWord(rowsWord);
         return offsetExpr;
     }
 
@@ -1951,10 +1980,6 @@ public class SqlParser {
         return stream.checkIsSpecialWordValueSame(SW_HAVING);
     }
 
-    private boolean checkIsRoNumberFunc() {
-        return stream.checkIsSpecialWordValueSame(SW_ROW_NUMBER);
-    }
-
     // ------------------------------------------------------ WORD SEQUENSE ----------------------------------------------------------------------------- \\
     private boolean checkIsExistsPredicateExpression() {
         return stream.checkIsSpecialWordSequents(OW_O_NOT, OW_R_EXISTS);
@@ -1978,6 +2003,10 @@ public class SqlParser {
 
     private boolean checkIsOrderByStatement() {
         return stream.checkIsSpecialWordSequents(OW_R_ORDER, OW_R_BY);
+    }
+
+    private boolean checkIsFetchStatement() {
+        return stream.checkIsSpecialWordValueSame(SW_FETCH);
     }
 
     private boolean checkIsPartitionByStatement() {

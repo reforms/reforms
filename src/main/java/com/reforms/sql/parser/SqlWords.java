@@ -170,6 +170,18 @@ public class SqlWords {
 
     public static String SW_PARTITION = "PARTITION"; // MSSQL
 
+    public static String SW_FETCH = "FETCH"; // MSSQL
+
+    public static String SW_NEXT = "NEXT"; // MSSQL
+
+    public static String SW_FIRST = "FIRST"; // MSSQL
+
+    public static String SW_ROWS = "ROWS"; // MSSQL
+
+    public static String SW_ROW = "ROW"; // MSSQL
+
+    public static String SW_ONLY = "ONLY"; // MSSQL
+
     private static final Map<String, Boolean> WORDS = init();
 
     private static Map<String, Boolean> init() {
@@ -215,6 +227,7 @@ public class SqlWords {
         addWords(words, SW_USING);
         addWords(words, SW_OVER);
         addWords(words, SW_PARTITION);
+        addWords(words, SW_FETCH, SW_NEXT, SW_FIRST, SW_ONLY, SW_ROWS, SW_ROW);
         return Collections.unmodifiableMap(words);
     }
 

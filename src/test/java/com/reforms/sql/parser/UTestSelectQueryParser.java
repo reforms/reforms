@@ -545,8 +545,8 @@ public class UTestSelectQueryParser {
                 "ORDER BY RowNum";
         assertSelectQuery(query);
 
-        //query = "SELECT * FROM TableName ORDER BY id OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY";
-        //assertSelectQuery(query);
+        query = "SELECT * FROM TableName ORDER BY id OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY";
+        assertSelectQuery(query);
 
         /**
          *
