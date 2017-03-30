@@ -1,7 +1,7 @@
 package com.reforms.orm.dao.filter;
 
-import com.reforms.orm.dao.filter.page.IPageFilter;
-import com.reforms.orm.dao.filter.page.PageFilter;
+import com.reforms.orm.dao.paging.IPageFilter;
+import com.reforms.orm.dao.paging.PageFilter;
 
 import java.util.Collections;
 import java.util.HashMap;

@@ -1,5 +1,6 @@
 package com.reforms.sql.expr.term;
 
+import com.reforms.sql.expr.statement.OverStatement;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
 import static com.reforms.sql.expr.term.ExpressionType.ET_FUNC_EXPRESSION;
@@ -15,6 +16,8 @@ public class FuncExpression extends SelectableExpression {
     private String name;
 
     private ValueListExpression args;
+
+    private OverStatement overStatement;
 
     public boolean isShortStyle() {
         return shortStyle;
@@ -36,10 +39,17 @@ public class FuncExpression extends SelectableExpression {
         return args;
     }
 
-
     public void setArgs(ValueListExpression args) {
         this.args = args;
         args.setSpacable(false);
+    }
+
+    public OverStatement getOverStatement() {
+        return overStatement;
+    }
+
+    public void setOverStatement(OverStatement overStatement) {
+        this.overStatement = overStatement;
     }
 
     @Override
@@ -53,5 +63,6 @@ public class FuncExpression extends SelectableExpression {
         if (args != null && (!args.isEmpty() || !shortStyle)) {
             sqlBuilder.appendExpression(args);
         }
+        sqlBuilder.appendExpression(overStatement);
     }
 }

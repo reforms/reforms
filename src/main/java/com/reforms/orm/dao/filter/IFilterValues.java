@@ -2,7 +2,7 @@ package com.reforms.orm.dao.filter;
 
 import com.reforms.orm.dao.IPriorityValues;
 import com.reforms.orm.dao.IValues;
-import com.reforms.orm.dao.filter.page.IPageFilter;
+import com.reforms.orm.dao.paging.IPageFilter;
 
 /**
  * Контракт на получение значения фильтра по ключу

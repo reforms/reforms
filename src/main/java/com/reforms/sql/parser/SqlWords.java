@@ -164,6 +164,12 @@ public class SqlWords {
 
     public static String SW_USING = "USING"; // MSSQL
 
+    public static String SW_ROW_NUMBER = "ROW_NUMBER"; // MSSQL
+
+    public static String SW_OVER = "OVER"; // MSSQL
+
+    public static String SW_PARTITION = "PARTITION"; // MSSQL
+
     private static final Map<String, Boolean> WORDS = init();
 
     private static Map<String, Boolean> init() {
@@ -207,6 +213,8 @@ public class SqlWords {
         addWords(words, SW_DELETE);
         addWords(words, SW_INSERT, SW_INTO);
         addWords(words, SW_USING);
+        addWords(words, SW_OVER);
+        addWords(words, SW_PARTITION);
         return Collections.unmodifiableMap(words);
     }
 

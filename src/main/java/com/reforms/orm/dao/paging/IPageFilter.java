@@ -1,4 +1,4 @@
-package com.reforms.orm.dao.filter.page;
+package com.reforms.orm.dao.paging;
 
 /**
  * Контракт на получение параметров для постраничной загрузки данных

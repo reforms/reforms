@@ -52,4 +52,5 @@ public class OptWords {
 
     public static final OptWord OW_R_INTO = new OptWord(true, SW_INTO);
 
+    public static final OptWord OW_R_PARTITION = new OptWord(true, SW_PARTITION);
 }

@@ -1,6 +1,6 @@
 package com.reforms.orm.dao.filter;
 
-import com.reforms.orm.dao.filter.page.IPageFilter;
+import com.reforms.orm.dao.paging.IPageFilter;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -7,8 +7,8 @@ import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.filter.column.CompositeSelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.IndexSelectFilter;
-import com.reforms.orm.dao.filter.page.IPageFilter;
-import com.reforms.orm.dao.filter.page.PageFilter;
+import com.reforms.orm.dao.paging.IPageFilter;
+import com.reforms.orm.dao.paging.PageFilter;
 import com.reforms.orm.dao.report.IReportDaoAdapter;
 import com.reforms.orm.dao.report.model.Report;
 

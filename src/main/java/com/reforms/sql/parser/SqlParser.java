@@ -303,6 +303,38 @@ public class SqlParser {
         return null;
     }
 
+    private PartitionByStatement parsePartitionByStatement() {
+        if (checkIsPartitionByStatement()) {
+            String partitionWord = stream.parseSpecialWordValueAndCheck(SW_PARTITION);
+            String byWord = stream.parseSpecialWordValueAndCheck(SW_BY);
+            List<Expression> valueExprs = parseValueExpressions(true);
+            PartitionByStatement partitionByStatement = new PartitionByStatement();
+            partitionByStatement.setPartitionWord(partitionWord);
+            partitionByStatement.setByWord(byWord);
+            partitionByStatement.setValueExprs(valueExprs);
+            return partitionByStatement;
+        }
+        return null;
+    }
+
+    private OverStatement parseOverStatement() {
+        if (stream.checkIsSpecialWordValueSame(SW_OVER)) {
+            String overWord = stream.parseSpecialWordValueAndCheck(SW_OVER);
+            stream.checkIsOpenParent(true);
+            stream.moveCursor();
+            PartitionByStatement partitionByStatement = parsePartitionByStatement();
+            OrderByStatement orderByStatement = parseOrderByStatement();
+            stream.checkIsCloseParen(true);
+            stream.moveCursor();
+            OverStatement overStatement = new OverStatement();
+            overStatement.setOverWord(overWord);
+            overStatement.setPartitionByStatement(partitionByStatement);
+            overStatement.setOrderByStatement(orderByStatement);
+            return overStatement;
+        }
+        return null;
+    }
+
     private PageStatement parsePageStatement() {
         LimitExpression limitExpr = parseLimitExpression();
         OffsetExpression offsetExpr = parseOffsetExpression();
@@ -719,6 +751,7 @@ public class SqlParser {
         return new AsteriskExpression();
     }
 
+
     // 2
     private boolean checkIsFuncExpression() {
         stream.keepParserState();
@@ -730,14 +763,20 @@ public class SqlParser {
 
     // 2
     private FuncExpression parseFuncExpression() {
+        return parseCommonFuncExpression();
+    }
+
+    private FuncExpression parseCommonFuncExpression() {
         String funcName = stream.parseSpecialWordValue();
         if (funcName == null) {
             throw stream.createException("Ожидается наименование функции");
         }
         ValueListExpression funcArgs = parseFuncArgListExpression();
+        OverStatement overStatement = parseOverStatement();
         FuncExpression funcExpr = new FuncExpression();
         funcExpr.setName(funcName);
         funcExpr.setArgs(funcArgs);
+        funcExpr.setOverStatement(overStatement);
         return funcExpr;
     }
 
@@ -757,15 +796,7 @@ public class SqlParser {
         stream.checkIsOpenParent();
         stream.moveCursor();
         if (!stream.checkIsCloseParen(false)) {
-            boolean argFlag = true;
-            while (argFlag) {
-                Expression argExpr = parseValueOrArgExpression(isValue);
-                argListExpr.addValueExpr(argExpr);
-                argFlag = stream.checkIsComma();
-                if (argFlag) {
-                    stream.moveCursor();
-                }
-            }
+            argListExpr.setValueExprs(parseValueExpressions(isValue));
         }
         stream.checkIsCloseParen();
         stream.moveCursor();
@@ -784,6 +815,20 @@ public class SqlParser {
         stream.checkIsCloseParen();
         stream.moveCursor();
         return argListExpr;
+    }
+
+    private List<Expression> parseValueExpressions(boolean isValue) {
+        List<Expression> exprs = new ArrayList<>();
+        boolean hasNextValue = true;
+        while (hasNextValue) {
+            Expression argExpr = parseValueOrArgExpression(isValue);
+            exprs.add(argExpr);
+            hasNextValue = stream.checkIsComma();
+            if (hasNextValue) {
+                stream.moveCursor();
+            }
+        }
+        return exprs;
     }
 
     // 2.1.1
@@ -1766,14 +1811,7 @@ public class SqlParser {
 
     private SortKeyExpression parseSortKeyExpression() {
         int from = stream.getCursor();
-        Expression sortKeyValueExpr = null;
-        if (checkIsColumnExpression()) {
-            sortKeyValueExpr = parseColumnExpression();
-            // TODO проверить, что это простая колонка
-        } else if (checkIsNumericExpression()) {
-            sortKeyValueExpr = parseNumericExpression();
-            // TODO проверить, что это число без мантис точек и прочего лишнего
-        }
+        Expression sortKeyValueExpr = parseSimpleArgExpression();
         if (sortKeyValueExpr == null) {
             throw stream.createException("Ожидается значение сортировки в секции 'ORDER BY'", from);
         }
@@ -1913,6 +1951,10 @@ public class SqlParser {
         return stream.checkIsSpecialWordValueSame(SW_HAVING);
     }
 
+    private boolean checkIsRoNumberFunc() {
+        return stream.checkIsSpecialWordValueSame(SW_ROW_NUMBER);
+    }
+
     // ------------------------------------------------------ WORD SEQUENSE ----------------------------------------------------------------------------- \\
     private boolean checkIsExistsPredicateExpression() {
         return stream.checkIsSpecialWordSequents(OW_O_NOT, OW_R_EXISTS);
@@ -1936,6 +1978,10 @@ public class SqlParser {
 
     private boolean checkIsOrderByStatement() {
         return stream.checkIsSpecialWordSequents(OW_R_ORDER, OW_R_BY);
+    }
+
+    private boolean checkIsPartitionByStatement() {
+        return stream.checkIsSpecialWordSequents(OW_R_PARTITION, OW_R_BY);
     }
 
     // -------------------------------------------------------------- SIMPLE ----------------------------------------------------------------------------- \\

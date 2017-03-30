@@ -1,4 +1,4 @@
-package com.reforms.orm.dao.filter.page;
+package com.reforms.orm.dao.paging;
 
 /**
  * @author evgenie

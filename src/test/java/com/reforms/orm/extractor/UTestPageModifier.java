@@ -1,8 +1,8 @@
 package com.reforms.orm.extractor;
 
 import com.reforms.orm.IOrmContext;
-import com.reforms.orm.dao.filter.page.IPageFilter;
-import com.reforms.orm.dao.filter.page.PageFilter;
+import com.reforms.orm.dao.paging.IPageFilter;
+import com.reforms.orm.dao.paging.PageFilter;
 import com.reforms.sql.db.DbType;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;

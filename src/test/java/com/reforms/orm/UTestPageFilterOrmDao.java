@@ -13,7 +13,7 @@ import org.junit.Test;
 import com.reforms.orm.dao.filter.FilterMap;
 import com.reforms.orm.dao.filter.FilterSequence;
 import com.reforms.orm.dao.filter.IFilterValues;
-import com.reforms.orm.dao.filter.page.PageFilter;
+import com.reforms.orm.dao.paging.PageFilter;
 
 public class UTestPageFilterOrmDao extends GoodsDbTest {
 

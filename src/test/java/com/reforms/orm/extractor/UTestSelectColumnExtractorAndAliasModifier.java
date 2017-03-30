@@ -22,6 +22,8 @@ public class UTestSelectColumnExtractorAndAliasModifier {
     public void testSelectLogic() {
         assertStatementWith("SELECT c1, c2", "SELECT c1, c2 FROM t");
         assertStatementWith("SELECT c1", "SELECT c1, c2! FROM t");
+        assertStatementWith("SELECT c1", "SELECT c1, c2 ! FROM t");
+        assertStatementWith("SELECT c1", "SELECT c1, c2 AS ! FROM t");
         assertStatementWith("SELECT c1", "SELECT c1, c2 AS c3:! FROM t WHERE c3 > 0");
         assertStatementWith("SELECT c1, c2, ROWNUM RN",
                 "SELECT * FROM (SELECT c1, c2 , ROWNUM RN FROM (SELECT c1, c2 FROM schemaName.tableName WHERE c1 > 0 ORDER BY 1)) WHERE RN > ? AND RN <= ?");

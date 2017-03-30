@@ -1,6 +1,6 @@
 package com.reforms.orm.dao.filter;
 
-import com.reforms.orm.dao.filter.page.IPageFilter;
+import com.reforms.orm.dao.paging.IPageFilter;
 import com.reforms.orm.reflex.IReflexor;
 import com.reforms.orm.reflex.Reflexor;
 

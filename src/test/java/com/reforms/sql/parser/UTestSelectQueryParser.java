@@ -8,25 +8,9 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * 1.
- * SELECT client_id, name_cln, addr_cln
-        FROM schemeName.test_clns
-                WHERE (client_id, name_cln, addr_cln) = (60, 'архивный юрик', 'moskow');
-    2.
-    assertWhereStatement("WHERE (1) MATCH (SELECT client_id FROM schemeName.test_clns)");
-    TODO add new test in SCENARIO package:
-    (SELECT client_id, 1 as filter FROM schemeName.test_clns
-             WHERE group_id = 1 AND act_time >= NOW()
-             ORDER BY client_id DESC)
-             UNION ALL
-             (SELECT client_id, 2 as filter FROM schemeName.test_clients
-             WHERE group_id = 1 AND act_time < NOW()
-             ORDER BY client_id DESC)
-             ORDER BY filter
-
-   TODO add new test: return List<String>
-
-
+ * 1. assertWhereStatement("WHERE (1) MATCH (SELECT client_id FROM schemeName.test_clns)");
+ *
+ *
  * @author evgenie
  */
 public class UTestSelectQueryParser {
@@ -457,7 +441,24 @@ public class UTestSelectQueryParser {
     }
 
     @Test
-    public void testPageStatement() {
+    public void testBigSelectStatement() {
+        assertSelectQuery("SELECT cg.id, cg.tcl_group FROM schemeName.tcl_groups cg " +
+                "INNER JOIN schemeName.doc_rcpts_groups drg ON drg.doc_id = ? AND drg.group_id = cg.id WHERE cg.tcl_type = 0 AND cg.id " +
+                "IN (SELECT cl2cg.tcl_group_id FROM schemeName.clns2client_groups cl2cg WHERE EXISTS (SELECT 1 FROM schemeName.clns cl " +
+                "WHERE client_id IN (SELECT client_id FROM schemeName.body2clns WHERE operator_id = ?) AND cl.status <> 0 AND " +
+                "(EXISTS (SELECT 1 FROM schemeName.c2accounts c2a, schemeName.accounts a WHERE c2a.tcl_id = cl.tcl_id AND a.id = c2a.account_id " +
+                "AND a.branch_id = 1 AND a.status <> 0) OR cl.branch_id = ?) AND cl.tcl_id = cl2cg.tcl_id)) ORDER BY cg.tcl_group");
+        assertSelectQuery("SELECT cl.client_id, cl.last_name, cl.first_name, cl.middle_name "
+                + "FROM test_scheme.pcl cl, test_scheme.o2cl o2c, test_scheme.cdcrc dr "
+                + "WHERE dr.doc_id = ? AND dr.recipient_id = cl.client_id AND cl.status <> 0 AND o2c.client_id = cl.client_id AND o2c.operator_id = ? "
+                + "AND cl.client_id IN (SELECT c2a.client_id FROM test_scheme.ccaa c2a, test_scheme.aaa a "
+                + "WHERE c2a.account_id = a.id AND a.branch_id = ? AND a.account LIKE ?) "
+                + "AND UPPER((CASE WHEN last_name IS NOT NULL THEN last_name ELSE '' END) || ' ' || (CASE WHEN first_name IS NOT NULL THEN first_name ELSE '' END) || ' ' || (CASE WHEN middle_name IS NOT NULL THEN middle_name ELSE '' END)"
+                + ") LIKE ?");
+    }
+
+    @Test
+    public void testPagingQueryForPostgreSql() {
         assertSelectQuery("SELECT t1 FROM tableName1 LIMIT 10");
         assertSelectQuery("SELECT t1 FROM tableName1 LIMIT ?");
         assertSelectQuery("SELECT t1 FROM tableName1 LIMIT :limitCount");
@@ -477,24 +478,84 @@ public class UTestSelectQueryParser {
     }
 
     @Test
-    public void testBigSelectStatement() {
-        assertSelectQuery("SELECT cg.id, cg.tcl_group FROM schemeName.tcl_groups cg " +
-                "INNER JOIN schemeName.doc_rcpts_groups drg ON drg.doc_id = ? AND drg.group_id = cg.id WHERE cg.tcl_type = 0 AND cg.id " +
-                "IN (SELECT cl2cg.tcl_group_id FROM schemeName.clns2client_groups cl2cg WHERE EXISTS (SELECT 1 FROM schemeName.clns cl " +
-                "WHERE client_id IN (SELECT client_id FROM schemeName.body2clns WHERE operator_id = ?) AND cl.status <> 0 AND " +
-                "(EXISTS (SELECT 1 FROM schemeName.c2accounts c2a, schemeName.accounts a WHERE c2a.tcl_id = cl.tcl_id AND a.id = c2a.account_id " +
-                "AND a.branch_id = 1 AND a.status <> 0) OR cl.branch_id = ?) AND cl.tcl_id = cl2cg.tcl_id)) ORDER BY cg.tcl_group");
-
-        assertSelectQuery("SELECT cl.client_id, cl.last_name, cl.first_name, cl.middle_name "
-                + "FROM test_scheme.pcl cl, test_scheme.o2cl o2c, test_scheme.cdcrc dr "
-                + "WHERE dr.doc_id = ? AND dr.recipient_id = cl.client_id AND cl.status <> 0 AND o2c.client_id = cl.client_id AND o2c.operator_id = ? "
-                + "AND cl.client_id IN (SELECT c2a.client_id FROM test_scheme.ccaa c2a, test_scheme.aaa a "
-                + "WHERE c2a.account_id = a.id AND a.branch_id = ? AND a.account LIKE ?) "
-                + "AND UPPER((CASE WHEN last_name IS NOT NULL THEN last_name ELSE '' END) || ' ' || (CASE WHEN first_name IS NOT NULL THEN first_name ELSE '' END) || ' ' || (CASE WHEN middle_name IS NOT NULL THEN middle_name ELSE '' END)"
-                + ") LIKE ?");
-        // Oracle
+    public void testPagingQueryForOracle() {
         assertSelectQuery("SELECT * FROM (SELECT c1, c2, ROWNUM RN FROM (SELECT c1, c2 FROM schemaName.tableName WHERE c1 > 0 ORDER BY 1)) WHERE RN > ? AND RN <= ?");
         assertSelectQuery("SELECT c1, c2 FROM (SELECT c1, c2, ROWNUM RN FROM (SELECT c1, c2 FROM schemaName.tableName WHERE c2 != TRUE ORDER BY 2)) WHERE RN > ? AND RN <= ?");
+    }
+
+    @Test
+    public void testPagingQueryForMsSql2012() {
+        String query =
+                "SELECT ROW_NUMBER() OVER(PARTITION BY PostalCode ORDER BY SalesYTD DESC) AS \"Row Number\", p.LastName, s.SalesYTD, a.PostalCode " +
+                "FROM Sales.SalesPerson AS s " +
+                    "INNER JOIN Person.Person AS p " +
+                        "ON s.BusinessEntityID = p.BusinessEntityID " +
+                    "INNER JOIN Person.Address AS a " +
+                        "ON a.AddressID = p.BusinessEntityID " +
+                "WHERE TerritoryID IS NOT NULL " +
+                     "AND SalesYTD <> 0 " +
+                "ORDER BY PostalCode";
+        assertSelectQuery(query);
+
+        query =
+            "SELECT SalesOrderID, ProductID, OrderQty, " +
+                "SUM(OrderQty) OVER(PARTITION BY SalesOrderID) AS Total, " +
+                "AVG(OrderQty) OVER(PARTITION BY SalesOrderID) AS \"Avg\", " +
+                "COUNT(OrderQty) OVER(PARTITION BY SalesOrderID) AS \"Count\", " +
+                "MIN(OrderQty) OVER(PARTITION BY SalesOrderID) AS \"Min\", " +
+                "MAX(OrderQty) OVER(PARTITION BY SalesOrderID) AS \"Max\" " +
+            "FROM Sales.SalesOrderDetail " +
+            "WHERE SalesOrderID IN (43659, 43664)";
+        assertSelectQuery(query);
+
+        query =
+            "SELECT BusinessEntityID, TerritoryID, " +
+                    "DATEPART(yy, ModifiedDate) AS SalesYear, " +
+                    "CONVERT(varchar(20), SalesYTD, 1) AS SalesYTD, " +
+                    "CONVERT(varchar(20), AVG(SalesYTD) OVER(PARTITION BY TerritoryID " +
+                                                            "ORDER BY DATEPART(yy, ModifiedDate)" +
+                                                            "), 1) AS MovingAvg, " +
+                    "CONVERT(varchar(20), SUM(SalesYTD) OVER(PARTITION BY TerritoryID " +
+                                                            "ORDER BY DATEPART(yy, ModifiedDate)" +
+                                                            "), 1) AS CumulativeTotal " +
+             "FROM Sales.SalesPerson " +
+             "WHERE TerritoryID IS NULL OR TerritoryID < 5 " +
+             "ORDER BY TerritoryID, SalesYear";
+        assertSelectQuery(query);
+
+        query = "SELECT ROW_NUMBER() OVER(ORDER BY SalesYTD DESC) AS Row, " +
+                       "FirstName, LastName, ROUND(SalesYTD, 2, 1) AS \"Sales YTD\" " +
+                "FROM Sales.vSalesPerson " +
+                "WHERE TerritoryName IS NOT NULL AND SalesYTD <> 0";
+        assertSelectQuery(query);
+
+        query = "SELECT name, salary " +
+                "FROM (SELECT ROW_NUMBER() OVER(ORDER BY salary) AS rn, " +
+                              "emp.* " +
+                      "FROM emp) " +
+                "WHERE rn BETWEEN 3 AND 5";
+        assertSelectQuery(query);
+
+        query = "SELECT * " +
+                "FROM (SELECT ROW_NUMBER() OVER(ORDER BY OrderDate) AS RowNum, * " +
+                       "FROM Orders " +
+                       "WHERE OrderDate >= '1980-01-01'" +
+                      ") AS RowConstrainedResult " +
+                "WHERE RowNum >= 1 AND RowNum < 20 " +
+                "ORDER BY RowNum";
+        assertSelectQuery(query);
+
+        //query = "SELECT * FROM TableName ORDER BY id OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY";
+        //assertSelectQuery(query);
+
+        /**
+         *
+            OFFSET excludes the first set of records.
+            OFFSET can only be used with an ORDER BY clause.
+            OFFSET with FETCH NEXT returns a defined window of records.
+            OFFSET with FETCH NEXT is great for building pagination support.
+         */
+
     }
 
     private void assertSelectQuery(String query) {

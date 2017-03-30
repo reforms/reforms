@@ -1,8 +1,8 @@
 package com.reforms.orm.filter;
 
 import com.reforms.orm.dao.filter.FilterSequence;
-import com.reforms.orm.dao.filter.page.IPageFilter;
-import com.reforms.orm.dao.filter.page.PageFilter;
+import com.reforms.orm.dao.paging.IPageFilter;
+import com.reforms.orm.dao.paging.PageFilter;
 
 import org.junit.Test;
 
