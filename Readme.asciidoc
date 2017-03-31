@@ -5,26 +5,26 @@ RefOrms
 -------
 Hello, its RefOrms framework.
 
-
 What the project does:
 ~~~~~~~~~~~~~~~~~~~~~
- Project help you write pretty full SQL and map result to your ORM data.
- Project contains SQL-92 parser (select query only), SelectQuery as AST tree
- Project contains api to contains SQL with your filters
- Project contains api to map SQL results to yout Orm classes
+
+Project help you write pretty full SQL and map result to your ORM data.
+Project contains SQL-92 parser (select query only), SelectQuery as AST tree
+Project contains api to contains SQL with your filters
+Project contains api to map SQL results to yout Orm classes
 
 Why the project is useful:
 ~~~~~~~~~~~~~~~~~~~~~~~~~
- It's powerfull instrument help you to take all from SQL and put it to ORM.
- It's not hibernate, it's not DDL (like JOOQ) its only SQL to ORM
 
- How users can get started with the project
- Download reforms.jar and include it to your project.
+It's powerfull instrument help you to take all from SQL and put it to ORM.
+It's not hibernate, it's not DDL (like JOOQ) its only SQL to ORM
+How users can get started with the project
+Download reforms.jar and include it to your project.
 
- Example of usage
- ~~~~~~~~~~~~~~~~
+Example of usage
+~~~~~~~~~~~~~~~~
 
- [source,java]
+[source,java]
 ----
  package com.reforms.example;
 
