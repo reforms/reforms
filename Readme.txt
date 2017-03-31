@@ -1,31 +1,191 @@
+////
+License is free for everything
+////
+RefOrms
+----------
 Hello, its RefOrms framework.
-Bad English - Sorry.
+
 
 What the project does:
+~~~~~~~~~~~~~~~~~~~~~
  Project help you write pretty full SQL and map result to your ORM data.
  Project contains SQL-92 parser (select query only), SelectQuery as AST tree
  Project contains api to contains SQL with your filters
  Project contains api to map SQL results to yout Orm classes
 
 Why the project is useful:
+~~~~~~~~~~~~~~~~~~~~~~~~~
  It's powerfull instrument help you to take all from SQL and put it to ORM.
  It's not hibernate, it's not DDL (like JOOQ) its only SQL to ORM
 
  How users can get started with the project
  Download reforms.jar and include it to your project.
 
- Example of usage (scheme of code)
+ Example of usage
+ ~~~~~~~~~~~~~~~~
 
- // OrmDao - is class from reforms framework (it's only ONE CLASS from framework, other is YOUR classes!)
- // ds  - DataSource, object that contain java.sql.Connection to BD
- // query, for example: SELECT id, name, description, price, articul, act_time FROM goods WHERE id = :id
- // Your_Orm, Pojo class, for example: public class GoodsOrm{...} with fields like id, name, description, price, articul, actTime and get/set methods
- // filters - FilterMap with key "id" and "1L" value, or 1L (use with loadSimpleOrms)
- // :id - is place holder for ? that be set with PreparedStatement like this -> ps.setLong(1, 1L);
- // Usage:
- OrmDao ormDao = new OrmDao(ds);
- List<Your_Orm> yourOrmList = ormDao.loadOrms(Your_Orm.class, query, filters);
- // after invoke loadOrms or loadSimpleOrms method you will get List of Your_Orm (GoodsOrm in comment example)
+ [source,java]
+ ----
+ package com.reforms.example;
 
- Full example you can find in test of this project. See 'reforms/src/test/java/com/reforms/orm/UTestOrmDao.java' and other classes.
+ /** Your ORM */
+ public class Client {
 
+    private long id;
+
+    private String name;
+
+    private ClientState state;
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public ClientState getState() {
+        return state;
+    }
+
+    public void setState(ClientState state) {
+        this.state = state;
+    }
+}
+
+package com.reforms.example;
+
+import com.reforms.ann.TargetField;
+import com.reforms.ann.TargetMethod;
+
+/** Your ENUM of client states */
+public enum ClientState {
+    NEW(0),
+    ACTIVE(1),
+    BLOCKED(2);
+
+    @TargetField
+    private int state;
+
+    private ClientState(int state) {
+        this.state = state;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    @TargetMethod
+    public static ClientState getClientState(int state) {
+        for (ClientState clientState : values()) {
+            if (clientState.state == state) {
+                return clientState;
+            }
+        }
+        throw new IllegalStateException("Unknown client with state " + state);
+    }
+}
+
+package com.reforms.example;
+
+import com.reforms.orm.dao.bobj.model.OrmHandler;
+
+/** Your Handler if need */
+public class ClientHandler implements OrmHandler<Client> {
+
+    private int index;
+
+    @Override
+    public void startHandle() {
+        index = 0;
+        System.out.println("beging...");
+    }
+
+    @Override
+    public boolean handleOrm(Client dbClient) {
+        index++;
+        System.out.println("Load client: " + dbClient);
+        return true;
+    }
+
+    @Override
+    public void endHandle() {
+        System.out.println("end... Total: " + index);
+    }
+}
+
+package com.reforms.example;
+
+import com.reforms.orm.OrmDao;
+import com.reforms.orm.dao.bobj.model.OrmIterator;
+
+import java.sql.Connection;
+import java.util.List;
+
+/** Your DAO */
+public class ClientDao {
+
+    // Reform api - dao
+    private OrmDao ormDao;
+
+    public ClientDao(Connection connection) {
+        ormDao = new OrmDao(connection);
+    }
+
+    // SQL SELECT QUERY to load all active clients
+    private static final String SELECT_ACTIVE_CLIENTS_QUERY = "SELECT id, name, state FROM clients WHERE state = ?";
+
+    public List<Client> loadActiveClients() throws Exception {
+        return ormDao.selectList(Client.class, SELECT_ACTIVE_CLIENTS_QUERY, ClientState.ACTIVE);
+    }
+
+    // SQL SELECT QUERY to load all clients
+    private static final String SELECT_ALL_CLIENTS_QUERY = "SELECT id, name, state FROM clients";
+
+    public OrmIterator<Client> loadClients() throws Exception {
+        return ormDao.selectIterator(Client.class, SELECT_ALL_CLIENTS_QUERY);
+    }
+
+    public void processClients(ClientHandler clientHandler) throws Exception {
+        ormDao.selectAndHandle(Client.class, SELECT_ALL_CLIENTS_QUERY, clientHandler);
+    }
+
+    // SQL SELECT QUERY to find client
+    private static final String FIND_CLIENT_QUERY = "SELECT id, name, state FROM clients WHERE id = ?";
+
+    public Client findClient(long clientId) throws Exception {
+        return ormDao.select(Client.class, FIND_CLIENT_QUERY, clientId);
+    }
+
+    // SQL UPDATE QUERY update client name
+    private static final String UPDATE_CLIENT_QUERY = "UPDATE clients SET name = ?, state = ? WHERE id = ?";
+
+    public int updateClientName(long clientId, String clientName, ClientState clientState) throws Exception {
+        return ormDao.update(UPDATE_CLIENT_QUERY, clientName, clientState, clientId);
+    }
+
+    // SQL DELETE QUERY delete client by id
+    private static final String DELETE_CLIENT_QUERY = "DELETE FROM clients WHERE id = ?";
+
+    public int deleteClient(long clientId) throws Exception {
+        return ormDao.delete(DELETE_CLIENT_QUERY, clientId);
+    }
+
+    // SQL INSERT QUERY insert client
+    private static final String INSERT_CLIENT_QUERY = "INSERT INTO clients (id, name, state) VALUES(?, ?, ?)";
+
+    public void saveClient(long clientId, String clientName, ClientState clientState) throws Exception {
+        ormDao.insert(INSERT_CLIENT_QUERY, clientId, clientName, clientState);
+    }
+
+}
+----

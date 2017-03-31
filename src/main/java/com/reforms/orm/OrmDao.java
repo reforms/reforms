@@ -1,24 +1,134 @@
 package com.reforms.orm;
 
-import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
-import static com.reforms.orm.dao.filter.column.DefaultSelectedColumnFilter.DEFAULT_COLUMNS_FILTER;
-
-import java.util.List;
-import java.util.Map;
-
 import com.reforms.orm.dao.OrmDaoAdapter;
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
-import com.reforms.orm.dao.bobj.update.*;
+import com.reforms.orm.dao.bobj.update.IUpdateValues;
+import com.reforms.orm.dao.bobj.update.UpdateMap;
+import com.reforms.orm.dao.bobj.update.UpdateObject;
+import com.reforms.orm.dao.bobj.update.UpdateSequence;
 import com.reforms.orm.dao.filter.FilterMap;
 import com.reforms.orm.dao.filter.FilterObject;
 import com.reforms.orm.dao.filter.FilterSequence;
 import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 
+import java.util.List;
+import java.util.Map;
+
+import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
+import static com.reforms.orm.dao.filter.column.DefaultSelectedColumnFilter.DEFAULT_COLUMNS_FILTER;
+
 /**
- * Фасадные методы для доступа к БД
+ * Фасадные методы для доступа к БД<br>
+ * Usage example N1: Clear SQL and filter query with simple values:<pre><code>
+ *
+ * public <b>class Client</b> {
+ *
+ *     private long id;
+ *
+ *     private String name;
+ *
+ *     private ClientState state;
+ *
+ *     public long getId() {
+ *         return id;
+ *     }
+ *
+ *     public void setId(long id) {
+ *         this.id = id;
+ *     }
+ *
+ *     public String getName() {
+ *         return name;
+ *     }
+ *
+ *     public void setName(String name) {
+ *         this.name = name;
+ *     }
+ *
+ *     public ClientState getState() {
+ *         return state;
+ *     }
+ *
+ *     public void setState(ClientState state) {
+ *         this.state = state;
+ *     }
+ * }
+ *
+ * public <b>enum ClientState</b> {
+ *     NEW(0),
+ *     ACTIVE(1),
+ *     BLOCKED(2);
+ *
+ *     {@literal @}TargetField
+ *     private int state;
+ *
+ *     private ClientState(int state) {
+ *         this.state = state;
+ *     }
+ *
+ *     public int getState() {
+ *         return state;
+ *     }
+ *
+ *     {@literal @}TargetField
+ *     public static ClientState getClientState(int state) {
+ *        for (ClientState clientState : values()) {
+ *             if (clientState.state == state) {
+ *                 return clientState;
+ *             }
+ *         }
+ *         throw new IllegalStateException("Unknown client with state " + state);
+ *     }
+ * }
+ *
+ * public <b>class ClientDao</b> {
+ *
+ *     // Reform api - dao
+ *     private OrmDao ormDao;
+
+ *     public ClientDao(Connection connection) {
+ *         ormDao = new OrmDao(connection);
+ *     }
+ *
+ *     // SQL SELECT QUERY to load all active clients
+ *     private static final String SELECT_ACTIVE_CLIENTS_QUERY = "SELECT id, name, state FROM clients WHERE state = ?";
+ *
+ *     public List<Client> loadActiveClients() throws Exception {
+ *         return ormDao.<b>selectList</b>(Client.class, SELECT_ACTIVE_CLIENTS_QUERY, ClientState.ACTIVE);
+ *     }
+ *
+ *     // SQL SELECT QUERY to find client
+ *     private static final String FIND_CLIENT_QUERY = "SELECT id, name, state FROM clients WHERE id = ?";
+ *
+ *     public Client findClient(long clientId) throws Exception {
+ *         return ormDao.<b>select</b>(Client.class, FIND_CLIENT_QUERY, clientId);
+ *     }
+ *
+ *     // SQL UPDATE QUERY update client name
+ *     private static final String UPDATE_CLIENT_QUERY = "UPDATE clients SET name = ?, state = ? WHERE id = ?";
+ *
+ *     public int updateClientName(long clientId, String clientName, ClientState clientState) throws Exception {
+ *         return ormDao.<b>update</b>(UPDATE_CLIENT_QUERY, clientName, clientState, clientId);
+ *     }
+ *
+ *     // SQL DELETE QUERY delete client by id
+ *     private static final String DELETE_CLIENT_QUERY = "DELETE FROM clients WHERE id = ?";
+ *
+ *     public int deleteClient(long clientId) throws Exception {
+ *         return ormDao.<b>delete</b>(DELETE_CLIENT_QUERY, clientId);
+ *     }
+ *
+ *     // SQL INSERT QUERY insert client
+ *     private static final String INSERT_CLIENT_QUERY = "INSERT INTO clients (id, name, state) VALUES(?, ?, ?)";
+ *
+ *     public void saveClient(long clientId, String clientName, ClientState clientState) throws Exception {
+ *         ormDao.<b>insert</b>(INSERT_CLIENT_QUERY, clientId, clientName, clientState);
+ *     }
+ * }
+ * </code></pre>
  * @author evgenie
  */
 public class OrmDao {
@@ -41,13 +151,63 @@ public class OrmDao {
     /**
      * Select single object with <code>sqlQuery</code> by <code>filters</code>.<br>
      * Example of usage:<pre><code>
-     * // Your Orm class
+     * // Your ORM
      * public class Client {
-     *     private long clientId;
-     *     private String clientName;
-     *     // get/set method ...
+     *
+     *     private long id;
+     *     private String name;
+     *     private ClientState state;
+     *
+     *     public long getId() {
+     *         return id;
+     *     }
+     *     public void setId(long id) {
+     *         this.id = id;
+     *     }
+     *
+     *     public String getName() {
+     *         return name;
+     *     }
+     *     public void setName(String name) {
+     *         this.name = name;
+     *     }
+     *
+     *     public ClientState getState() {
+     *         return state;
+     *     }
+     *     public void setState(ClientState state) {
+     *         this.state = state;
+     *     }
      * }
-     * // Your Dao class
+     *
+     * // Your ENUM of client states
+     * public enum ClientState {
+     *     NEW(0),
+     *     ACTIVE(1),
+     *     BLOCKED(2);
+     *
+     *     {@literal @}TargetField
+     *     private final int state;
+     *
+     *     private ClientState(int state) {
+     *         this.state = state;
+     *     }
+     *
+     *     public int getState() {
+     *         return state;
+     *     }
+     *
+     *     {@literal @}TargetMethod
+     *     public static ClientState getClientState(int state) {
+     *         for (ClientState clientState : values()) {
+     *             if (clientState.state == state) {
+     *                 return clientState;
+     *             }
+     *         }
+     *         throw new IllegalStateException("Unknown client with state " + state);
+     *     }
+     * }
+     * // Your DAO
      * public class ClientDao {
      *
      *     // Reform api - dao
@@ -56,10 +216,11 @@ public class OrmDao {
      *     public ClientDao(Connection connection) {
      *         ormDao = new OrmDao(connection);
      *     }
-     *     // SQL SELECT QUERY to find client
-     *     private static final String FIND_CLIENT_QUERY = "SELECT client_id, client_name FROM clients WHERE client_id = ?";
      *
-     *     public Client findClient(long clientId) {
+     *     // SQL SELECT QUERY to find client
+     *     private static final String FIND_CLIENT_QUERY = "SELECT id, name, state FROM clients WHERE id = ?";
+     *
+     *     public Client findClient(long clientId) throws Exception {
      *         return ormDao.select(Client.class, FIND_CLIENT_QUERY, clientId);
      *     }
      * }
@@ -71,7 +232,7 @@ public class OrmDao {
      *        BigInteger.class, BigDecimal.class, java.sql.Date.class, java.sql.Timestamp.class, java.sql.Time.class, java.util.Date.class
      *        byte[].class, <i>YourOrm.class</i><br>
      *
-     * @param sqlQuery - sql select query. For example: '<code>SELECT client_id, client_name FROM clients WHERE client_id = ?</code>';
+     * @param sqlQuery - sql select query. For example: '<code>SELECT id, name, state FROM clients WHERE id = ?</code>';
      * @param filters - filter values for select query. In the example above clientId in <code>findClient</code> method is filter value
      * @return single object of ormClass type
      * @throws Exception any exception, SQLException, ReflectiveOperationException and other
@@ -81,9 +242,312 @@ public class OrmDao {
     }
 
     /**
+     * Select list of objects with <code>sqlQuery</code> by <code>filters</code>.<br>
+     * Example of usage:<pre><code>
+     * // Your ORM
+     * public class Client {
+     *
+     *     private long id;
+     *     private String name;
+     *     private ClientState state;
+     *
+     *     public long getId() {
+     *         return id;
+     *     }
+     *     public void setId(long id) {
+     *         this.id = id;
+     *     }
+     *
+     *     public String getName() {
+     *         return name;
+     *     }
+     *     public void setName(String name) {
+     *         this.name = name;
+     *     }
+     *
+     *     public ClientState getState() {
+     *         return state;
+     *     }
+     *     public void setState(ClientState state) {
+     *         this.state = state;
+     *     }
+     * }
+     *
+     * // Your ENUM of client states
+     * public enum ClientState {
+     *     NEW(0),
+     *     ACTIVE(1),
+     *     BLOCKED(2);
+     *
+     *     {@literal @}TargetField
+     *     private final int state;
+     *
+     *     private ClientState(int state) {
+     *         this.state = state;
+     *     }
+     *
+     *     public int getState() {
+     *         return state;
+     *     }
+     *
+     *     {@literal @}TargetMethod
+     *     public static ClientState getClientState(int state) {
+     *         for (ClientState clientState : values()) {
+     *             if (clientState.state == state) {
+     *                 return clientState;
+     *             }
+     *         }
+     *         throw new IllegalStateException("Unknown client with state " + state);
+     *     }
+     * }
+     * // Your DAO
+     * public class ClientDao {
+     *
+     *     // Reform api - dao
+     *     private OrmDao ormDao;
+     *
+     *     public ClientDao(Connection connection) {
+     *         ormDao = new OrmDao(connection);
+     *     }
+     *
+     *     // SQL SELECT QUERY to load all active clients
+     *     private static final String SELECT_ACTIVE_CLIENTS_QUERY = "SELECT id, name, state FROM clients WHERE state = ?";
+     *
+     *     public List<Client> loadActiveClients() throws Exception {
+     *         return ormDao.selectList(Client.class, SELECT_ACTIVE_CLIENTS_QUERY, ClientState.ACTIVE);
+     *     }
+     * }
+     * </code></pre>
+     *
+     * @param ormClass - type of object. Supported types:<br>
+     *        Boolean.class, boolean.class, Byte.class, byte.class, Short.class, short.class, Integer.class, int.class,
+     *        Float.class, float.class, Double.class, double.class, Long.class, long.class, Enum.class, String.class,
+     *        BigInteger.class, BigDecimal.class, java.sql.Date.class, java.sql.Timestamp.class, java.sql.Time.class, java.util.Date.class
+     *        byte[].class, <i>YourOrm.class</i><br>
+     *
+     * @param sqlQuery - sql select query. For example: '<code>SELECT id, name, state FROM clients WHERE state = ?</code>';
+     * @param filters - filter values for select query. In the example above clientId in <code>findClient</code> method is filter value
+     * @return single object of ormClass type
+     * @throws Exception any exception, SQLException, ReflectiveOperationException and other
+     */
+    public <OrmType> List<OrmType> selectList(Class<OrmType> ormClass, String sqlQuery, Object ... filters) throws Exception {
+        return selectOrms(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterSequence(filters));
+    }
+
+    /**
+     * Select object iterator with <code>sqlQuery</code> by <code>filters</code>.<br>
+     * Example of usage:<pre><code>
+     * // Your ORM
+     * public class Client {
+     *
+     *     private long id;
+     *     private String name;
+     *     private ClientState state;
+     *
+     *     public long getId() {
+     *         return id;
+     *     }
+     *     public void setId(long id) {
+     *         this.id = id;
+     *     }
+     *
+     *     public String getName() {
+     *         return name;
+     *     }
+     *     public void setName(String name) {
+     *         this.name = name;
+     *     }
+     *
+     *     public ClientState getState() {
+     *         return state;
+     *     }
+     *     public void setState(ClientState state) {
+     *         this.state = state;
+     *     }
+     * }
+     *
+     * // Your ENUM of client states
+     * public enum ClientState {
+     *     NEW(0),
+     *     ACTIVE(1),
+     *     BLOCKED(2);
+     *
+     *     {@literal @}TargetField
+     *     private final int state;
+     *
+     *     private ClientState(int state) {
+     *         this.state = state;
+     *     }
+     *
+     *     public int getState() {
+     *         return state;
+     *     }
+     *
+     *     {@literal @}TargetMethod
+     *     public static ClientState getClientState(int state) {
+     *         for (ClientState clientState : values()) {
+     *             if (clientState.state == state) {
+     *                 return clientState;
+     *             }
+     *         }
+     *         throw new IllegalStateException("Unknown client with state " + state);
+     *     }
+     * }
+     * // Your DAO
+     * public class ClientDao {
+     *
+     *     // Reform api - dao
+     *     private OrmDao ormDao;
+     *
+     *     public ClientDao(Connection connection) {
+     *         ormDao = new OrmDao(connection);
+     *     }
+     *
+     *    // SQL SELECT QUERY to load all clients
+     *    private static final String SELECT_ALL_CLIENTS_QUERY = "SELECT id, name, state FROM clients";
+     *
+     *    public OrmIterator<Client> loadClients() throws Exception {
+     *        return ormDao.selectIterator(Client.class, SELECT_ALL_CLIENTS_QUERY);
+     *    }
+     * }
+     * </code></pre>
+     *
+     * @param ormClass - type of object. Supported types:<br>
+     *        Boolean.class, boolean.class, Byte.class, byte.class, Short.class, short.class, Integer.class, int.class,
+     *        Float.class, float.class, Double.class, double.class, Long.class, long.class, Enum.class, String.class,
+     *        BigInteger.class, BigDecimal.class, java.sql.Date.class, java.sql.Timestamp.class, java.sql.Time.class, java.util.Date.class
+     *        byte[].class, <i>YourOrm.class</i><br>
+     *
+     * @param sqlQuery - sql select query. For example: '<code>SELECT id, name, state FROM clients WHERE state = ?</code>';
+     * @param filters - filter values for select query. In the example above clientId in <code>findClient</code> method is filter value
+     * @return single object of ormClass type
+     * @throws Exception any exception, SQLException, ReflectiveOperationException and other
+     */
+    public <OrmType> OrmIterator<OrmType> selectIterator(Class<OrmType> ormClass, String sqlQuery, Object ... filters) throws Exception {
+        return selectOrmIterator(ormClass, sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterSequence(filters));
+    }
+
+    /**
+     * Select object iterator with <code>sqlQuery</code> by <code>filters</code>.<br>
+     * Example of usage:<pre><code>
+     * // Your ORM
+     * public class Client {
+     *
+     *     private long id;
+     *     private String name;
+     *     private ClientState state;
+     *
+     *     public long getId() {
+     *         return id;
+     *     }
+     *     public void setId(long id) {
+     *         this.id = id;
+     *     }
+     *
+     *     public String getName() {
+     *         return name;
+     *     }
+     *     public void setName(String name) {
+     *         this.name = name;
+     *     }
+     *
+     *     public ClientState getState() {
+     *         return state;
+     *     }
+     *     public void setState(ClientState state) {
+     *         this.state = state;
+     *     }
+     * }
+     *
+     * // Your ENUM of client states
+     * public enum ClientState {
+     *     NEW(0),
+     *     ACTIVE(1),
+     *     BLOCKED(2);
+     *
+     *     {@literal @}TargetField
+     *     private final int state;
+     *
+     *     private ClientState(int state) {
+     *         this.state = state;
+     *     }
+     *
+     *     public int getState() {
+     *         return state;
+     *     }
+     *
+     *     {@literal @}TargetMethod
+     *     public static ClientState getClientState(int state) {
+     *         for (ClientState clientState : values()) {
+     *             if (clientState.state == state) {
+     *                 return clientState;
+     *             }
+     *         }
+     *         throw new IllegalStateException("Unknown client with state " + state);
+     *     }
+     * }
+     * // Your handler of client
+     * public class ClientHandler implements OrmHandler<Client> {
+     *
+     *     private int index;
+     *
+     *     {@literal @}Override
+     *     public void startHandle() {
+     *         index = 0;
+     *         System.out.println("beging...");
+     *     }
+
+     *     {@literal @}Override
+     *     public boolean handleOrm(Client dbClient) {
+     *         index++;
+     *         System.out.println("Load client: " + dbClient);
+     *         return true;
+     *     }
+     *
+     *     {@literal @}Override
+     *     public void endHandle() {
+     *         System.out.println("end... Total: " + index);
+     *     }
+     * }
+     * // Your DAO
+     * public class ClientDao {
+     *
+     *     // Reform api - dao
+     *     private OrmDao ormDao;
+     *
+     *     public ClientDao(Connection connection) {
+     *         ormDao = new OrmDao(connection);
+     *     }
+     *
+     *    // SQL SELECT QUERY to load all clients
+     *    private static final String SELECT_ALL_CLIENTS_QUERY = "SELECT id, name, state FROM clients";
+     *
+     *    public void processClients(ClientHandler clientHandler) throws Exception {
+     *        ormDao.selectAndHandle(Client.class, SELECT_ALL_CLIENTS_QUERY, clientHandler);
+     *    }
+     *
+     * }
+     * </code></pre>
+     *
+     * @param ormClass - type of object. Supported types:<br>
+     *        Boolean.class, boolean.class, Byte.class, byte.class, Short.class, short.class, Integer.class, int.class,
+     *        Float.class, float.class, Double.class, double.class, Long.class, long.class, Enum.class, String.class,
+     *        BigInteger.class, BigDecimal.class, java.sql.Date.class, java.sql.Timestamp.class, java.sql.Time.class, java.util.Date.class
+     *        byte[].class, <i>YourOrm.class</i><br>
+     *
+     * @param sqlQuery - sql select query. For example: '<code>SELECT id, name, state FROM clients WHERE state = ?</code>';
+     * @param filters - filter values for select query. In the example above clientId in <code>findClient</code> method is filter value
+     * @return single object of ormClass type
+     * @throws Exception any exception, SQLException, ReflectiveOperationException and other
+     */
+    public <OrmType> void selectAndHandle(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, Object ... filters) throws Exception {
+        handleSelectedOrms(ormClass, sqlQuery, handler, DEFAULT_COLUMNS_FILTER, new FilterSequence(filters));
+    }
+
+    /**
      * Update records with <code>sqlQuery</code> by <code>values</code>.
      * Example of usage:<pre><code>
-     * // Your Dao class
+     * // Your ORM
      * public class ClientDao {
      *
      *     // Reform api - dao
@@ -93,14 +557,13 @@ public class OrmDao {
      *         ormDao = new OrmDao(connection);
      *     }
      *     // SQL UPDATE QUERY update client name
-     *     private static final String UPDATE_CLIENT_NAME_QUERY = "UPDATE clients SET client_name = ? WHERE client_id = ?";
+     *     private static final String UPDATE_CLIENT_QUERY = "UPDATE clients SET name = ?, state = ? WHERE id = ?";
      *
-     *     public int updateClientName(long clientId, String clientName) {
-     *         return ormDao.update(UPDATE_CLIENT_NAME_QUERY, clientName, clientId);
+     *     public int updateClientName(long clientId, String clientName, ClientState clientState) throws Exception {
+     *         return ormDao.update(UPDATE_CLIENT_QUERY, clientName, clientState, clientId);
      *     }
-     * }
      * </code></pre>
-     * @param sqlQuery - sql update query. For example: '<code>UPDATE clients SET client_name = ? WHERE client_id = ?</code>';
+     * @param sqlQuery - sql update query. For example: '<code>UPDATE clients SET name = ?, state = ? WHERE id = ?</code>';
      * @param values   - values to update AND filter records. In the example above in <code>updateClientName</code> method clientName is update source, clientId is filter value
      * @return count of updating records
      * @throws Exception any exception, SQLException, ReflectiveOperationException and other
@@ -112,7 +575,7 @@ public class OrmDao {
     /**
      * Delete records with <code>sqlQuery</code> by <code>filters</code>.
      * Example of usage:<pre><code>
-     * // Your Dao class
+     * // Your ORM
      * public class ClientDao {
      *
      *     // Reform api - dao
@@ -122,14 +585,14 @@ public class OrmDao {
      *         ormDao = new OrmDao(connection);
      *     }
      *     // SQL DELETE QUERY delete client by id
-     *     private static final String DELETE_CLIENT_QUERY = "DELETE FROM clients WHERE client_id = ?";
+     *     private static final String DELETE_CLIENT_QUERY = "DELETE FROM clients WHERE id = ?";
      *
-     *     public int deleteClient(long clientId) {
+     *     public int deleteClient(long clientId) throws Exception {
      *         return ormDao.delete(DELETE_CLIENT_QUERY, clientId);
      *     }
      * }
      * </code></pre>
-     * @param sqlQuery - sql delete query. For example: '<code>DELETE FROM clients WHERE client_id = ?</code>';
+     * @param sqlQuery - sql delete query. For example: '<code>DELETE FROM clients WHERE id = ?</code>';
      * @param filters  - filter values for delete query.
      * @return count of deleting records
      * @throws Exception any exception, SQLException, ReflectiveOperationException and other
@@ -141,7 +604,7 @@ public class OrmDao {
     /**
      * Insert record with <code>sqlQuery</code> by <code>values</code>.
      * Example of usage:<pre><code>
-     * // Your Dao class
+     * // Your ORM
      * public class ClientDao {
      *
      *     // Reform api - dao
@@ -151,10 +614,10 @@ public class OrmDao {
      *         ormDao = new OrmDao(connection);
      *     }
      *     // SQL INSERT QUERY insert client
-     *     private static final String INSERT_CLIENT_QUERY = "INSERT INTO clients (client_id, client_name) VALUES(?, ?)";
+     *     private static final String INSERT_CLIENT_QUERY = "INSERT INTO clients (id, name, state) VALUES(?, ?, ?)";
      *
-     *     public void insertClient(long clientId, String clientName) {
-     *         return ormDao.insert(INSERT_CLIENT_QUERY, clientId, clientName);
+     *     public void saveClient(long clientId, String clientName, ClientState clientState) throws Exception {
+     *         ormDao.insert(INSERT_CLIENT_QUERY, clientId, clientName, clientState);
      *     }
      * }
      * </code></pre>
