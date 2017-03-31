@@ -25,7 +25,7 @@ Why the project is useful:
  ~~~~~~~~~~~~~~~~
 
  [source,java]
- ----
+----
  package com.reforms.example;
 
  /** Your ORM */
