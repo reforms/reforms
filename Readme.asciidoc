@@ -7,28 +7,62 @@ Hello, its RefOrms framework.
 
 What the project does:
 ~~~~~~~~~~~~~~~~~~~~~
-
-Project help you write pretty full SQL and map result to your ORM data.
-Project contains SQL-92 parser (select query only), SelectQuery as AST tree
-Project contains api to contains SQL with your filters
-Project contains api to map SQL results to yout Orm classes
+[square]
+* Project helps you *map* your *SQL* query to your *ORM* data.
+* Project contains SQL-92 parser to *select*, *update*, *insert* and *delete queries*.
 
 Why the project is useful:
 ~~~~~~~~~~~~~~~~~~~~~~~~~
+[square]
+* It's powerfull instrument which helps you to take all from *SQL* and map it to *ORM*.
+* It's not hibernate, it's not DDL (like JOOQ) it's only *SQL* to *ORM*.
 
-It's powerfull instrument help you to take all from SQL and put it to ORM.
-It's not hibernate, it's not DDL (like JOOQ) its only SQL to ORM
-How users can get started with the project
-Download reforms.jar and include it to your project.
+How users can get started with the project:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Download *reforms.jar* and include it to your project.
 
-Example of usage
-~~~~~~~~~~~~~~~~
+Concept of Usage as Best Practices:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[square]
+* One dependency: *reforms.jar* for all needs
+* One class *com.reforms.orm.OrmDao* for most of needs
+* Usaging *annotated* code as *little* as possible
+* *Simple*, but *powerfull sintaxes* for mapping selecting columns to orm fields
+* *Reusable* sql query for *difference* filters
 
+Short example:
+~~~~~~~~~~~~~~
+[source,java]
+----
+// Find client using id
+private static final String FIND_CLIENT_QUERY = "SELECT id, name, state FROM clients WHERE id = ?";
+
+public Client findClient(long clientId) throws Exception {
+    // In constructor: ormDao = new com.reforms.orm.OrmDao(connection);
+    return ormDao.select(Client.class, FIND_CLIENT_QUERY, clientId);
+}
+----
+
+Job for You and Job for RefOrms:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[options="header,middle,autowidth"]
+|===
+| N | Task | Your job | RefOrms job | Example and Details
+| 1 | ORM class | + | - | <<E1,_Clien.java_>>
+| 2 | SQL query | + | - | _SELECT, INSERT, UPDATE, DELETE queries_
+| 3 | DAO class | + | - | <<E4,_ClienDao.java_>>
+| 3 | Setting values to PreparedStaement | - | + | _ps.setLong("id", 1L);_
+| 4 | Reading values from ResultSet | - | + | _rs.getLong("id");_
+| 5 | Map ResultSet to ORM class | - | + | _rs -> ORM_
+|===
+
+Full Example of usage
+~~~~~~~~~~~~~~~~~~~~~
+[[E1]]*1. Your ORM*
 [source,java]
 ----
  package com.reforms.example;
 
- /** Your ORM */
  public class Client {
 
     private long id;
@@ -61,13 +95,15 @@ Example of usage
         this.state = state;
     }
 }
-
+----
+*2. Your ENUM (part of orm)*
+[source,java]
+----
 package com.reforms.example;
 
 import com.reforms.ann.TargetField;
 import com.reforms.ann.TargetMethod;
 
-/** Your ENUM of client states */
 public enum ClientState {
     NEW(0),
     ACTIVE(1),
@@ -94,12 +130,14 @@ public enum ClientState {
         throw new IllegalStateException("Unknown client with state " + state);
     }
 }
-
+----
+*3. Your ORM Handler (if need)*
+[source,java]
+----
 package com.reforms.example;
 
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 
-/** Your Handler if need */
 public class ClientHandler implements OrmHandler<Client> {
 
     private int index;
@@ -122,7 +160,10 @@ public class ClientHandler implements OrmHandler<Client> {
         System.out.println("end... Total: " + index);
     }
 }
-
+----
+[[E4]]*4. Your DAO*
+[source,java]
+----
 package com.reforms.example;
 
 import com.reforms.orm.OrmDao;
@@ -131,7 +172,6 @@ import com.reforms.orm.dao.bobj.model.OrmIterator;
 import java.sql.Connection;
 import java.util.List;
 
-/** Your DAO */
 public class ClientDao {
 
     // Reform api - dao
@@ -141,14 +181,14 @@ public class ClientDao {
         ormDao = new OrmDao(connection);
     }
 
-    // SQL SELECT QUERY to load all active clients
+    // Load all active clients
     private static final String SELECT_ACTIVE_CLIENTS_QUERY = "SELECT id, name, state FROM clients WHERE state = ?";
 
     public List<Client> loadActiveClients() throws Exception {
         return ormDao.selectList(Client.class, SELECT_ACTIVE_CLIENTS_QUERY, ClientState.ACTIVE);
     }
 
-    // SQL SELECT QUERY to load all clients
+    // Load all clients
     private static final String SELECT_ALL_CLIENTS_QUERY = "SELECT id, name, state FROM clients";
 
     public OrmIterator<Client> loadClients() throws Exception {
@@ -159,28 +199,28 @@ public class ClientDao {
         ormDao.selectAndHandle(Client.class, SELECT_ALL_CLIENTS_QUERY, clientHandler);
     }
 
-    // SQL SELECT QUERY to find client
+    // Find client using id
     private static final String FIND_CLIENT_QUERY = "SELECT id, name, state FROM clients WHERE id = ?";
 
     public Client findClient(long clientId) throws Exception {
         return ormDao.select(Client.class, FIND_CLIENT_QUERY, clientId);
     }
 
-    // SQL UPDATE QUERY update client name
+    // Update client name and state
     private static final String UPDATE_CLIENT_QUERY = "UPDATE clients SET name = ?, state = ? WHERE id = ?";
 
-    public int updateClientName(long clientId, String clientName, ClientState clientState) throws Exception {
+    public int updateClientNameAndState(long clientId, String clientName, ClientState clientState) throws Exception {
         return ormDao.update(UPDATE_CLIENT_QUERY, clientName, clientState, clientId);
     }
 
-    // SQL DELETE QUERY delete client by id
+    // Delete client using id
     private static final String DELETE_CLIENT_QUERY = "DELETE FROM clients WHERE id = ?";
 
     public int deleteClient(long clientId) throws Exception {
         return ormDao.delete(DELETE_CLIENT_QUERY, clientId);
     }
 
-    // SQL INSERT QUERY insert client
+    // Insert new client
     private static final String INSERT_CLIENT_QUERY = "INSERT INTO clients (id, name, state) VALUES(?, ?, ?)";
 
     public void saveClient(long clientId, String clientName, ClientState clientState) throws Exception {
