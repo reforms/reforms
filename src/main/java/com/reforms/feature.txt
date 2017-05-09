@@ -1,2 +1,26 @@
 ПЛАНЫ, ФИШЕЧКИ и РЮШЕЧКИ:
 
+Интерфейсное програмированние:
+
+1. Добавить возможность инъекции в sql-выражение части запроса, указанного в именованном параметре. Пример:
+    final String SELECT_CLIENT_BASE_QUERY =
+            "SELECT cl.id, " +
+            "       cl.name, " +
+            "       addr.id AS address_id, " +
+            "       addr.city, " +
+            "       addr.street, " +
+            "       cl.act_time AS t# " +
+            "  FROM client AS cl, " +
+            "         address AS addr" +
+            "  WHERE cl.address_id = addr.id AND " +
+            "              cl.id = ::client_id AND " +
+            "              cl.act_time >= :t#act_time " +
+            "  ORDER BY cl.id ASC";
+
+    @TargetQuery(
+            type = ST_SELECT,
+            query = SELECT_CLIENT_BASE_QUERY,
+            orm = ClientOrm.class)
+    public List<ClientOrm> loadClients1(@Filter("act_time") Date actTime);
+
+2. Добавить возможность поддержки  транзакций на уровне интерфейсных методов с помощью аннотации Transaction

@@ -7,12 +7,12 @@
     <artifactId>reforms</artifactId>
     <name>Module reforms</name>
 
-    <version>2017.01</version>
+    <version>2017.05</version>
 
     <properties>
         <!-- Накстройка параметров компиляции -->
-        <compile.source>1.7</compile.source>
-        <compile.target>1.7</compile.target>
+        <compile.source>1.8</compile.source>
+        <compile.target>1.8</compile.target>
         <compile.debug>true</compile.debug>
         <compile.optimize>true</compile.optimize>
         <compile.deprecation>false</compile.deprecation>

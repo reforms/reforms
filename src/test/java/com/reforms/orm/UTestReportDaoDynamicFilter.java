@@ -60,7 +60,7 @@ public class UTestReportDaoDynamicFilter extends GoodsDbTest {
         filters.setPrice(new BigDecimal("100.00"));
         assertReport(SELECT_GOODS_SIMPLE_QUERY, new FilterObject(filters));
     }
-
+ 
     @Test
     public void runTestReportDaoDynamicBobjFilter_full_loadReport_ALL() throws Exception {
         assertFullReport(SELECT_GOODS_SIMPLE_QUERY, new FilterObject(new GoodsFilter()));
