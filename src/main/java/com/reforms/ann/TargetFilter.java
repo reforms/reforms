@@ -15,9 +15,4 @@ public @interface TargetFilter {
      */
     String value() default "";
 
-    /**
-     * Признак того, что это орм фильтр
-     */
-    boolean bobj() default false;
-
 }

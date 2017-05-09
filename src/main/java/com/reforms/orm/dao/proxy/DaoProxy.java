@@ -103,15 +103,13 @@ public class DaoProxy implements InvocationHandler {
             Object argValue = args[index];
             TargetFilter filter = findTargetFilter(index, method);
             if (filter != null) {
-                if (filter.bobj()) {
-                    daoAdapter.setFilterObject(argValue);
-                    continue;
-                }
                 String filterName = filter.value();
                 if (! filterName.isEmpty()) {
                     daoAdapter.addFilterPair(filterName, argValue);
                     continue;
                 }
+                daoAdapter.setFilterObject(argValue);
+                continue;
             }
             if (argValue instanceof Map) {
                 daoAdapter.addFilterPairs((Map<String, Object>) argValue);
@@ -136,15 +134,13 @@ public class DaoProxy implements InvocationHandler {
             Object argValue = args[index];
             TargetFilter filter = findTargetFilter(index, method);
             if (filter != null) {
-                if (filter.bobj()) {
-                    daoAdapter.setUpdateObject(argValue);
-                    continue;
-                }
                 String filterName = filter.value();
                 if (! filterName.isEmpty()) {
                     daoAdapter.addUpdatePair(filterName, argValue);
                     continue;
                 }
+                daoAdapter.setUpdateObject(argValue);
+                continue;
             }
             if (argValue instanceof Map) {
                 daoAdapter.addUpdatePairs((Map<String, Object>) argValue);
@@ -170,15 +166,13 @@ public class DaoProxy implements InvocationHandler {
             Object argValue = args[index];
             TargetFilter filter = findTargetFilter(index, method);
             if (filter != null) {
-                if (filter.bobj()) {
-                    daoAdapter.setInsertObject(argValue);
-                    continue;
-                }
                 String filterName = filter.value();
                 if (! filterName.isEmpty()) {
                     daoAdapter.addInsertPair(filterName, argValue);
                     continue;
                 }
+                daoAdapter.setInsertObject(argValue);
+                continue;
             }
             if (argValue instanceof Map) {
                 daoAdapter.addInsertPairs((Map<String, Object>) argValue);

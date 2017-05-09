@@ -22,9 +22,11 @@ INSERT INTO address (id, city, street) VALUES (1, 'Москва', 'Лужник�
 INSERT INTO address (id, city, street) VALUES (2, 'Москва', 'Конова');
 INSERT INTO address (id, city, street) VALUES (3, 'Москва', 'Кантемировская');
 INSERT INTO address (id, city, street) VALUES (4, 'Москва', 'Левая');
+INSERT INTO address (id, city, street) VALUES (5, 'Москва', 'Правая');
 
 -- Добавляем клиентов
 INSERT INTO client (id, name, address_id, act_time) VALUES (1, 'Пупкин Иван Иванович', 1, {ts '2017-01-01 19:12:01.69'});
 INSERT INTO client (id, name, address_id, act_time) VALUES (2, 'Остапов Никалай Сергеевич', 2, {ts '2017-01-01 19:12:01.69'});
 INSERT INTO client (id, name, address_id, act_time) VALUES (3, 'Павлов Никалай Валерьевич', 3, {ts '2017-01-01 19:12:01.69'});
 INSERT INTO client (id, name, address_id, act_time) VALUES (4, 'Дронов Павел Валерьевич', 4, {ts '2017-01-01 19:12:01.69'});
+INSERT INTO client (id, name, address_id, act_time) VALUES (5, 'Дронов Сергей Валерьевич', 5, {ts '2017-01-01 19:12:01.69'});

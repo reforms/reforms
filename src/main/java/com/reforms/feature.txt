@@ -2,7 +2,7 @@
 
 Интерфейсное програмированние:
 
-Добавить возможность инъекции в sql-выражение части запроса, указанного в именованном параметре. Пример:
+1. Добавить возможность инъекции в sql-выражение части запроса, указанного в именованном параметре. Пример:
     final String SELECT_CLIENT_BASE_QUERY =
             "SELECT cl.id, " +
             "       cl.name, " +
@@ -22,3 +22,5 @@
             query = SELECT_CLIENT_BASE_QUERY,
             orm = ClientOrm.class)
     public List<ClientOrm> loadClients1(@Filter("act_time") Date actTime);
+
+2. Добавить возможность поддержки  транзакций на уровне интерфейсных методов с помощью аннотации Transaction

@@ -6,6 +6,7 @@ import com.reforms.orm.scenario.TestScenarioDao;
 import org.junit.Test;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -147,5 +148,18 @@ public class UTestSimpleClientDao extends TestScenarioDao {
                 "city=Питер, " +
                 "street=Новый, " +
                 "actTime=Sun Jan 01 19:12:01 MSK 2017]", clientOrm1.toString());
+    }
+
+    @Test
+    public void testClientDaoDeleteClient2() throws Exception {
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        ClientOrm client = new ClientOrm();
+        client.setAddressId(6L);
+        client.setCity("Питер");
+        client.setStreet("Новый");
+        client.setId(6L);
+        client.setName("Сухой Иван Сергеевич");
+        client.setActTime(new Date());
+        clientDao.instert(client);
     }
 }
