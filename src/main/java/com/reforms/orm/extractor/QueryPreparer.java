@@ -153,7 +153,9 @@ public class QueryPreparer {
                 String filterName = filterExpr.getFilterName();
                 ColumnAlias filterDetails = filterValueParser.parseColumnAlias(filterName);
                 if (filterDetails == null || filterDetails.getAliasType() == null) {
-                    Object filterValue = values.getPriorityValue(priority, filterName);
+                    int paramNameType = values.getParamNameType(priority);
+                    String preapredName = paramNameConverter.convertName(paramNameType, filterName);
+                    Object filterValue = values.getPriorityValue(priority, preapredName);
                     if (filterValue == null && filterExpr.isStaticFilter() && !filterExpr.isQuestionFlag()) {
                         throw new IllegalStateException("Не возможно установить фильтр '" + filterName + "' для null значения");
                     }

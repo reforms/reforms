@@ -13,7 +13,10 @@ import com.reforms.orm.dao.filter.FilterObject;
 import com.reforms.orm.dao.filter.FilterSequence;
 import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
+import com.reforms.orm.dao.proxy.DaoProxy;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.Map;
 
@@ -872,5 +875,13 @@ public class OrmDao {
 
     public static IOrmDaoAdapter createDao(Object connectionHolder, String sqlQuery) {
         return new OrmDaoAdapter(connectionHolder, sqlQuery);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <Interfaze> Interfaze createDao(Object connectionHolder, Class<Interfaze> daoInterface) {
+        ClassLoader classLoader = daoInterface.getClassLoader();
+        Class<?>[] daoClasses = new Class[]{daoInterface};
+        InvocationHandler handler = new DaoProxy(connectionHolder, daoInterface);
+        return (Interfaze) Proxy.newProxyInstance(classLoader, daoClasses, handler);
     }
 }
