@@ -238,7 +238,7 @@ public class ClientDao {
 ----
 
 Any Examples
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~
 
 *1. Mapping selecting column values to orm fields, in case, all orm field names differ from column names*
 [source,sql]
