@@ -29,18 +29,25 @@ Concept of Usage as Best Practices:
 * Usaging *annotated* code as *little* as possible
 * *Simple*, but *powerfull sintaxes* for mapping selecting columns to orm fields
 * *Reusable* sql query for *difference* filters
+* Usaging *Interface programming* style as technic of coding
 
 Short example:
 ~~~~~~~~~~~~~~
 [source,java]
 ----
-// Find client using id
-private static final String FIND_CLIENT_QUERY = "SELECT id, name, state FROM clients WHERE id = ?";
-
-public Client findClient(long clientId) throws Exception {
-    // In constructor: ormDao = new com.reforms.orm.OrmDao(connection);
-    return ormDao.select(Client.class, FIND_CLIENT_QUERY, clientId);
+// 1. Common dao style: Inside your client ClintDao class
+public Client findClientById(long clientId) throws Exception {
+    com.reforms.orm.OrmDao ormDao = new com.reforms.orm.OrmDao(connection);
+    return ormDao.select(Client.class,
+                         "SELECT id, name, state FROM clients WHERE id = ?",
+                         clientId);
 }
+
+// 2. Interface programming style: Inside your IClientDao dao interface
+@TargetQuery(
+    type = ST_SELECT,
+    query = "SELECT id, name, state FROM clients WHERE name = ?")
+public Client findClientByName(String clientName);
 ----
 
 Job for You and Job for RefOrms:
@@ -161,7 +168,7 @@ public class ClientHandler implements OrmHandler<Client> {
     }
 }
 ----
-[[E4]]*4. Your DAO*
+[[E4]]*4. Your DAO
 [source,java]
 ----
 package com.reforms.example;
@@ -228,4 +235,29 @@ public class ClientDao {
     }
 
 }
+----
+
+Any Examples
+~~~~~~~~~~~~~~
+
+*1. Mapping selecting column values to orm fields, in case, all orm field names differ from column names*
+[source,sql]
+----
+SELECT  cl.id AS cid:clientId,                  -- map column 'cl.id' to 'clientId' orm field
+                                                -- client.setClientId(cl.id);
+                                                -- cid - as clause name in result sql query: SELECT cl.id AS cid,...
+        cl.name AS clientName,                  -- map column 'cl.name' to 'clientName' orm field
+                                                -- client.setClientName(cl.name);
+        addr.id AS clientAddress.addressId,     -- map column 'addr.id' to 'addressId' orm field inside of clientAddress orm
+                                                -- client.getClientAddress().setAddressId(addr.id);
+        addr.city AS clientAddress.refCity,     -- map column 'addr.city' to 'refCity' orm field inside of clientAddress orm
+                                                -- client.getClientAddress().setCity(addr.city)
+        addr.street AS clientAddress.refStreet, -- map column 'addr.street' to 'refStreet' orm field inside of clientAddress orm
+                                                -- client.getClientAddress().setRefstreet(addr.street)
+        cl.act_time AS t#logDate                -- map column 'cl.act_time' to 'logDate' orm field
+                                                -- client.setLogDate(cl.act_time);
+                                                -- t# - direct type of act_time - java.util.Date based on java.sql.Timestamp
+
+            FROM client AS cl,
+                 address AS addr
 ----
