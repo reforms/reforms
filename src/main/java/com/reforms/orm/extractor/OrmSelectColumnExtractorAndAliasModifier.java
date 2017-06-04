@@ -4,12 +4,13 @@ import static com.reforms.orm.OrmConfigurator.getInstance;
 
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
+import com.reforms.orm.dao.column.ColumnAlias;
 import com.reforms.orm.dao.column.SelectedColumn;
 import com.reforms.sql.expr.term.ExtendsSelectableExpression;
 import com.reforms.sql.expr.term.ColumnExpression;
 
 /**
- * Для отчетов нужно указывать тип по умолчанию - строковой
+ * Для орм нужно указывать тип как есть
  * @author evgenie
  */
 @ThreadSafe
@@ -31,6 +32,12 @@ public class OrmSelectColumnExtractorAndAliasModifier extends SelectColumnExtrac
     @Override
     protected SelectedColumn fromColumnExpression(int index, ColumnExpression columnExpr) {
         SelectedColumn selectedColumn = super.fromColumnExpression(index, columnExpr);
+        ColumnAlias columnAlias = selectedColumn.getColumnAlias();
+        String javaFieldName = columnAlias.getJavaAliasKey();
+        if (javaFieldName != null) {
+            String lowerCaseFieldName = javaFieldName.toLowerCase();
+            columnAlias.setJavaAliasKey(lowerCaseFieldName);
+        }
         addFieldName(selectedColumn);
         return selectedColumn;
     }

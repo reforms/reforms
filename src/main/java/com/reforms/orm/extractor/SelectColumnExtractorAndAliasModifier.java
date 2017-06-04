@@ -105,10 +105,11 @@ public class SelectColumnExtractorAndAliasModifier {
         String columnName = columnExpr.getColumnName();
         selectedColumn.setIndex(index);
         selectedColumn.setPrefixColumnName(unwrapValue(columnExpr.getPrefix()));
-        selectedColumn.setColumnName(unwrapValue(columnName));
+        String unwrappedColumnName = unwrapValue(columnName);
+        selectedColumn.setColumnName(unwrappedColumnName);
         ColumnAlias cAlias = new ColumnAlias();
         cAlias.setAlias(columnName);
-        cAlias.setJavaAliasKey(columnName);
+        cAlias.setJavaAliasKey(unwrappedColumnName);
         selectedColumn.setColumnAlias(cAlias);
         return selectedColumn;
     }

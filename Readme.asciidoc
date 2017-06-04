@@ -28,11 +28,161 @@ Concept of Usage as Best Practices:
 * One class *com.reforms.orm.OrmDao* for most of needs
 * Usaging *annotated* code as *little* as possible
 * *Simple*, but *powerfull sintaxes* for mapping selecting columns to orm fields
-* *Reusable* sql query for *difference* filters
+* *Reusable* SQL query for *difference* filters
 * Usaging *Interface programming* style as technic of coding
 
-Short example:
-~~~~~~~~~~~~~~
+Job for You and Job for RefOrms:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[options="header,middle,autowidth"]
+|===
+| N | Task | Your job | RefOrms job | Example and Details
+| 1 | ORM class | + | - | <<E1,_Clien.java_>>
+| 2 | SQL query | + | - | _SELECT, INSERT, UPDATE, DELETE queries_
+| 3 | DAO class or DAO interface | + | - | <<E4,_ClienDao.java_>>
+| 4 | Parse SQL query | - | + | Building tree expressions for analysis
+| 5 | Setting values to PreparedStaement | - | + | _ps.setLong("id", 1L);_
+| 6 | Reading values from ResultSet | - | + | _rs.getLong("id");_
+| 7 | Map ResultSet to ORM class | - | + | Using tree expressions convert _rs_ to _ORM_
+|===
+
+Strengths and Features:
+~~~~~~~~~~~~~~~~~~~~~~~
+[square]
+* Selectable columns:
+** Filtering selectable columns in _SELECT_ clause before SQL query execute
+** Mapping selectable columns to _orm fields_ inside your SQL query, using framework rules
+** Mapping selectable columns to _orm fields_ inside your SQL query, using your custom rules
+** Mapping selectable columns to _map data_ inside your SQL query, using framework rules
+** Mapping selectable columns to _map data_ inside your SQL query, using your custom rules
+* Managing of schema inside your SQL query
+* Filtering data in _WHERE/HAVING_ clause
+** _Static_ filters - required filters inside your SQL query: if filter values absent exception will occure
+** _Dynamic_ filters - optional filters inside your SQL query: if filter values absent SQL query will be changed and SQL expressions for missing filter values will be cut from SQL query
+** Filters can be base on _BEAN way_, _DIRECT way_ or _MAP way_
+* Paging data for some dialect of sql
+
+Sintax rules for mapping selecting columns to orm fields inside your SQL query:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+At first, take a look at SQL query below
+[source,sql]
+----
+SELECT client_id, CNAME, state AS client_state FROM clients
+----
+Column *name* map to orm field *name* use next rules:
+[start]
+1. _Under_score_ column to *camelCase* field: _client_id_ -> *clientId*
+2. _UPPERCASE_ column to *lowercase* field: _CNAME_ -> *cname*
+3. _AS clause statement_ has *highest* priority then column: pass:q[<strike>state</strike>] _client_state_  -> *clientState*. Be careful, as clause _name_ converting to field name using _under_score_ to _camelCase_ rule *only*
+[end]
+
+Adapting column *type* to orm field *type* goes through next phases:
+[start]
+1. Determination of type to reading value from ResultSet - base on syntax rules in select statement
+2. Converting value of this type to the relevant field type of orm - base on syntax rules in select statement
+[end]
+
+And
+[start=3]
+3. Always base on syntax rules in select statement inside _AS clause_
+4. Аbsolutely ignoring of column type in your db
+5. Only depends on orm field type
+[end]
+
+Example? At first, take a look at SQL query below
+[source,sql]
+----
+SELECT client_id, client_id AS id, act_time AS t#logTime FROM clients
+----
+and orm class
+[source,java]
+----
+class Client {
+    // ....
+    int clientId;
+    long id;
+    java.util.Date logTime;
+    // ....
+}
+----
+[start]
+1. Column expression '_client_id_' will reading from ResultSet using *clientId* field type - *int*. Java code equivalent: _rs.getInt(1);_
+2. Column expression '_client_id AS id_' will reading from ResultSet using *id* field type - long. Java code equivalent: _rs.getLong(2);_
+3. Column expression '_act_time AS **t#**logTime_' will reading from ResultSet using *t#* directive wich mean 'read as java.sql.Timestamp' and convert read value to java.util.Date, because logTime field declared with this type. Java code equivalent: _new java.util.Date(rs.getTimestamp(3).getTime());_
+[end]
+
+All directives see in table below
+[options="header,middle,autowidth"]
+|===
+| Directive | Java Type
+|  z | boolean
+|  y | byte
+|  x | short
+|  i | int
+|  f | float
+|  w | double
+|  l | long
+|  e | java.lang.Enum (user data concrete type)
+|  s or nothing | java.lang.String (default type for reporting)
+|  n | java.math.BigDecimal
+|  I | java.math.BigInteger
+|  d | java.sql.Date
+|  v | java.sql.Time
+|  t | java.sql.Timestamp
+|  a | java.io.InputStream as AsciiStream
+|  b | java.io.InputStream as BinaryStream
+|  u | User Custome Type, need Registry IReportValueConverter
+|===
+Expected that directive will rarely be used and mainly for date, stream and user types
+
+Sintax rules for filters:
+~~~~~~~~~~~~~~~~~~~~~~~~~
+At first, take a look at SQL query below
+[source,sql]
+----
+SELECT id, name, state FROM clients WHERE id = ?
+----
+Its SQL query in common style for filtering result by id. If we use RefOrms framework terminology we can say that query contains *static* (_required_) filter by id. And if we use RefOrms framework we can (although not necessarily) rewrite SQL query like this:
+[source,sql]
+----
+SELECT id, name, state FROM clients WHERE id = :id
+----
+It's like Hibernate or Spring way. What happens, if id filter value will be absent? Exception occur. And it's correct. But, if we have filter that can be or not to be?
+[source,sql]
+----
+SELECT id, name, state, act_time FROM clients WHERE act_time >= ? AND act_time <= ?
+----
+What then? Then the game enters the dynamic filters. How? Easy.
+[source,sql]
+----
+SELECT id, name, state, act_time FROM clients WHERE act_time >= ::begin_from AND act_time <= ::end_to
+----
+Double colon is way to use dynamic filters. What happens, if _begin_from_ will be absent, but _end_to_  will present? Like below
+[source,sql]
+----
+SELECT id, name, state, act_time FROM clients WHERE act_time <= ?
+----
+If both will absent?
+[source,sql]
+----
+SELECT id, name, state, act_time FROM clients
+----
+Yes. SQL query was modifed. And it's powerfull side of RefOrms framework. You don't need to construct your sql query using _if statement_ in java code. You only declare dynamic or static filters inside SQL query. RefOrms framework supports all SQL-92 predicates with dynamic filters. Few examples
+[source,sql]
+----
+-- 1. IN predicate will be removed if states filter will be absent
+SELECT id, name, state FROM clients WHERE state IN (::states)
+
+-- 2. LIKE predicate will be removed if name filter will be absent
+SELECT id, name, state FROM clients WHERE name LIKE ::name
+
+-- 3. VALUES block predicate will be narrowed down if some filters will be absent OR removed if all filters will be absent
+SELECT id, name, state FROM clients WHERE (id, name) = (::id, ::name)
+
+-- and so on
+----
+
+Short example and two ways usaging reforms framework:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [source,java]
 ----
 // 1. Common dao style: Inside your client ClintDao class
@@ -42,26 +192,13 @@ public Client findClientById(long clientId) throws Exception {
                          "SELECT id, name, state FROM clients WHERE id = ?",
                          clientId);
 }
-
+/** OR */
 // 2. Interface programming style: Inside your IClientDao dao interface
 @TargetQuery(
     type = ST_SELECT,
     query = "SELECT id, name, state FROM clients WHERE name = ?")
 public Client findClientByName(String clientName);
 ----
-
-Job for You and Job for RefOrms:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[options="header,middle,autowidth"]
-|===
-| N | Task | Your job | RefOrms job | Example and Details
-| 1 | ORM class | + | - | <<E1,_Clien.java_>>
-| 2 | SQL query | + | - | _SELECT, INSERT, UPDATE, DELETE queries_
-| 3 | DAO class | + | - | <<E4,_ClienDao.java_>>
-| 3 | Setting values to PreparedStaement | - | + | _ps.setLong("id", 1L);_
-| 4 | Reading values from ResultSet | - | + | _rs.getLong("id");_
-| 5 | Map ResultSet to ORM class | - | + | _rs -> ORM_
-|===
 
 Full Example of usage
 ~~~~~~~~~~~~~~~~~~~~~
@@ -168,7 +305,7 @@ public class ClientHandler implements OrmHandler<Client> {
     }
 }
 ----
-[[E4]]*4. Your DAO
+[[E4]]*4. Your DAO*
 [source,java]
 ----
 package com.reforms.example;
@@ -245,7 +382,7 @@ Any Examples
 ----
 SELECT  cl.id AS cid:clientId,                  -- map column 'cl.id' to 'clientId' orm field
                                                 -- client.setClientId(cl.id);
-                                                -- cid - as clause name in result sql query: SELECT cl.id AS cid,...
+                                                -- cid - as clause name in result SQL query: SELECT cl.id AS cid,...
         cl.name AS clientName,                  -- map column 'cl.name' to 'clientName' orm field
                                                 -- client.setClientName(cl.name);
         addr.id AS clientAddress.addressId,     -- map column 'addr.id' to 'addressId' orm field inside of clientAddress orm

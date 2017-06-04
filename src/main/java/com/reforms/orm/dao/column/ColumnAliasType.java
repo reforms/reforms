@@ -13,6 +13,7 @@ import java.util.Map;
  *  f               - float
  *  w               - double
  *  l               - long
+ *  e               - java.lang.Enum
  *  s or nothing    - java.lang.String
  *  n               - java.math.BigDecimal
  *  I               - java.math.BigInteger

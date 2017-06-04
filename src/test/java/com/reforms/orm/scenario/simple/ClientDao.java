@@ -18,10 +18,10 @@ class ClientDao {
     }
 
     private static final String LOAD_CLIENTS_QUERY =
-            "SELECT cl.id, " +
-            "       cl.name, " +
-            "       addr.id AS address_id, " +
-            "       addr.city, " +
+            "SELECT cl.id AS l#, " +
+            "       cl.nAme, " +
+            "       addr.id AS address_Id, " +
+            "       addr.cITy, " +
             "       addr.street, " +
             "       cl.act_time AS t# " +
             "    FROM client AS cl, " +
