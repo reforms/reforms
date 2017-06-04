@@ -21,6 +21,25 @@ How users can get started with the project:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Download *reforms.jar* and include it to your project.
 
+Short example and two ways usaging reforms framework:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[source,java]
+----
+// 1. Common dao style: Inside your client ClintDao class
+public Client findClientById(long clientId) throws Exception {
+    com.reforms.orm.OrmDao ormDao = new com.reforms.orm.OrmDao(connection);
+    return ormDao.select(Client.class,
+                         "SELECT id, name, state FROM clients WHERE id = ?",
+                         clientId);
+}
+/** OR */
+// 2. Interface programming style: Inside your IClientDao dao interface
+@TargetQuery(
+    type = ST_SELECT,
+    query = "SELECT id, name, state FROM clients WHERE name = ?")
+public Client findClientByName(String clientName);
+----
+
 Concept of Usage as Best Practices:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [square]
@@ -40,7 +59,7 @@ Job for You and Job for RefOrms:
 | 2 | SQL query | + | - | _SELECT, INSERT, UPDATE, DELETE queries_
 | 3 | DAO class or DAO interface | + | - | <<E4,_ClienDao.java_>>
 | 4 | Parse SQL query | - | + | Building tree expressions for analysis
-| 5 | Setting values to PreparedStaement | - | + | _ps.setLong("id", 1L);_
+| 5 | Setting values to PreparedStatement | - | + | _ps.setLong("id", 1L);_
 | 6 | Reading values from ResultSet | - | + | _rs.getLong("id");_
 | 7 | Map ResultSet to ORM class | - | + | Using tree expressions convert _rs_ to _ORM_
 |===
@@ -132,7 +151,7 @@ All directives see in table below
 |  b | java.io.InputStream as BinaryStream
 |  u | User Custome Type, need Registry IReportValueConverter
 |===
-Expected that directive will rarely be used and mainly for date, stream and user types
+Expected that directive will rarely be used and mainly for date, stream and user types.
 
 Sintax rules for filters:
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,7 +165,7 @@ Its SQL query in common style for filtering result by id. If we use RefOrms fram
 ----
 SELECT id, name, state FROM clients WHERE id = :id
 ----
-It's like Hibernate or Spring way. What happens, if id filter value will be absent? Exception occur. And it's correct. But, if we have filter that can be or not to be?
+It's like Hibernate or Spring way. What happens, if *:id* filter value will be absent? Exception occur. And it's correct. But, if we have filter that can be or not to be?
 [source,sql]
 ----
 SELECT id, name, state, act_time FROM clients WHERE act_time >= ? AND act_time <= ?
@@ -156,7 +175,7 @@ What then? Then the game enters the dynamic filters. How? Easy.
 ----
 SELECT id, name, state, act_time FROM clients WHERE act_time >= ::begin_from AND act_time <= ::end_to
 ----
-Double colon is way to use dynamic filters. What happens, if _begin_from_ will be absent, but _end_to_  will present? Like below
+Double colon is way to use dynamic filters. What happens, if *:begin_from* will be absent, but *:end_to*  will present? Like below
 [source,sql]
 ----
 SELECT id, name, state, act_time FROM clients WHERE act_time <= ?
@@ -179,25 +198,6 @@ SELECT id, name, state FROM clients WHERE name LIKE ::name
 SELECT id, name, state FROM clients WHERE (id, name) = (::id, ::name)
 
 -- and so on
-----
-
-Short example and two ways usaging reforms framework:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[source,java]
-----
-// 1. Common dao style: Inside your client ClintDao class
-public Client findClientById(long clientId) throws Exception {
-    com.reforms.orm.OrmDao ormDao = new com.reforms.orm.OrmDao(connection);
-    return ormDao.select(Client.class,
-                         "SELECT id, name, state FROM clients WHERE id = ?",
-                         clientId);
-}
-/** OR */
-// 2. Interface programming style: Inside your IClientDao dao interface
-@TargetQuery(
-    type = ST_SELECT,
-    query = "SELECT id, name, state FROM clients WHERE name = ?")
-public Client findClientByName(String clientName);
 ----
 
 Full Example of usage
