@@ -47,16 +47,16 @@ public class DaoProxy implements InvocationHandler {
             return invokeDefaultMethod(proxy, method, args);
         }
         if (targetQuery != null) {
-            if (ST_SELECT == targetQuery.type()) {
+            if (QT_SELECT == targetQuery.type()) {
                 return processSelectQuery(targetQuery, method, args);
             }
-            if (ST_UPDATE == targetQuery.type()) {
+            if (QT_UPDATE == targetQuery.type()) {
                 return processUpdateQuery(targetQuery, method, args);
             }
-            if (ST_INSERT == targetQuery.type()) {
+            if (QT_INSERT == targetQuery.type()) {
                 return processInsertQuery(targetQuery, method, args);
             }
-            if (ST_DELETE == targetQuery.type()) {
+            if (QT_DELETE == targetQuery.type()) {
                 return processDeleteQuery(targetQuery, method, args);
             }
         } else {

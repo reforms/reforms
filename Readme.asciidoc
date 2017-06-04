@@ -34,9 +34,7 @@ public Client findClientById(long clientId) throws Exception {
 }
 /** OR */
 // 2. Interface programming style: Inside your IClientDao dao interface
-@TargetQuery(
-    type = ST_SELECT,
-    query = "SELECT id, name, state FROM clients WHERE name = ?")
+@TargetQuery(query = "SELECT id, name, state FROM clients WHERE name = ?", type = QT_SELECT)
 public Client findClientByName(String clientName);
 ----
 

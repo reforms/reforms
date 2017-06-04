@@ -16,7 +16,7 @@ import com.reforms.ann.TargetQuery;
 public interface IClientDao {
 
     @TargetQuery(
-            type = ST_SELECT,
+            type = QT_SELECT,
             query =
             "SELECT cl.id, " +
             "       cl.name, " +
@@ -33,7 +33,7 @@ public interface IClientDao {
     public List<ClientOrm> loadClients(Date actTime);
 
     @TargetQuery(
-            type = ST_SELECT,
+            type = QT_SELECT,
             query =
             "SELECT cl.id, " +
             "       cl.name, " +
@@ -65,38 +65,38 @@ public interface IClientDao {
             "  ORDER BY cl.id ASC";
 
     @TargetQuery(
-            type = ST_SELECT,
+            type = QT_SELECT,
             query = SELECT_CLIENT_BASE_QUERY,
             orm = ClientOrm.class)
     public List<ClientOrm> loadClients1(@TargetFilter("act_time") Date actTime);
 
     @TargetQuery(
-            type = ST_SELECT,
+            type = QT_SELECT,
             query = SELECT_CLIENT_BASE_QUERY,
             orm = ClientOrm.class)
     public ClientOrm findClient1(long clientId, Date actTime);
 
     @TargetQuery(
-            type = ST_SELECT,
+            type = QT_SELECT,
             query = SELECT_CLIENT_BASE_QUERY,
             orm = ClientOrm.class)
     public ClientOrm findClient2(Map<String, Object> filters);
 
     @TargetQuery(
-            type = ST_SELECT,
+            type = QT_SELECT,
             query = SELECT_CLIENT_BASE_QUERY,
             orm = ClientOrm.class)
     public ClientOrm findClient2(@TargetFilter ClientFilter filter);
 
     @TargetQuery(
-            type = ST_UPDATE,
+            type = QT_UPDATE,
             query = "UPDATE client " +
                     "   SET name = :name " +
                     "       WHERE id = :id")
     public int updateClient(String name, long clientId);
 
     @TargetQuery(
-            type = ST_UPDATE,
+            type = QT_UPDATE,
             query = "UPDATE address " +
                     "   SET city = :city," +
                     "       street = :street " +
@@ -109,12 +109,12 @@ public interface IClientDao {
     }
 
     @TargetQuery(
-            type = ST_DELETE,
+            type = QT_DELETE,
             query = "DELETE FROM address WHERE id = :id")
     public int deleteClient(long addressId);
 
     @TargetQuery(
-            type = ST_DELETE,
+            type = QT_DELETE,
             query = "DELETE FROM client WHERE id = :id")
     public int deleteAddress(long clientId);
 
@@ -124,12 +124,12 @@ public interface IClientDao {
     }
 
     @TargetQuery(
-            type = ST_INSERT,
+            type = QT_INSERT,
             query = "INSERT INTO address (id, city, street) VALUES (:address_id, :city, :street)")
     public void instertAddress(@TargetFilter ClientOrm client);
 
     @TargetQuery(
-            type = ST_INSERT,
+            type = QT_INSERT,
             query = "INSERT INTO client (id, name, address_id, act_time) VALUES (:id, :name, :address_id, :t#act_time)")
     public void instertClient(@TargetFilter ClientOrm client);
 

@@ -12,7 +12,7 @@ import com.reforms.ann.TargetQuery;
 public interface IClientAddressOrmDao {
 
     @TargetQuery(
-            type = ST_UPDATE,
+            type = QT_UPDATE,
             query = "UPDATE address " +
                     "   SET city = :city," +
                     "       street = :street " +
@@ -20,12 +20,12 @@ public interface IClientAddressOrmDao {
     public int updateAddresOrm(String city, String street, long addressId);
 
     @TargetQuery(
-            type = ST_DELETE,
+            type = QT_DELETE,
             query = "DELETE FROM client WHERE id = :id")
     public int deleteAddressOrm(long clientId);
 
     @TargetQuery(
-            type = ST_INSERT,
+            type = QT_INSERT,
             query = "INSERT INTO address (id, city, street) VALUES (:address_id, :city, :street)")
     public void instertAddressOrm(@TargetFilter ClientOrm client);
 
