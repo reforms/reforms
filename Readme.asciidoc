@@ -19,7 +19,7 @@ Why the project is useful:
 
 How users can get started with the project:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Download *reforms.jar* and include it to your project.
+Download link:https://github.com/RefOrms2017/reforms/blob/dist/dist/2017-06/reforms-2017.06.jar[reforms.jar] and include it to your project.
 
 Short example and two ways usaging reforms framework:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
