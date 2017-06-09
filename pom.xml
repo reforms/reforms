@@ -97,7 +97,6 @@
                     </includes>
                     <excludes>
                         <exclude>**/*$*.class</exclude>
-                        <exclude>**/UTestClassFileParser.class</exclude>
                     </excludes>
                 </configuration>
             </plugin>

@@ -183,7 +183,7 @@ If both will absent?
 ----
 SELECT id, name, state, act_time FROM clients
 ----
-Yes. SQL query was modifed. And it's powerfull side of RefOrms framework. You don't need to construct your sql query using _if statement_ in java code. You only declare dynamic or static filters inside SQL query. RefOrms framework supports all SQL-92 predicates with dynamic filters. Few examples
+Yes. SQL query was modifed. And it's powerfull side of RefOrms framework. You don't need to construct your sql query using _if statement_ in java code. You only declare dynamic or static filters inside SQL query. RefOrms framework supports all SQL-92 predicates (excluding OVERLAPS and MATCH) with dynamic filters. Few examples
 [source,sql]
 ----
 -- 1. IN predicate will be removed if states filter will be absent
