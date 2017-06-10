@@ -20,6 +20,7 @@ import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
  */
 public class DaoProxy implements InvocationHandler {
 
+    /** Довеяет всем */
     private static final Lookup TRUSTED_LOOKUP = getLookupField();
 
     private static Lookup getLookupField() {
