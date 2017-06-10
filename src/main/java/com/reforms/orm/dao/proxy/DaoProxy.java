@@ -35,8 +35,8 @@ public class DaoProxy implements InvocationHandler {
     private Object connectionHolder;
     private Class<?> daoInterface;
 
-    public DaoProxy(Object connectionHolder2, Class<?> daoInterface) {
-        this.connectionHolder = connectionHolder2;
+    public DaoProxy(Object connectionHolder, Class<?> daoInterface) {
+        this.connectionHolder = connectionHolder;
         this.daoInterface = daoInterface;
     }
 
