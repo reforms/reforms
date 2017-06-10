@@ -3,21 +3,13 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com</groupId>
+
+    <groupId>com.github.reforms</groupId>
     <artifactId>reforms</artifactId>
+    <version>2017.06-SNAPSHOT</version>
+
     <name>RefOrms Framework</name>
     <description>Powerfull instrument to work with SQL query and ORM layer</description>
-    <version>2017.06</version>
-
-    <properties>
-        <!-- Накстройка параметров компиляции -->
-        <compile.source>1.8</compile.source>
-        <compile.target>1.8</compile.target>
-        <compile.debug>true</compile.debug>
-        <compile.optimize>true</compile.optimize>
-        <compile.deprecation>false</compile.deprecation>
-        <compile.encoding>UTF8</compile.encoding>
-    </properties>
 
     <dependencies>
         <dependency>
@@ -39,19 +31,8 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <build>
-        <sourceDirectory>src/main/java</sourceDirectory>
-        <testSourceDirectory>src/test/java</testSourceDirectory>
-        <resources>
-            <resource>
-                <directory>${project.build.sourceDirectory}</directory>
-                <includes>
-                    <include>**/*.png</include>
-                    <include>**/*.gif</include>
-                    <include>**/*.properties</include>
-                </includes>
-            </resource>
-        </resources>
         <testResources>
             <testResource>
                 <directory>${project.build.testSourceDirectory}</directory>
@@ -61,29 +42,19 @@
             </testResource>
         </testResources>
         <plugins>
-            <!-- Найстрока плагина ресурсов -->
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <configuration>
-                    <encoding>UTF8</encoding>
-                </configuration>
-            </plugin>
-            <!-- Найстрока процесса компиляции -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
-                <inherited>true</inherited>
                 <configuration>
-                    <source>${compile.source}</source>
-                    <target>${compile.target}</target>
-                    <debug>${compile.debug}</debug>
-                    <optimize>${compile.optimize}</optimize>
-                    <deprecation>${compile.deprecation}</deprecation>
-                    <encoding>${compile.encoding}</encoding>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <debug>true</debug>
+                    <optimize>true</optimize>
+                    <deprecation>false</deprecation>
+                    <encoding>UTF8</encoding>
                 </configuration>
             </plugin>
 
-            <!-- Настройка плагина для автоматического запуска JUnit тестов -->
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.5</version>
