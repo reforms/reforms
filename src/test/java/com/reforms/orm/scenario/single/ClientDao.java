@@ -20,11 +20,6 @@ class ClientDao {
     private static final String LOAD_CLIENT_IDS_QUERY =
             "SELECT cl.id FROM client AS cl ORDER BY 1 ASC";
 
-    /**
-     * Загрузить информацию о клиенте
-     * @param clientId
-     * @return
-     */
     public List<Long> loadClientIds() throws Exception {
         return ormDao.selectSimpleOrms(Long.class, LOAD_CLIENT_IDS_QUERY);
     }
@@ -32,11 +27,6 @@ class ClientDao {
     private static final String LOAD_CLIENT_NAMES_QUERY =
             "SELECT cl.name AS clientName FROM client AS cl ORDER BY 1 ASC";
 
-    /**
-     * Загрузить информацию о клиенте
-     * @param clientId
-     * @return
-     */
     public List<String> loadClientNames() throws Exception {
         return ormDao.selectOrms(String.class, LOAD_CLIENT_NAMES_QUERY);
     }
@@ -44,11 +34,6 @@ class ClientDao {
     private static final String LOAD_CLIENT_CLIENT_ORDER_QUERY =
             "SELECT cl.id FROM client AS cl ORDER BY 1 ASC";
 
-    /**
-     * Загрузить информацию о клиенте
-     * @param clientId
-     * @return
-     */
     public List<ClientOrder> loadClientOrders() throws Exception {
         return ormDao.selectOrms(ClientOrder.class, LOAD_CLIENT_CLIENT_ORDER_QUERY);
     }

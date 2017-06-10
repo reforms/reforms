@@ -76,13 +76,6 @@ public class DaoProxy implements InvocationHandler {
         throw new IllegalStateException("Method '" + method + "' not implemented yet. Class '" + daoInterface + "'");
     }
 
-    /**
-     * @param proxy
-     * @param method
-     * @param args
-     * @return
-     * @throws Throwable
-     */
     private Object invokeDefaultMethod(Object proxy, Method method, Object[] args) throws Throwable {
         if (TRUSTED_LOOKUP == null) {
             throw new IllegalStateException("'TRUSTED_LOOKUP' can not be initialized");

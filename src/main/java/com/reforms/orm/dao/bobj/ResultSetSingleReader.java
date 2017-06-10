@@ -56,11 +56,6 @@ public class ResultSetSingleReader implements IResultSetObjectReader {
         return adaptedValue;
     }
 
-    /**
-     * TODO продумать вопрос, что делать, если колонок больше 1??? Сейчас просто возвращаем первую
-     * @param columns
-     * @return
-     */
     private SelectedColumn findSelectedColumn(List<SelectedColumn> columns) {
         return columns.get(0);
     }

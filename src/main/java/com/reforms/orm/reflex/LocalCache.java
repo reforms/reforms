@@ -22,8 +22,8 @@ public class LocalCache {
 
     /**
      * Умышленно не делаем грамотную синхронизацию
-     * @param clazz
-     * @return
+     * @param clazz класс
+     * @return рефлексор
      */
     public IReflexor getReflexor(Class<?> clazz) {
         IReflexor reflexor = reflexors.get(clazz);
@@ -39,8 +39,8 @@ public class LocalCache {
 
     /**
      * Умышленно не делаем грамотную синхронизацию
-     * @param clazz
-     * @return
+     * @param clazz класс
+     * @return рефлексор
      */
     public IEnumReflexor getEnumReflexor(Class<?> clazz) {
         IEnumReflexor reflexor = enumReflexors.get(clazz);
@@ -56,8 +56,8 @@ public class LocalCache {
 
     /**
      * Умышленно не делаем грамотную синхронизацию
-     * @param clazz
-     * @return
+     * @param clazz класс
+     * @return создатель объектов
      */
     public InstanceCreator getInstanceCreator(Class<?> clazz) {
         InstanceCreator creator = creators.get(clazz);
@@ -73,8 +73,8 @@ public class LocalCache {
 
     /**
      * Умышленно не делаем грамотную синхронизацию
-     * @param clazz
-     * @return
+     * @param clazz класс
+     * @return информатор
      */
     public InstanceInformator getInstanceInformator(Class<?> clazz) {
         InstanceInformator informator = informators.get(clazz);

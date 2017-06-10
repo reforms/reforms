@@ -185,9 +185,9 @@ class DefaultValueCreator implements InvocationHandler {
 
     /**
      * TODO оптимизация: переделать на Map и добавить контракт на создание объекта
-     * @param clazzType
-     * @param index
-     * @return
+     * @param clazzType класс
+     * @param index     индекс
+     * @return объект
      */
     private Object getNextValue(Class<?> clazzType, int index) {
         if (clazzType.isPrimitive()) {

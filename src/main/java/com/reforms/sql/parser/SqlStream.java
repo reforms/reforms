@@ -370,7 +370,7 @@ public class SqlStream {
 
     /**
      * Проверить, что следующий токен одного из указанного значения
-     * @param words возможные варианты
+     * @param checkedWords возможные варианты
      * @return true - следующий токен одного из указанного значения
      */
     public boolean checkIsSpecialWordValueOneOf(String ... checkedWords) {

@@ -46,11 +46,10 @@ public class ReportDao {
 
     /**
      * Не рекомендуется использовать при наличии дианмических фильтров
-     * @param connectionHolder
-     * @param sqlQuery
-     * @param filters
-     * @return
-     * @throws Exception
+     * @param sqlQuery SQL-выражение
+     * @param filters фильтры
+     * @return отчет
+     * @throws Exception ошибка
      */
     public Report loadSimpleReport(String sqlQuery, Object... filters) throws Exception {
         return loadReport(sqlQuery, DEFAULT_COLUMNS_FILTER, new FilterSequence(filters));
