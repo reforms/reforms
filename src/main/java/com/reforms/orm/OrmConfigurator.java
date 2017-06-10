@@ -65,12 +65,12 @@ public class OrmConfigurator {
         T value = (T) SETTINGS.get(clazz.getName());
         if (value == null) {
             if (! clazz.isAnnotationPresent(ThreadSafe.class)) {
-                throw new IllegalStateException("Необходимо указать аннотацию com.reforms.ann.ThreadSafe для класса '" + clazz + "'");
+                throw new IllegalStateException("No com.reforms.ann.ThreadSafe annotation present for class '" + clazz + "'");
             }
             try {
                 value = clazz.newInstance();
             } catch (ReflectiveOperationException roe) {
-                throw new IllegalStateException("Невозможно создать экземпляр класса '" + clazz + "'", roe);
+                throw new IllegalStateException("Unable to create instance of '" + clazz + "'", roe);
             }
             putInstance(clazz, value);
         }
