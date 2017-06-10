@@ -5,7 +5,7 @@
 
     <groupId>com.github.reforms</groupId>
     <artifactId>reforms</artifactId>
-    <version>2017.06.11</version>
+    <version>2017.06-SNAPSHOT</version>
 
     <name>RefOrms Framework</name>
     <description>Powerfull instrument to work with SQL query and ORM layer</description>
