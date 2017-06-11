@@ -15,4 +15,9 @@ public @interface TargetFilter {
      */
     String value() default "";
 
+    /**
+     * Признак того, что параметр содержит массив индексов для фильтрации колонок или реализацию ISelectedColumnFilter
+     */
+    boolean columnFilter() default false;
+
 }
