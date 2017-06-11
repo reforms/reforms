@@ -7,12 +7,14 @@ import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Map;
 
 import com.reforms.ann.TargetFilter;
 import com.reforms.ann.TargetQuery;
 import com.reforms.orm.OrmDao;
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
+import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 
 /**
  * Proxy implementations of dao
@@ -77,13 +79,6 @@ public class DaoProxy implements InvocationHandler {
         throw new IllegalStateException("Method '" + method + "' not implemented yet. Class '" + daoInterface + "'");
     }
 
-    /**
-     * @param proxy
-     * @param method
-     * @param args
-     * @return
-     * @throws Throwable
-     */
     private Object invokeDefaultMethod(Object proxy, Method method, Object[] args) throws Throwable {
         if (TRUSTED_LOOKUP == null) {
             throw new IllegalStateException("'TRUSTED_LOOKUP' can not be initialized");
@@ -118,6 +113,10 @@ public class DaoProxy implements InvocationHandler {
             Object argValue = args[index];
             TargetFilter filter = findTargetFilter(index, method);
             if (filter != null) {
+                if (filter.columnFilter()) {
+                    addSelectableFilter(daoAdapter, index, method, args);
+                    continue;
+                }
                 String filterName = filter.value();
                 if (! filterName.isEmpty()) {
                     daoAdapter.addFilterPair(filterName, argValue);
@@ -132,6 +131,44 @@ public class DaoProxy implements InvocationHandler {
             }
             daoAdapter.addSimpleFilterValues(argValue);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean addSelectableFilter(IOrmDaoAdapter daoAdapter, int index, Method method, Object[] args) {
+        Class<?>[] paramTypes = method.getParameterTypes();
+        // добавляем массив индексов колонок на выборку данных
+        if (paramTypes[index] == int[].class) {
+            daoAdapter.addSelectableIndexes(int[].class.cast(args[index]));
+            return true;
+        }
+        if (paramTypes[index] == Integer[].class) {
+            for (Integer value : Integer[].class.cast(args[index])) {
+                daoAdapter.addSelectableIndex(Integer.class.cast(value));
+            }
+        }
+        // добавляем конкретную колонку на выборку данных
+        if (paramTypes[index] == int.class) {
+            daoAdapter.addSelectableIndex(int.class.cast(args[index]));
+            return true;
+        }
+        if (paramTypes[index] == Integer.class && args[index] != null) {
+            daoAdapter.addSelectableIndex(Integer.class.cast(args[index]));
+            return true;
+        }
+        // добавляем коллекцию индексов колонок на выборку данных
+        if (args[index] instanceof Collection) {
+            for (Object value : (Collection<Object>) args[index]) {
+                if (value instanceof Integer) {
+                    daoAdapter.addSelectableIndex(Integer.class.cast(value));
+                }
+            }
+            return true;
+        }
+        if (args[index] instanceof ISelectedColumnFilter) {
+            daoAdapter.setSelectedColumnFilter(ISelectedColumnFilter.class.cast(args[index]));
+            return true;
+        }
+        return false;
     }
 
     private Object processUpdateQuery(TargetQuery targetQuery, Method method, Object[] args) throws Exception {

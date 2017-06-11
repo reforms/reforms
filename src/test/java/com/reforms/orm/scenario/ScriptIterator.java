@@ -73,7 +73,7 @@ public class ScriptIterator {
      * @param relativePath относительный путь к файлу
      * @param owner класс, относительно расположения которого указывается путь к ресурсу
      * @return файл
-     * @throws IOException
+     * @throws IOException ошибка
      */
     public static ScriptIterator getResourceIterator(String relativePath, Class<?> owner) throws IOException {
         URL resourceUrl = owner.getResource(relativePath);

@@ -37,11 +37,6 @@ public class PrepareStatementValuesSetter {
         return addFilterValue(filterType.getMarker(), value);
     }
 
-    /**
-     *
-     * @param filterValue
-     * @return
-     */
     private ColumnAliasType getFilterType(Object filterValue) {
         String prefix = paramSetterFactory.findParamSetterMarker(filterValue);
         if (prefix != null) {

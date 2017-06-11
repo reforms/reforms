@@ -35,7 +35,7 @@ public class PredicateModifier {
     /**
      * TODO доработка - Будет больше if условий, не только для типа ET_COMPARISON_PREDICATE_EXPRESSION
      * Пример: было 'id = :id_filter?' стало при id_filter = null -> 'id IS NULL'
-     * @param filterExpr
+     * @param filterExpr выражение
      */
     public void changeStaticFilter(Expression filterExpr) {
         Expression predicateExpr = queryTree.getParentExpressionFor(filterExpr);

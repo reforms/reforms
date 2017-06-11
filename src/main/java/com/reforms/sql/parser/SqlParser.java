@@ -111,7 +111,7 @@ public class SqlParser {
 
     /**
      * (SELECT ...) UNION ALL (SELECT )
-     * @return
+     * @return SELECT-запрос
      */
     private SelectQuery parseVariantOfSelectQuery() {
         if (checkIsSubSelectQuery()) {

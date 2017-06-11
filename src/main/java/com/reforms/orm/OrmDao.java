@@ -540,7 +540,6 @@ public class OrmDao {
      *
      * @param sqlQuery - sql select query. For example: '<code>SELECT id, name, state FROM clients WHERE state = ?</code>';
      * @param filters - filter values for select query. In the example above clientId in <code>findClient</code> method is filter value
-     * @return single object of ormClass type
      * @throws Exception any exception, SQLException, ReflectiveOperationException and other
      */
     public <OrmType> void selectAndHandle(Class<OrmType> ormClass, String sqlQuery, OrmHandler<OrmType> handler, Object ... filters) throws Exception {
@@ -625,8 +624,7 @@ public class OrmDao {
      * }
      * </code></pre>
      * @param sqlQuery - sql insert query. For example: '<code>INSERT INTO clients (client_id, client_name) VALUES(?, ?)</code>';
-     * @param filters  - filter values for insert query.
-     * @return count of deleting records
+     * @param values значения
      * @throws Exception any exception, SQLException, ReflectiveOperationException and other
      */
     public void insert(String sqlQuery, Object ... values) throws Exception {

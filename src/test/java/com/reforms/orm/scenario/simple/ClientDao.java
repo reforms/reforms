@@ -29,11 +29,7 @@ class ClientDao {
             "        WHERE cl.address_id = addr.id AND " +
             "              cl.id = ::client_id_param" +
             "            ORDER BY cl.id ASC";
-    /**
-     * Загрузить информацию о клиенте
-     * @param clientId
-     * @return
-     */
+
     public ClientOrm loadClient(long clientId) throws Exception {
         return ormDao.selectSimpleOrm(ClientOrm.class, LOAD_CLIENTS_QUERY, clientId);
     }

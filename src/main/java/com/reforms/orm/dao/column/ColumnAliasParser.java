@@ -63,8 +63,7 @@ public class ColumnAliasParser {
     /**
      * Распарсить алиас. Если filterFlag=true - то это признак того, что это фильтр, а не алиас
      * @param alias      алиас или фильтр
-     * @param filterFlag признак того, что это фильтр
-     * @return
+     * @return алиас
      */
     public ColumnAlias parseColumnAlias(String alias) {
         if (alias == null || alias.isEmpty()) {

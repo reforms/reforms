@@ -114,12 +114,6 @@ public class SelectColumnExtractorAndAliasModifier {
         return selectedColumn;
     }
 
-    /**
-     * TODO доработка: Проверить функции по справочнику. Справочник прогрузить заранее всех известных функций и выражений!
-     * @param index
-     * @param anyExpr
-     * @return колонка для выборки
-     */
     protected SelectedColumn fromAnyExpression(int index, Expression anyExpr) {
         SelectedColumn selectedColumn = new SelectedColumn();
         selectedColumn.setIndex(index);

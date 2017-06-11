@@ -57,8 +57,8 @@ public class OrmConfigurator {
 
     /**
      * TODO не правильная синхронизация
-     * @param clazz
-     * @return
+     * @param clazz класс
+     * @return экземпляр класса
      */
     @SuppressWarnings("unchecked")
     public static <T> T getInstance(Class<T> clazz) {

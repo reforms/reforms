@@ -32,8 +32,8 @@ public class SelectStatementExtractor {
      * Пример 3:
      *      (SELECT 1) UNION ALL (SELECT 2)
      *      Ожидаемый результат selectStatement - 'SELECT 1';
-     * @param selectQuery
-     * @return
+     * @param selectQuery SELECT запрос
+     * @return список колонок
      */
     public SelectStatement extractFirstSelectStatement(SelectQuery selectQuery) {
         // N1

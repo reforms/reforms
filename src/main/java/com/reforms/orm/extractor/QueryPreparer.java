@@ -53,9 +53,9 @@ public class QueryPreparer {
      * TODO оптимизация - требуется оптимизация по работе с деревом выражений, например,
      *                    когда отсутствуют динамические фильтры и nullable-статические
      * TODO рефакторинг - сложно написано
-     * @param selectQuery
-     * @param filters
-     * @return
+     * @param selectQuery SELECT запрос
+     * @param filters     фильтры
+     * @return объект для установки значений в PS
      */
     public PrepareStatementValuesSetter prepareSelectQuery(SelectQuery selectQuery, IFilterValues filters) {
         if (filters == null) {
@@ -127,11 +127,6 @@ public class QueryPreparer {
         return prepareValues(query, values, null);
     }
 
-    /**
-     * @param query
-     * @param values
-     * @return
-     */
     private PrepareStatementValuesSetter prepareValues(Expression query, IPriorityValues values, IPageFilter pageFilter) {
         ParamSetterFactory paramSetterFactory = getInstance(ParamSetterFactory.class);
         PrepareStatementValuesSetter fpss = new PrepareStatementValuesSetter(paramSetterFactory);
