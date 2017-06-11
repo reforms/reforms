@@ -66,6 +66,32 @@ public class UTestProxyClientDao extends TestScenarioDao {
     }
 
     @Test
+    public void testClientDaoColumnIntFilter() throws Exception {
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        Date actTime = new SimpleDateFormat("dd.MM.yyyy").parse("10.10.2016");
+        List<ClientOrm> clients = clientDao.loadClients(new int[] {1, 2}, actTime);
+        ClientOrm clientOrm1 = clients.get(0);
+        // selected first 2 columns
+        assertEquals(1L, clientOrm1.getId());
+        assertEquals("Пупкин Иван Иванович", clientOrm1.getName());
+        // don't seleceted -> to be zero and null
+        assertEquals(0L, clientOrm1.getAddressId());
+        assertNull(clientOrm1.getCity());
+        assertNull(clientOrm1.getStreet());
+        assertNull(clientOrm1.getActTime());
+
+        clients = clientDao.loadClients(new int[] {4, 5}, actTime);
+        clientOrm1 = clients.get(0);
+        // selected first 4 and 5 columns
+        assertEquals(0, clientOrm1.getId());
+        assertNull(clientOrm1.getName());
+        assertEquals(0L, clientOrm1.getAddressId());
+        assertEquals("Москва", clientOrm1.getCity()); // 4
+        assertEquals("Лужники", clientOrm1.getStreet()); // 5
+        assertNull(clientOrm1.getActTime());
+    }
+
+    @Test
     public void testClientDaoFindClient() throws Exception {
         IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
         ClientOrm clientOrm1 = clientDao.findClient(1L, new SimpleDateFormat("dd.MM.yyyy").parse("10.10.2016"));

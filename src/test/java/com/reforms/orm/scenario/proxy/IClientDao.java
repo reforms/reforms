@@ -62,6 +62,23 @@ public interface IClientDao {
             "  FROM client AS cl, " +
             "         address AS addr" +
             "  WHERE cl.address_id = addr.id AND " +
+            "              cl.act_time >= :t#act_time" +
+            "  ORDER BY cl.id ASC",
+            orm = ClientOrm.class)
+    public List<ClientOrm> loadClients(@TargetFilter(columnFilter = true) int[] keepColumns, Date actTime);
+
+    @TargetQuery(
+            type = QT_SELECT,
+            query =
+            "SELECT cl.id, " +
+            "       cl.name, " +
+            "       addr.id AS address_id, " +
+            "       addr.city, " +
+            "       addr.street, " +
+            "       cl.act_time AS t# " +
+            "  FROM client AS cl, " +
+            "         address AS addr" +
+            "  WHERE cl.address_id = addr.id AND " +
             "              cl.id = :client_id AND " +
             "              cl.act_time >= ::t#act_time " +
             "  ORDER BY cl.id ASC",
