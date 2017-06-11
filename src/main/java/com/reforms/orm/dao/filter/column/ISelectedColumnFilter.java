@@ -6,6 +6,7 @@ import com.reforms.orm.dao.column.SelectedColumn;
  * Фильтр на ограничение выбираемых колонок
  * @author evgenie
  */
+@FunctionalInterface
 public interface ISelectedColumnFilter {
 
     /**

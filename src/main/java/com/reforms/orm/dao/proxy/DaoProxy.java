@@ -129,6 +129,10 @@ public class DaoProxy implements InvocationHandler {
                 daoAdapter.addFilterPairs((Map<String, Object>) argValue);
                 continue;
             }
+            if (argValue instanceof ISelectedColumnFilter) {
+                daoAdapter.setSelectedColumnFilter(ISelectedColumnFilter.class.cast(argValue));
+                continue;
+            }
             daoAdapter.addSimpleFilterValues(argValue);
         }
     }

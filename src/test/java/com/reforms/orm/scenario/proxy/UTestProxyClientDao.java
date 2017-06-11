@@ -1,6 +1,8 @@
 package com.reforms.orm.scenario.proxy;
 
 import com.reforms.orm.OrmDao;
+import com.reforms.orm.dao.filter.column.FilterState;
+import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 import com.reforms.orm.scenario.TestScenarioDao;
 
 import org.junit.Test;
@@ -12,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Тестируем выборку для вложенных объектов
@@ -41,6 +44,25 @@ public class UTestProxyClientDao extends TestScenarioDao {
                 "city=Москва, " +
                 "street=Конова, " +
                 "actTime=Sun Jan 01 19:12:01 MSK 2017]", clientOrm2.toString());
+    }
+
+    @Test
+    public void testClientDaoColumnFilter() throws Exception {
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        Date actTime = new SimpleDateFormat("dd.MM.yyyy").parse("10.10.2016");
+        ISelectedColumnFilter keep2columns = column -> {
+            return column.getIndex() <= 2 ? FilterState.FS_ACCEPT : FilterState.FS_REMOVE;
+        };
+        List<ClientOrm> clients = clientDao.loadClients(keep2columns, actTime);
+        ClientOrm clientOrm1 = clients.get(0);
+        // selected first 2 columns
+        assertEquals(1L, clientOrm1.getId());
+        assertEquals("Пупкин Иван Иванович", clientOrm1.getName());
+        // don't seleceted -> to be zero and null
+        assertEquals(0L, clientOrm1.getAddressId());
+        assertNull(clientOrm1.getCity());
+        assertNull(clientOrm1.getStreet());
+        assertNull(clientOrm1.getActTime());
     }
 
     @Test

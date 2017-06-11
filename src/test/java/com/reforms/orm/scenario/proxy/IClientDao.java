@@ -8,6 +8,7 @@ import java.util.Map;
 
 import com.reforms.ann.TargetFilter;
 import com.reforms.ann.TargetQuery;
+import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 
 /**
  * Контракт на получение списка клиентов
@@ -31,6 +32,23 @@ public interface IClientDao {
             "  ORDER BY cl.id ASC",
             orm = ClientOrm.class)
     public List<ClientOrm> loadClients(Date actTime);
+
+    @TargetQuery(
+            type = QT_SELECT,
+            query =
+            "SELECT cl.id, " +
+            "       cl.name, " +
+            "       addr.id AS address_id, " +
+            "       addr.city, " +
+            "       addr.street, " +
+            "       cl.act_time AS t# " +
+            "  FROM client AS cl, " +
+            "         address AS addr" +
+            "  WHERE cl.address_id = addr.id AND " +
+            "              cl.act_time >= :t#act_time" +
+            "  ORDER BY cl.id ASC",
+            orm = ClientOrm.class)
+    public List<ClientOrm> loadClients(ISelectedColumnFilter columnFilter, Date actTime);
 
     @TargetQuery(
             type = QT_SELECT,
