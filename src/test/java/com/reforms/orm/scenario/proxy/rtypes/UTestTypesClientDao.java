@@ -1,6 +1,7 @@
 package com.reforms.orm.scenario.proxy.rtypes;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.*;
 
@@ -73,4 +74,105 @@ public class UTestTypesClientDao extends TestScenarioDao {
         assertEquals("3", info.get(3L));
     }
 
+    @Test
+    public void testListId() {
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        List<Long> ids = clientDao.listClientIds();
+        assertClientIds(ids);
+    }
+
+    @Test
+    public void testSetId() {
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        Set<Long> ids = clientDao.setClientIds();
+        assertClientIds(ids);
+    }
+
+    @Test
+    public void testArrayId() {
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        Long[] ids = clientDao.arrayClientIds();
+        assertClientIds(Arrays.asList(ids));
+    }
+
+    private void assertClientIds(Iterable<Long> it) {
+        Set<Long> info = new HashSet<>();
+        int index = 0;
+        for (Long clId : it) {
+            info.add(clId);
+            index++;
+        }
+        assertEquals(3, index);
+        assertTrue(info.remove(1L));
+        assertTrue(info.remove(2L));
+        assertTrue(info.remove(3L));
+    }
+
+    @Test
+    public void testListNames() {
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        List<String> ids = clientDao.listClientNames(2);
+        assertClientNames(ids);
+    }
+
+    @Test
+    public void testSetNames() {
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        Set<String> names = clientDao.setClientNames(2);
+        assertClientNames(names);
+    }
+
+    @Test
+    public void testArrayNames() {
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        String[] names = clientDao.arrayClientNames(2);
+        assertClientNames(Arrays.asList(names));
+    }
+
+    private void assertClientNames(Iterable<String> it) {
+        Set<String> info = new HashSet<>();
+        int index = 0;
+        for (String clName : it) {
+            info.add(clName);
+            index++;
+        }
+        assertEquals(3, index);
+        assertTrue(info.remove("1"));
+        assertTrue(info.remove("2"));
+        assertTrue(info.remove("3"));
+    }
+
+    @Test
+    public void testListState() {
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        List<ClientState> states = clientDao.listClientState();
+        assertClientState(states);
+    }
+
+    @Test
+    public void testSetState() {
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        Set<ClientState> states = clientDao.setClientState();
+        assertClientState(states);
+    }
+
+    @Test
+    public void testArrayState() {
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        ClientState[] states = clientDao.arrayClientState();
+        assertClientState(Arrays.asList(states));
+    }
+
+    private void assertClientState(Iterable<ClientState> it) {
+        Set<ClientState> info = new HashSet<>();
+        int index = 0;
+        for (ClientState state : it) {
+            info.add(state);
+            index++;
+        }
+        assertEquals(3, index);
+        assertTrue(info.remove(ClientState.ACTIVE));
+        assertTrue(info.remove(ClientState.BLOCKED));
+        assertTrue(info.remove(ClientState.DELETED));
+    }
 }

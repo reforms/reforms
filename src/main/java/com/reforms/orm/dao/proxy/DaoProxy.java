@@ -231,7 +231,7 @@ public class DaoProxy implements InvocationHandler {
         }
         // добавляем конкретную колонку на выборку данных
         if (paramTypes[index] == int.class) {
-            daoAdapter.addSelectableIndex(int.class.cast(args[index]));
+            daoAdapter.addSelectableIndex(Integer.class.cast(args[index]));
             return true;
         }
         if (paramTypes[index] == Integer.class && args[index] != null) {
