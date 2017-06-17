@@ -175,4 +175,18 @@ public class UTestTypesClientDao extends TestScenarioDao {
         assertTrue(info.remove(ClientState.BLOCKED));
         assertTrue(info.remove(ClientState.DELETED));
     }
+
+    @Test
+    public void testClientCount() {
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        int clientCount = clientDao.countClients();
+        assertEquals(3, clientCount);
+    }
+
+    @Test
+    public void testClientIdSum() {
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        int clientIdSum = clientDao.sumClientIds();
+        assertEquals(6, clientIdSum);
+    }
 }

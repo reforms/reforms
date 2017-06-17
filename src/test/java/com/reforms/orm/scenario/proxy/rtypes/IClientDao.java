@@ -61,4 +61,10 @@ public interface IClientDao {
 
     @TargetQuery(ALL_CLIENT_IDS_QUERY)
     public ClientState[] arrayClientState();
+
+    @TargetQuery("SELECT COUNT(*) FROM client")
+    public int countClients();
+
+    @TargetQuery("SELECT SUM(id) FROM client")
+    public int sumClientIds();
 }
