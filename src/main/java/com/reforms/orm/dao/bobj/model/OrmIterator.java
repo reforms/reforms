@@ -20,7 +20,9 @@ public class OrmIterator<OrmType> implements AutoCloseable {
     }
 
     public void prepare() throws SQLException {
-        rs = ps.executeQuery();
+        if (rs == null) {
+            rs = ps.executeQuery();
+        }
     }
 
     public boolean hasNext() throws Exception {

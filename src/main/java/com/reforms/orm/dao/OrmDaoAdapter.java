@@ -3,6 +3,7 @@ package com.reforms.orm.dao;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
@@ -345,6 +346,13 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         IOrmDao dao = new OrmDao();
         DaoSelectContext daoCtx = buildDaoSelectContext(ormClass);
         return dao.loads(daoCtx);
+    }
+
+    @Override
+    public <OrmType> Set<OrmType> set(Class<OrmType> ormClass) throws Exception {
+        IOrmDao dao = new OrmDao();
+        DaoSelectContext daoCtx = buildDaoSelectContext(ormClass);
+        return dao.set(daoCtx);
     }
 
     @Override

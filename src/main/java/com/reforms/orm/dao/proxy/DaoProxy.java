@@ -4,16 +4,21 @@ import static com.reforms.ann.TargetQuery.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.reforms.ann.TargetFilter;
 import com.reforms.ann.TargetQuery;
 import com.reforms.orm.OrmDao;
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
+import com.reforms.orm.dao.bobj.model.OrmHandler;
+import com.reforms.orm.dao.bobj.model.OrmIterator;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 
 /**
@@ -24,6 +29,9 @@ public class DaoProxy implements InvocationHandler {
 
     /** Довеяет всем */
     private static final Lookup TRUSTED_LOOKUP = getLookupField();
+
+    /** Пустой массив */
+    private static final Object[] EMPTY_ARGS = new Object[]{};
 
     private static Lookup getLookupField() {
         try {
@@ -48,6 +56,9 @@ public class DaoProxy implements InvocationHandler {
         TargetQuery targetQuery = method.getAnnotation(TargetQuery.class);
         if (method.isDefault()) {
             return invokeDefaultMethod(proxy, method, args);
+        }
+        if (args == null) {
+            args = EMPTY_ARGS;
         }
         if (targetQuery != null) {
             if (QT_SELECT == targetQuery.type()) {
@@ -94,23 +105,59 @@ public class DaoProxy implements InvocationHandler {
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     private Object processSelectQuery(TargetQuery targetQuery, Method method, Object[] args) throws Exception {
         IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, targetQuery.query());
-        configureSelectAdapter(daoAdapter, method, args);
+        boolean hasHandler = configureSelectAdapter(daoAdapter, method, args);
         Class<?> ormType = getOrmClass(targetQuery, method);
-        if (Iterable.class.isAssignableFrom(method.getReturnType())) {
+        // Обработка списков
+        if (List.class.isAssignableFrom(method.getReturnType())) {
             return daoAdapter.loads(ormType);
         }
+        // Обработка множества
+        if (Set.class.isAssignableFrom(method.getReturnType())) {
+            return daoAdapter.set(ormType);
+        }
+        // Обработка массивов
+        if (method.getReturnType().isArray()) {
+            List values = daoAdapter.loads(ormType);
+            return values.toArray((Object[]) Array.newInstance(ormType, values.size()));
+        }
+        // Обработка итераторов
+        if (OrmIterator.class.isAssignableFrom(method.getReturnType())) {
+            return daoAdapter.iterate(ormType);
+        }
+        // Указан обработчик для выбираемых объектов
+        if (hasHandler) {
+            OrmHandler<Object> handler = findOrmHandler(args);
+            if (handler == null) {
+                throw new IllegalStateException("Ожидается OrmHandler, а получен null. " +
+                        "Метод '" + method.getName() + "#" + method.getParameterTypes().length);
+            }
+            daoAdapter.handle((Class<Object>) ormType, handler);
+            return null;
+        }
+        // Если ничего из перечисленных, значит одиночный объект
         return daoAdapter.load(ormType);
     }
 
     @SuppressWarnings("unchecked")
-    private void configureSelectAdapter(IOrmDaoAdapter daoAdapter, Method method, Object[] args) {
+    private boolean configureSelectAdapter(IOrmDaoAdapter daoAdapter, Method method, Object[] args) {
+        boolean hasHandler = false;
         if (args.length == 0) {
-            return;
+            return hasHandler;
         }
         for (int index = 0; index < args.length; index++) {
             Object argValue = args[index];
+            // значение обработчика пропускаем
+            if (argValue instanceof OrmHandler) {
+                if (hasHandler) {
+                    throw new IllegalStateException("Допускается указание только одного хендлера типа OrmHandler в параметрах метода. " +
+                            "Метод '" + method.getName() + "#" + method.getParameterTypes().length);
+                }
+                hasHandler = true;
+                continue;
+            }
             TargetFilter filter = findTargetFilter(index, method);
             if (filter != null) {
                 if (filter.columnFilter()) {
@@ -135,6 +182,17 @@ public class DaoProxy implements InvocationHandler {
             }
             daoAdapter.addSimpleFilterValues(argValue);
         }
+        return hasHandler;
+    }
+
+    @SuppressWarnings("unchecked")
+    private OrmHandler<Object> findOrmHandler(Object args[]) {
+        for (Object arg : args) {
+            if (arg instanceof OrmHandler) {
+                return (OrmHandler<Object>) arg;
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")

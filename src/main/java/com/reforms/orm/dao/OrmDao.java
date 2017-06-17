@@ -6,7 +6,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.IConnectionHolder;
@@ -80,6 +82,31 @@ class OrmDao implements IOrmDao {
     }
 
     @Override
+    public <OrmType> Set<OrmType> set(DaoSelectContext daoCtx) throws Exception {
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
+        Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
+        SelectQuery selectQuery = parseSelectQuery(daoCtx.getQuery());
+        OrmSelectColumnExtractorAndAliasModifier selectedColumnExtractor = getInstance(OrmSelectColumnExtractorAndAliasModifier.class);
+        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(selectQuery, daoCtx.getSelectedColumnFilter());
+        IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
+        IResultSetObjectReader ormReader = rsrFactory.resolveReader(daoCtx.getOrmType(), selectedColumns);
+        QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
+        PrepareStatementValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
+        String preparedSqlQuery = selectQuery.toString();
+        Set<OrmType> orms = new HashSet<>();
+        try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
+            paramSetterEngine.setParamsTo(ps);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (ormReader.canRead(rs)) {
+                    OrmType orm = ormReader.read(rs);
+                    orms.add(orm);
+                }
+            }
+        }
+        return orms;
+    }
+
+    @Override
     public <OrmType> OrmIterator<OrmType> iterate(DaoSelectContext daoCtx) throws Exception {
         IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
@@ -124,7 +151,9 @@ class OrmDao implements IOrmDao {
                 handler.startHandle();
                 while (ormReader.canRead(rs)) {
                     Object orm = ormReader.read(rs);
-                    handler.handleOrm(orm);
+                    if (!handler.handleOrm(orm)) {
+                        break;
+                    }
                 }
                 handler.endHandle();
             }

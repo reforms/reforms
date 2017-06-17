@@ -5,12 +5,15 @@ package com.reforms.orm.dao.bobj.model;
  * @author evgenie
  * @param <T> класс сущностей
  */
+@FunctionalInterface
 public interface OrmHandler<T> {
 
-    public void startHandle();
+    public default void startHandle() {
+    }
 
-    public boolean handleOrm(T reportRecord); 
+    public boolean handleOrm(T orm);
 
-    public void endHandle();
+    public default void endHandle() {
+    }
 
 }

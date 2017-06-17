@@ -4,6 +4,7 @@ import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Контракт на совершение базовых операций к БД
@@ -14,6 +15,8 @@ interface IOrmDao {
     <OrmType> OrmType load(DaoSelectContext daoCtx) throws Exception;
 
     <OrmType> List<OrmType> loads(DaoSelectContext daoCtx) throws Exception;
+
+    <OrmType> Set<OrmType> set(DaoSelectContext daoCtx) throws Exception;
 
     <OrmType> OrmIterator<OrmType> iterate(DaoSelectContext daoCtx) throws Exception;
 
