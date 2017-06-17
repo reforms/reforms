@@ -28,7 +28,10 @@ public @interface TargetQuery {
     int type() default QT_AUTO;
 
     /** SQL-запрос */
-    String query();
+    String query() default "";
+
+    /** SQL-запрос - short style, if nothing except query */
+    String value() default "";
 
     /** SQL-запрос */
     Class<?> orm() default Object.class;

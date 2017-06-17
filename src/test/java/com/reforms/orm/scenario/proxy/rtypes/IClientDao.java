@@ -23,7 +23,7 @@ public interface IClientDao {
     @TargetQuery(type = QT_SELECT, query = ALL_CLIENTS_QUERY, orm = Client.class)
     public Set<Client> setClients();
 
-    @TargetQuery(type = QT_SELECT, query = ALL_CLIENTS_QUERY)
+    @TargetQuery(ALL_CLIENTS_QUERY)
     public Client[] arrayClients();
 
     @TargetQuery(type = QT_SELECT, query = ALL_CLIENTS_QUERY, orm = Client.class)
@@ -32,14 +32,3 @@ public interface IClientDao {
     @TargetQuery(type = QT_SELECT, query = ALL_CLIENTS_QUERY, orm = Client.class)
     public OrmIterator<Client> iterateClients();
 }
-
-
-
-
-
-
-
-
-
-
-

@@ -8,10 +8,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import com.reforms.ann.TargetFilter;
 import com.reforms.ann.TargetQuery;
@@ -27,7 +24,7 @@ import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
  */
 public class DaoProxy implements InvocationHandler {
 
-    /** Довеяет всем */
+    /** Доверяет всем */
     private static final Lookup TRUSTED_LOOKUP = getLookupField();
 
     /** Пустой массив */
@@ -43,8 +40,8 @@ public class DaoProxy implements InvocationHandler {
         }
     }
 
-    private Object connectionHolder;
-    private Class<?> daoInterface;
+    private final Object connectionHolder;
+    private final Class<?> daoInterface;
 
     public DaoProxy(Object connectionHolder, Class<?> daoInterface) {
         this.connectionHolder = connectionHolder;
@@ -61,16 +58,20 @@ public class DaoProxy implements InvocationHandler {
             args = EMPTY_ARGS;
         }
         if (targetQuery != null) {
-            if (QT_SELECT == targetQuery.type()) {
+            int queryType = targetQuery.type();
+            if (QT_AUTO == queryType) {
+                queryType = getQueryType(targetQuery);
+            }
+            if (QT_SELECT == queryType) {
                 return processSelectQuery(targetQuery, method, args);
             }
-            if (QT_UPDATE == targetQuery.type()) {
+            if (QT_UPDATE == queryType) {
                 return processUpdateQuery(targetQuery, method, args);
             }
-            if (QT_INSERT == targetQuery.type()) {
+            if (QT_INSERT == queryType) {
                 return processInsertQuery(targetQuery, method, args);
             }
-            if (QT_DELETE == targetQuery.type()) {
+            if (QT_DELETE == queryType) {
                 return processDeleteQuery(targetQuery, method, args);
             }
         } else {
@@ -105,9 +106,29 @@ public class DaoProxy implements InvocationHandler {
         return result;
     }
 
+    private int getQueryType(TargetQuery targetQuery) {
+        String query = getQuery(targetQuery);
+        if (query.length() > 6) {
+            String keyWord = new StringTokenizer(query, "(\n\t\b\f ", false).nextToken();
+            if ("SELECT".equalsIgnoreCase(keyWord)) {
+                return QT_SELECT;
+            }
+            if ("INSERT".equalsIgnoreCase(keyWord)) {
+                return QT_INSERT;
+            }
+            if ("DELETE".equalsIgnoreCase(keyWord)) {
+                return QT_DELETE;
+            }
+            if ("UPDATE".equalsIgnoreCase(keyWord)) {
+                return QT_UPDATE;
+            }
+        }
+        throw new IllegalStateException("Не удалось определить тип запроса в " + targetQuery);
+    }
+
     @SuppressWarnings("unchecked")
     private Object processSelectQuery(TargetQuery targetQuery, Method method, Object[] args) throws Exception {
-        IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, targetQuery.query());
+        IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, getQuery(targetQuery));
         boolean hasHandler = configureSelectAdapter(daoAdapter, method, args);
         Class<?> ormType = getOrmClass(targetQuery, method);
         // Обработка списков
@@ -234,7 +255,7 @@ public class DaoProxy implements InvocationHandler {
     }
 
     private Object processUpdateQuery(TargetQuery targetQuery, Method method, Object[] args) throws Exception {
-        IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, targetQuery.query());
+        IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, getQuery(targetQuery));
         configureUpdateAdapter(daoAdapter, method, args);
         return daoAdapter.update();
     }
@@ -265,7 +286,7 @@ public class DaoProxy implements InvocationHandler {
     }
 
     private Object processInsertQuery(TargetQuery targetQuery, Method method, Object[] args) throws Exception {
-        IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, targetQuery.query());
+        IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, getQuery(targetQuery));
         configureInsertAdapter(daoAdapter, method, args);
         daoAdapter.insert();
         return null;
@@ -296,8 +317,16 @@ public class DaoProxy implements InvocationHandler {
         }
     }
 
+    private String getQuery(TargetQuery targetQuery) {
+        String query = targetQuery.query();
+        if (query.isEmpty()) {
+            query = targetQuery.value();
+        }
+        return query;
+    }
+
     private Object processDeleteQuery(TargetQuery targetQuery, Method method, Object[] args) throws Exception {
-        IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, targetQuery.query());
+        IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, getQuery(targetQuery));
         configureSelectAdapter(daoAdapter, method, args);
         return daoAdapter.delete();
     }
