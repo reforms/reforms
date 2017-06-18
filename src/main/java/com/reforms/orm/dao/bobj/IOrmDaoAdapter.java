@@ -1,11 +1,11 @@
 package com.reforms.orm.dao.bobj;
 
-import java.util.List;
-import java.util.Set;
-
 import com.reforms.orm.dao.adapter.*;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
+
+import java.util.List;
+import java.util.Set;
 
 public interface IOrmDaoAdapter extends ISelectedColumnFilterAdapter<IOrmDaoAdapter>, IFilterValuesAdapter<IOrmDaoAdapter>, IPageFilterAdapter<IOrmDaoAdapter>,
         IUpdateValuesAdapter<IOrmDaoAdapter>, IInsertValuesAdapter<IOrmDaoAdapter> {
@@ -27,4 +27,6 @@ public interface IOrmDaoAdapter extends ISelectedColumnFilterAdapter<IOrmDaoAdap
     int delete() throws Exception;
 
     void insert() throws Exception;
+
+    int[][] inserts(int batchSize) throws Exception;
 }

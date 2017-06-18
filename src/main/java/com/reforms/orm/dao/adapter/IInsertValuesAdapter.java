@@ -1,8 +1,9 @@
 package com.reforms.orm.dao.adapter;
 
-import java.util.Map;
-
 import com.reforms.orm.dao.bobj.update.IInsertValues;
+
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Контракт на формирование данных для обновления
@@ -21,5 +22,7 @@ public interface IInsertValuesAdapter<Adapter> {
     Adapter addInsertPairs(Map<String, Object> insertValues);
 
     Adapter setInsertValue(IInsertValues insertValues);
+
+    Adapter setBatchInsertValues(Iterator<IInsertValues> updateValues);
 
 }

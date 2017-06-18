@@ -1,7 +1,5 @@
 package com.reforms.orm.dao;
 
-import java.util.*;
-
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
@@ -15,6 +13,8 @@ import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.IndexSelectFilter;
 import com.reforms.orm.dao.paging.IPageFilter;
 import com.reforms.orm.dao.paging.PageFilter;
+
+import java.util.*;
 
 /**
  * Адаптер к dao
@@ -47,6 +47,7 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     private UpdateMap updateMap;
     private IUpdateValues updateValues;
     private Iterator<IUpdateValues> batchUpdateValues;
+    private Iterator<IInsertValues> batchInsertValues;
 
     public OrmDaoAdapter(Object connectionHolder, String query) {
         this.connectionHolder = connectionHolder;
@@ -99,6 +100,12 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     @Override
     public IOrmDaoAdapter setBatchUpdateValues(Iterator<IUpdateValues> updateValues) {
         this.batchUpdateValues = updateValues;
+        return this;
+    }
+
+    @Override
+    public IOrmDaoAdapter setBatchInsertValues(Iterator<IInsertValues> batchInsertValues) {
+        this.batchInsertValues = batchInsertValues;
         return this;
     }
 
@@ -331,6 +338,15 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         return daoCtx;
     }
 
+    private DaoBatchInsertContext buildDaoBatchInsertContext(int batchSize) {
+        DaoBatchInsertContext daoCtx = new DaoBatchInsertContext();
+        daoCtx.setConnectionHolder(connectionHolder);
+        daoCtx.setQuery(query);
+        daoCtx.setBatchSize(batchSize);
+        daoCtx.setInsertValues(batchInsertValues);
+        return daoCtx;
+    }
+
     private DaoDeleteContext buildDaoDeleteContext() {
         DaoDeleteContext daoCtx = new DaoDeleteContext();
         daoCtx.setConnectionHolder(connectionHolder);
@@ -409,6 +425,13 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         IOrmDao dao = new OrmDao();
         DaoInsertContext daoCtx = buildDaoInsertContext();
         dao.insert(daoCtx);
+    }
+
+    @Override
+    public int[][] inserts(int batchSize) throws Exception {
+        IOrmDao dao = new OrmDao();
+        DaoBatchInsertContext daoCtx = buildDaoBatchInsertContext(batchSize);
+        return dao.inserts(daoCtx);
     }
 
 }

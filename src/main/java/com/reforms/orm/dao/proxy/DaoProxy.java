@@ -1,6 +1,13 @@
 package com.reforms.orm.dao.proxy;
 
-import static com.reforms.ann.TargetQuery.*;
+import com.reforms.ann.TargetDao;
+import com.reforms.ann.TargetFilter;
+import com.reforms.ann.TargetQuery;
+import com.reforms.orm.OrmDao;
+import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
+import com.reforms.orm.dao.bobj.model.OrmHandler;
+import com.reforms.orm.dao.bobj.model.OrmIterator;
+import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles.Lookup;
@@ -10,13 +17,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import com.reforms.ann.TargetFilter;
-import com.reforms.ann.TargetQuery;
-import com.reforms.orm.OrmDao;
-import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
-import com.reforms.orm.dao.bobj.model.OrmHandler;
-import com.reforms.orm.dao.bobj.model.OrmIterator;
-import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
+import static com.reforms.ann.TargetQuery.*;
 
 /**
  * Proxy implementations of dao
@@ -126,7 +127,7 @@ public class DaoProxy implements InvocationHandler {
         throw new IllegalStateException("Не удалось определить тип запроса в " + targetQuery);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private Object processSelectQuery(TargetQuery targetQuery, Method method, Object[] args) throws Exception {
         IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, getQuery(targetQuery));
         boolean hasHandler = configureSelectAdapter(daoAdapter, method, args);
@@ -254,6 +255,7 @@ public class DaoProxy implements InvocationHandler {
         return false;
     }
 
+    @SuppressWarnings("unchecked")
     private Object processUpdateQuery(TargetQuery targetQuery, Method method, Object[] args) throws Exception {
         IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, getQuery(targetQuery));
         if (targetQuery.batchSize() == BATCH_IGNORE_SIZE) {
@@ -303,11 +305,30 @@ public class DaoProxy implements InvocationHandler {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private Object processInsertQuery(TargetQuery targetQuery, Method method, Object[] args) throws Exception {
         IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, getQuery(targetQuery));
-        configureInsertAdapter(daoAdapter, method, args);
-        daoAdapter.insert();
-        return null;
+        if (targetQuery.batchSize() == BATCH_IGNORE_SIZE) {
+            configureInsertAdapter(daoAdapter, method, args);
+            daoAdapter.insert();
+            return null;
+        }
+        Class<?>[] paramTypes = method.getParameterTypes();
+        if (paramTypes.length == 1) {
+            int batchSize = targetQuery.batchSize();
+            if (Collection.class.isAssignableFrom(paramTypes[0])) {
+                Iterator<Object> valueIterator = Collection.class.cast(args[0]).iterator();
+                daoAdapter.setBatchInsertValues(new InsertValuesIterator(valueIterator));
+                return daoAdapter.inserts(batchSize);
+            }
+            if (Iterator.class.isAssignableFrom(paramTypes[0])) {
+                Iterator<Object> valueIterator = Iterator.class.cast(args[0]);
+                daoAdapter.setBatchInsertValues(new InsertValuesIterator(valueIterator));
+                return daoAdapter.inserts(batchSize);
+            }
+        }
+        throw new IllegalStateException("Не возможно правильно обработать INSERT запрос в методе:" +
+                method.getName() + "#" + paramTypes.length);
     }
 
     @SuppressWarnings("unchecked")
@@ -362,9 +383,19 @@ public class DaoProxy implements InvocationHandler {
     }
 
     private Class<?> getOrmClass(TargetQuery targetQuery, Method method) {
-        Class<?> ormType = targetQuery.orm();
-        if (ormType != Object.class) {
-            return ormType;
+        Class<?> ormTypeFromMethod = targetQuery.orm();
+        if (ormTypeFromMethod != Object.class) {
+            return ormTypeFromMethod;
+        }
+        TargetDao targetDao = method.getDeclaringClass().getAnnotation(TargetDao.class);
+        if (targetDao != null) {
+            Class<?> ormFromDao = targetDao.orm();
+            if (ormFromDao == Object.class) {
+                ormFromDao = targetDao.value();
+            }
+            if (ormFromDao != Object.class) {
+                return ormFromDao;
+            }
         }
         Class<?> returnType = method.getReturnType();
         if (returnType.isArray()) {

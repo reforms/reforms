@@ -1,18 +1,12 @@
 package com.reforms.orm.dao;
 
-import static com.reforms.orm.OrmConfigurator.getInstance;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.*;
-
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.IConnectionHolder;
 import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.dao.batch.IBatcher;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
+import com.reforms.orm.dao.bobj.update.IInsertValues;
 import com.reforms.orm.dao.bobj.update.IUpdateValues;
 import com.reforms.orm.dao.column.SelectedColumn;
 import com.reforms.orm.dao.filter.IPsValuesSetter;
@@ -23,6 +17,13 @@ import com.reforms.sql.expr.query.InsertQuery;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.expr.query.UpdateQuery;
 import com.reforms.sql.parser.SqlParser;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.*;
+
+import static com.reforms.orm.OrmConfigurator.getInstance;
 
 /**
  *
@@ -251,6 +252,58 @@ class OrmDao implements IOrmDao {
             paramSetterEngine.setParamsTo(ps);
             ps.executeUpdate();
         }
+    }
+
+    @Override
+    public int[][] inserts(DaoBatchInsertContext daoCtx) throws Exception {
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
+        Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
+        InsertQuery insertQuery = parseInsertQuery(daoCtx.getQuery());
+        QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
+        Iterator<IInsertValues> iterator = daoCtx.getInsertValues();
+        if (!iterator.hasNext()) {
+            throw new IllegalStateException("Не допускается указания пустого итератора по вставляемым данным");
+        }
+        IInsertValues insertValues = iterator.next();
+        IBatcher batcher = filterPreparer.prepareInsertQueryWithBatch(insertQuery, insertValues);
+        String preparedSqlQuery = insertQuery.toString();
+        List<int[]> batchesResult = new ArrayList<>();
+        boolean oldCommitState = connection.getAutoCommit();
+        if (oldCommitState) {
+            connection.setAutoCommit(false);
+        }
+        try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
+            batcher.add(insertValues, ps);
+            int currentBatchCount = 1;
+            while (iterator.hasNext()) {
+                insertValues = iterator.next();
+                batcher.add(insertValues, ps);
+                currentBatchCount++;
+                if (currentBatchCount == daoCtx.getBatchSize()) {
+                    currentBatchCount = 0;
+                    int[] updateStateResults = ps.executeBatch();
+                    batchesResult.add(updateStateResults);
+                }
+            }
+            if (currentBatchCount < daoCtx.getBatchSize()) {
+                currentBatchCount = 0;
+                int[] updateStateResults = ps.executeBatch();
+                batchesResult.add(updateStateResults);
+            }
+            if (oldCommitState) {
+                connection.commit();
+            }
+        } catch (Exception cause) {
+            if (oldCommitState) {
+                connection.rollback();
+            }
+            throw cause;
+        } finally {
+            if (oldCommitState) {
+                connection.setAutoCommit(true);
+            }
+        }
+        return batchesResult.toArray(new int[batchesResult.size()][]);
     }
 
     private SelectQuery parseSelectQuery(String sqlQuery) {

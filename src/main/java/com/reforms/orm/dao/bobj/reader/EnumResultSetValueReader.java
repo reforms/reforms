@@ -13,7 +13,7 @@ import static com.reforms.orm.reflex.EnumReflexor.createEnumReflexor;
  */
 class EnumResultSetValueReader implements IResultSetValueReader<Enum<?>> {
 
-    private ResultSetValueReaderFactory factory;
+    private final ResultSetValueReaderFactory factory;
 
     public EnumResultSetValueReader(ResultSetValueReaderFactory factory) {
         this.factory = factory;
@@ -28,6 +28,10 @@ class EnumResultSetValueReader implements IResultSetValueReader<Enum<?>> {
             throw new IllegalStateException("Не найден IParamRsReader для чтения из ResultSet значения для класса '" + assignToBeReadClass + "'");
         }
         Object assignValue = realReader.readValue(column, rs, assignToBeReadClass);
+        // Особый случай. Предполагаем, что NULL в БД эквивалентен NULL объекту в java
+        if (assignValue == null) {
+            return null;
+        }
         return (Enum<?>) enumReflexor.getEnumValue(assignValue);
     }
 

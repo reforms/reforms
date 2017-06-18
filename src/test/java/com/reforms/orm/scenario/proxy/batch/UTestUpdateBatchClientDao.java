@@ -1,6 +1,9 @@
 package com.reforms.orm.scenario.proxy.batch;
 
-import static org.junit.Assert.assertEquals;
+import com.reforms.orm.OrmDao;
+import com.reforms.orm.scenario.TestScenarioDao;
+
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,24 +11,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
-
-import com.reforms.orm.OrmDao;
-import com.reforms.orm.scenario.TestScenarioDao;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Тестируем выборку для вложенных объектов
  * @author evgenie
  */
-public class UTestBatchClientDao extends TestScenarioDao {
+public class UTestUpdateBatchClientDao extends TestScenarioDao {
 
-    public UTestBatchClientDao() {
-        super("batch.sql", "UTestBatchClientDao");
+    public UTestUpdateBatchClientDao() {
+        super("batch_update.sql", "UTestUpdateBatchClientDao");
     }
 
     @Test
     public void testList() {
-        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        IUpdateClientDao clientDao = OrmDao.createDao(h2ds, IUpdateClientDao.class);
         List<Client> clients = makeClients();
         int[][] result = clientDao.updateList(clients);
         assertResult((clients.size() + 1) / 2, result);
@@ -70,7 +70,7 @@ public class UTestBatchClientDao extends TestScenarioDao {
 
     @Test
     public void testListWithDirective() {
-        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        IUpdateClientDao clientDao = OrmDao.createDao(h2ds, IUpdateClientDao.class);
         List<Client> clients = makeClients2(10);
         int[][] result = clientDao.updateListWithDirective(clients);
         assertResult((clients.size() + 1) / 2, result);
@@ -79,7 +79,7 @@ public class UTestBatchClientDao extends TestScenarioDao {
 
     @Test
     public void testListWithoutDirective() {
-        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        IUpdateClientDao clientDao = OrmDao.createDao(h2ds, IUpdateClientDao.class);
         List<Client> clients = makeClients2(20);
         int[][] result = clientDao.updateListWithoutDirective(clients);
         assertResult((clients.size() + 1) / 2, result);
@@ -96,7 +96,7 @@ public class UTestBatchClientDao extends TestScenarioDao {
 
     @Test
     public void testUpdateIteratorWithQuestion() {
-        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        IUpdateClientDao clientDao = OrmDao.createDao(h2ds, IUpdateClientDao.class);
         List<Object[]> clients = makeClients3();
         int[][] result = clientDao.updateIteratorWithQuestion(clients.iterator());
         assertResult((clients.size() + 1) / 2, result);

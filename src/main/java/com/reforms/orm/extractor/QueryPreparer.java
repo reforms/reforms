@@ -94,6 +94,14 @@ public class QueryPreparer {
         return batcher;
     }
 
+    public IBatcher prepareInsertQueryWithBatch(InsertQuery insertQuery, IInsertValues insertValues) {
+        ParamSetterFactory paramSetterFactory = getInstance(ParamSetterFactory.class);
+        Batcher batcher = new Batcher(insertValues, new PsValuesSetter(paramSetterFactory));
+        prepareScheme(insertQuery);
+        prepareValues(insertQuery, batcher, null, batcher);
+        return batcher;
+    }
+
     public IPsValuesSetter prepareDeleteQuery(DeleteQuery deleteQuery, IFilterValues filters) {
         if (filters == null) {
             filters = EMPTY_FILTER_MAP;

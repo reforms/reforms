@@ -15,13 +15,13 @@ import static com.reforms.orm.reflex.ClassUtils.isEnumClass;
  */
 public class EnumReflexor implements IEnumReflexor {
 
-    private Class<?> enumClass;
+    private final Class<?> enumClass;
 
-    private Field getAssignValueField;
+    private final Field getAssignValueField;
 
-    private Method getAssignValueMethod;
+    private final Method getAssignValueMethod;
 
-    private Method getEnumMethod;
+    private final Method getEnumMethod;
 
     EnumReflexor(Class<?> enumClass) {
         this.enumClass = enumClass;
