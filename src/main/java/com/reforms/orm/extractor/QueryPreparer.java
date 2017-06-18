@@ -5,12 +5,15 @@ import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.dao.IParamNameConverter;
 import com.reforms.orm.dao.IPriorityValues;
 import com.reforms.orm.dao.PriorityValues;
+import com.reforms.orm.dao.batch.Batcher;
+import com.reforms.orm.dao.batch.IBatcher;
 import com.reforms.orm.dao.bobj.update.IInsertValues;
 import com.reforms.orm.dao.bobj.update.IUpdateValues;
 import com.reforms.orm.dao.column.ColumnAlias;
 import com.reforms.orm.dao.column.ColumnAliasParser;
 import com.reforms.orm.dao.filter.IFilterValues;
-import com.reforms.orm.dao.filter.PrepareStatementValuesSetter;
+import com.reforms.orm.dao.filter.IPsValuesSetter;
+import com.reforms.orm.dao.filter.PsValuesSetter;
 import com.reforms.orm.dao.filter.param.ParamSetterFactory;
 import com.reforms.orm.dao.paging.IPageFilter;
 import com.reforms.orm.scheme.ISchemeManager;
@@ -30,10 +33,10 @@ import java.util.Collection;
 import java.util.List;
 
 import static com.reforms.orm.OrmConfigurator.getInstance;
-import static com.reforms.orm.dao.IPriorityValues.PV_FILTER;
-import static com.reforms.orm.dao.IPriorityValues.PV_UPDATE;
+import static com.reforms.orm.dao.IPriorityValues.*;
 import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
 import static com.reforms.sql.expr.term.ExpressionType.ET_SET_CLAUSE_EXPRESSION;
+import static com.reforms.sql.expr.term.ExpressionType.ET_VALUES_EXPRESSION;
 import static com.reforms.sql.expr.term.value.ValueExpressionType.*;
 
 /**
@@ -57,7 +60,7 @@ public class QueryPreparer {
      * @param filters     фильтры
      * @return объект для установки значений в PS
      */
-    public PrepareStatementValuesSetter prepareSelectQuery(SelectQuery selectQuery, IFilterValues filters) {
+    public IPsValuesSetter prepareSelectQuery(SelectQuery selectQuery, IFilterValues filters) {
         if (filters == null) {
             filters = EMPTY_FILTER_MAP;
         }
@@ -67,7 +70,7 @@ public class QueryPreparer {
         return prepareValues(selectQuery, filters, newPageFilter);
     }
 
-    public PrepareStatementValuesSetter prepareUpdateQuery(UpdateQuery updateQuery, IUpdateValues updateValues, IFilterValues filters) {
+    public IPsValuesSetter prepareUpdateQuery(UpdateQuery updateQuery, IUpdateValues updateValues, IFilterValues filters) {
         if (filters == null) {
             filters = EMPTY_FILTER_MAP;
         }
@@ -83,7 +86,15 @@ public class QueryPreparer {
         return prepareValues(updateQuery, priorValues);
     }
 
-    public PrepareStatementValuesSetter prepareDeleteQuery(DeleteQuery deleteQuery, IFilterValues filters) {
+    public IBatcher prepareUpdateQueryWithBatch(UpdateQuery updateQuery, IUpdateValues updateValues) {
+        ParamSetterFactory paramSetterFactory = getInstance(ParamSetterFactory.class);
+        Batcher batcher = new Batcher(updateValues, new PsValuesSetter(paramSetterFactory));
+        prepareScheme(updateQuery);
+        prepareValues(updateQuery, batcher, null, batcher);
+        return batcher;
+    }
+
+    public IPsValuesSetter prepareDeleteQuery(DeleteQuery deleteQuery, IFilterValues filters) {
         if (filters == null) {
             filters = EMPTY_FILTER_MAP;
         }
@@ -92,7 +103,7 @@ public class QueryPreparer {
         return prepareValues(deleteQuery, filters);
     }
 
-    public PrepareStatementValuesSetter prepareInsertQuery(InsertQuery insertQuery, IInsertValues values) {
+    public IPsValuesSetter prepareInsertQuery(InsertQuery insertQuery, IInsertValues values) {
         // TODO: порядок важен.
         prepareScheme(insertQuery);
         return prepareValues(insertQuery, values);
@@ -123,17 +134,22 @@ public class QueryPreparer {
         }
     }
 
-    private PrepareStatementValuesSetter prepareValues(Expression query, IPriorityValues values) {
+    private IPsValuesSetter prepareValues(Expression query, IPriorityValues values) {
         return prepareValues(query, values, null);
     }
 
-    private PrepareStatementValuesSetter prepareValues(Expression query, IPriorityValues values, IPageFilter pageFilter) {
+    private IPsValuesSetter prepareValues(Expression query, IPriorityValues values, IPageFilter pageFilter) {
         ParamSetterFactory paramSetterFactory = getInstance(ParamSetterFactory.class);
-        PrepareStatementValuesSetter fpss = new PrepareStatementValuesSetter(paramSetterFactory);
+        IPsValuesSetter fpss = new PsValuesSetter(paramSetterFactory);
+        prepareValues(query, values, pageFilter, fpss);
+        return fpss;
+    }
+
+    private void prepareValues(Expression query, IPriorityValues values, IPageFilter pageFilter, IPsValuesSetter fpss) {
         ValueExpressionExtractor filterExprExtractor = new ValueExpressionExtractor();
         List<ValueExpression> filterExprs = filterExprExtractor.extractFilterExpressions(query);
         if (filterExprs.isEmpty()) {
-            return fpss;
+            return;
         }
         // Нумерация с 1цы
         int questionCount = 0;
@@ -151,53 +167,56 @@ public class QueryPreparer {
                     int paramNameType = values.getParamNameType(priority);
                     String preapredName = paramNameConverter.convertName(paramNameType, filterName);
                     Object filterValue = values.getPriorityValue(priority, preapredName);
-                    if (filterValue == null && filterExpr.isStaticFilter() && !filterExpr.isQuestionFlag()) {
+                    boolean nullNotAllowed = filterValue == null && !(PV_UPDATE == priority || PV_INSERT == priority);
+                    if (nullNotAllowed && filterExpr.isStaticFilter() && !filterExpr.isQuestionFlag()) {
                         throw new IllegalStateException("Не возможно установить фильтр '" + filterName + "' для null значения");
                     }
                     // Статический фильтр с null значением
-                    if (filterValue == null && filterExpr.isStaticFilter() && filterExpr.isQuestionFlag()) {
+                    if (nullNotAllowed && filterExpr.isStaticFilter() && filterExpr.isQuestionFlag()) {
                         predicateModifier.changeStaticFilter(filterExpr);
                     } else
-                    // Динамический фильтр
-                    if (isEmptyValue(filterValue) && filterExpr.isDynamicFilter()) {
-                        predicateModifier.changeDynamicFilter(filterExpr);
-                    } else {
-                        int newParamCount = fpss.addFilterValue(filterValue);
-                        if (filterValue != null) {
-                            filterExpr.setPsQuestionCount(newParamCount);
+                        // Динамический фильтр
+                        if (isEmptyValue(filterValue) && filterExpr.isDynamicFilter()) {
+                            predicateModifier.changeDynamicFilter(filterExpr);
+                        } else {
+                            int newParamCount = fpss.addFilterValue(null, filterValue);
+                            if (!nullNotAllowed) {
+                                filterExpr.setPsQuestionCount(newParamCount);
+                            }
                         }
-                    }
                 } else {
                     String shortFilterName = filterDetails.getJavaAliasKey();
                     int paramNameType = values.getParamNameType(priority);
                     String preapredName = paramNameConverter.convertName(paramNameType, shortFilterName);
                     Object filterValue = values.getPriorityValue(priority, preapredName);
-                    if (filterValue == null) {
+                    boolean nullNotAllowed = filterValue == null && !(PV_UPDATE == priority || PV_INSERT == priority);
+                    if (nullNotAllowed) {
                         filterValue = values.getPriorityValue(priority, filterName);
                     }
-                    if (filterValue == null && filterExpr.isStaticFilter() && !filterExpr.isQuestionFlag()) {
+                    if (nullNotAllowed && filterExpr.isStaticFilter() && !filterExpr.isQuestionFlag()) {
                         throw new IllegalStateException("Не возможно установить фильтр '" + filterName + "' для null значения");
                     }
                     // Статический фильтр с null значением
-                    if (filterValue == null && filterExpr.isStaticFilter() && filterExpr.isQuestionFlag()) {
+                    if (nullNotAllowed && filterExpr.isStaticFilter() && filterExpr.isQuestionFlag()) {
                         predicateModifier.changeStaticFilter(filterExpr);
                     } else
-                    // Динамический фильтр
-                    if (isEmptyValue(filterValue) && filterExpr.isDynamicFilter()) {
-                        predicateModifier.changeDynamicFilter(filterExpr);
-                    } else {
-                        int newParamCount = fpss.addFilterValue(filterDetails.getAliasPrefix(), filterValue);
-                        if (filterValue != null) {
-                            filterExpr.setPsQuestionCount(newParamCount);
+                        // Динамический фильтр
+                        if (isEmptyValue(filterValue) && filterExpr.isDynamicFilter()) {
+                            predicateModifier.changeDynamicFilter(filterExpr);
+                        } else {
+                            int newParamCount = fpss.addFilterValue(filterDetails.getAliasPrefix(), filterValue);
+                            if (!nullNotAllowed) {
+                                filterExpr.setPsQuestionCount(newParamCount);
+                            }
                         }
-                    }
                 }
             } else if (VET_QUESTION == valueFilterExpr.getValueExprType()) {
                 Object filterValue = values.getPriorityValue(priority, ++questionCount);
-                if (filterValue == null) {
+                boolean nullNotAllowed = filterValue == null && !(PV_UPDATE == priority || PV_INSERT == priority);
+                if (nullNotAllowed) {
                     throw new IllegalStateException("Значение null недопустимо для 'QuestionExpression'");
                 }
-                fpss.addFilterValue(filterValue);
+                fpss.addFilterValue(null, filterValue);
             } else if (VET_PAGE_QUESTION == valueFilterExpr.getValueExprType()) {
                 Object filterValue = null;
                 if (pageFilter != null) {
@@ -212,12 +231,11 @@ public class QueryPreparer {
                 if (filterValue == null) {
                     throw new IllegalStateException("Значение null недопустимо для 'PageQuestionExpression'");
                 }
-                fpss.addFilterValue(filterValue);
+                fpss.addFilterValue(null, filterValue);
             } else {
                 throw new IllegalStateException("Не возможно установить фильтр для типа '" + valueFilterExpr.getValueExprType() + "'");
             }
         }
-        return fpss;
     }
 
     private int getPriorType(Expression expr, QueryTree queryTree) {
@@ -228,8 +246,13 @@ public class QueryPreparer {
             }
             // TODO проверить.
             Expression parentOfParentExpr = queryTree.getParentExpressionFor(parentExpr);
-            if (parentOfParentExpr != null && ET_SET_CLAUSE_EXPRESSION == parentOfParentExpr.getType()) {
-                return PV_UPDATE;
+            if (parentOfParentExpr != null) {
+                if (ET_SET_CLAUSE_EXPRESSION == parentOfParentExpr.getType()) {
+                    return PV_UPDATE;
+                }
+                if (ET_VALUES_EXPRESSION == parentOfParentExpr.getType()) {
+                    return PV_INSERT;
+                }
             }
         }
         return PV_FILTER;

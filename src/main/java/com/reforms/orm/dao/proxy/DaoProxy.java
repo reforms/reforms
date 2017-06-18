@@ -256,8 +256,26 @@ public class DaoProxy implements InvocationHandler {
 
     private Object processUpdateQuery(TargetQuery targetQuery, Method method, Object[] args) throws Exception {
         IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, getQuery(targetQuery));
-        configureUpdateAdapter(daoAdapter, method, args);
-        return daoAdapter.update();
+        if (targetQuery.batchSize() == BATCH_IGNORE_SIZE) {
+            configureUpdateAdapter(daoAdapter, method, args);
+            return daoAdapter.update();
+        }
+        Class<?>[] paramTypes = method.getParameterTypes();
+        if (paramTypes.length == 1) {
+            int batchSize = targetQuery.batchSize();
+            if (Collection.class.isAssignableFrom(paramTypes[0])) {
+                Iterator<Object> valueIterator = Collection.class.cast(args[0]).iterator();
+                daoAdapter.setBatchUpdateValues(new UpdateValuesIterator(valueIterator));
+                return daoAdapter.updates(batchSize);
+            }
+            if (Iterator.class.isAssignableFrom(paramTypes[0])) {
+                Iterator<Object> valueIterator = Iterator.class.cast(args[0]);
+                daoAdapter.setBatchUpdateValues(new UpdateValuesIterator(valueIterator));
+                return daoAdapter.updates(batchSize);
+            }
+        }
+        throw new IllegalStateException("Не возможно правильно обработать UPDATE запрос в методе:" +
+                method.getName() + "#" + paramTypes.length);
     }
 
     @SuppressWarnings("unchecked")

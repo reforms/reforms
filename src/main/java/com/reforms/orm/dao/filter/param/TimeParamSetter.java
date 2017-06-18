@@ -15,20 +15,12 @@ public class TimeParamSetter implements ParamSetter {
 
     @Override
     public void setValue(Object value, int index, PreparedStatement ps) throws SQLException {
-        ps.setTime(index, getTimeValue(value));
+        ps.setTime(index, convertValue(value));
     }
 
     @Override
     public boolean acceptValue(Object value) {
         return convertValue(value) != null;
-    }
-
-    protected Time getTimeValue(Object value) {
-        Time timeValue = convertValue(value);
-        if (timeValue == null) {
-            throw new IllegalStateException("Невозможно преобразовать значение '" + value + "' к типу java.sql.Time");
-        }
-        return timeValue;
     }
 
     protected Time convertValue(Object value) {

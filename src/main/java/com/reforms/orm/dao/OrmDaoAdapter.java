@@ -1,9 +1,6 @@
 package com.reforms.orm.dao;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
@@ -49,6 +46,7 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     private Object updateBobj;
     private UpdateMap updateMap;
     private IUpdateValues updateValues;
+    private Iterator<IUpdateValues> batchUpdateValues;
 
     public OrmDaoAdapter(Object connectionHolder, String query) {
         this.connectionHolder = connectionHolder;
@@ -95,6 +93,12 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         for (Object value : values) {
             addFilterValue(value);
         }
+        return this;
+    }
+
+    @Override
+    public IOrmDaoAdapter setBatchUpdateValues(Iterator<IUpdateValues> updateValues) {
+        this.batchUpdateValues = updateValues;
         return this;
     }
 
@@ -318,6 +322,15 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         return daoCtx;
     }
 
+    private DaoBatchUpdateContext buildDaoBatchUpdateContext(int batchSize) {
+        DaoBatchUpdateContext daoCtx = new DaoBatchUpdateContext();
+        daoCtx.setConnectionHolder(connectionHolder);
+        daoCtx.setQuery(query);
+        daoCtx.setBatchSize(batchSize);
+        daoCtx.setUpateValues(batchUpdateValues);
+        return daoCtx;
+    }
+
     private DaoDeleteContext buildDaoDeleteContext() {
         DaoDeleteContext daoCtx = new DaoDeleteContext();
         daoCtx.setConnectionHolder(connectionHolder);
@@ -375,6 +388,13 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         IOrmDao dao = new OrmDao();
         DaoUpdateContext daoCtx = buildDaoUpdateContext();
         return dao.update(daoCtx);
+    }
+
+    @Override
+    public int[][] updates(int batchSize) throws Exception {
+        IOrmDao dao = new OrmDao();
+        DaoBatchUpdateContext daoCtx = buildDaoBatchUpdateContext(batchSize);
+        return dao.updates(daoCtx);
     }
 
     @Override

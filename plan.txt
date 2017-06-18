@@ -58,3 +58,9 @@
        [+] - INSERT
        [+] - UPDATE
        [+] - DELETE
+
+29. Добавить поддержку типов в список допустимых при установки значений в PreparedStatement:
+       - byte[]
+       - InputStream
+       - Reader
+       [+] - проработать вопрос с EnumParamSetter. Сейчас не допускает null значения но должен. Сделал setObject(x, null);

@@ -5,18 +5,17 @@ import static com.reforms.orm.OrmConfigurator.getInstance;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.IConnectionHolder;
 import com.reforms.orm.OrmConfigurator;
+import com.reforms.orm.dao.batch.IBatcher;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
+import com.reforms.orm.dao.bobj.update.IUpdateValues;
 import com.reforms.orm.dao.column.SelectedColumn;
-import com.reforms.orm.dao.filter.PrepareStatementValuesSetter;
+import com.reforms.orm.dao.filter.IPsValuesSetter;
 import com.reforms.orm.extractor.OrmSelectColumnExtractorAndAliasModifier;
 import com.reforms.orm.extractor.QueryPreparer;
 import com.reforms.sql.expr.query.DeleteQuery;
@@ -42,7 +41,7 @@ class OrmDao implements IOrmDao {
         IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
         IResultSetObjectReader ormReader = rsrFactory.resolveReader(daoCtx.getOrmType(), selectedColumns);
         QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
-        PrepareStatementValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
+        IPsValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
         String preparedSqlQuery = selectQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
             paramSetterEngine.setParamsTo(ps);
@@ -66,7 +65,7 @@ class OrmDao implements IOrmDao {
         IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
         IResultSetObjectReader ormReader = rsrFactory.resolveReader(daoCtx.getOrmType(), selectedColumns);
         QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
-        PrepareStatementValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
+        IPsValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
         String preparedSqlQuery = selectQuery.toString();
         List<OrmType> orms = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
@@ -91,7 +90,7 @@ class OrmDao implements IOrmDao {
         IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
         IResultSetObjectReader ormReader = rsrFactory.resolveReader(daoCtx.getOrmType(), selectedColumns);
         QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
-        PrepareStatementValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
+        IPsValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
         String preparedSqlQuery = selectQuery.toString();
         Set<OrmType> orms = new HashSet<>();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
@@ -116,7 +115,7 @@ class OrmDao implements IOrmDao {
         IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
         IResultSetObjectReader ormReader = rsrFactory.resolveReader(daoCtx.getOrmType(), selectedColumns);
         QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
-        PrepareStatementValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
+        IPsValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
         String preparedSqlQuery = selectQuery.toString();
         PreparedStatement ps = null;
         try {
@@ -143,7 +142,7 @@ class OrmDao implements IOrmDao {
         IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
         IResultSetObjectReader ormReader = rsrFactory.resolveReader(daoCtx.getOrmType(), selectedColumns);
         QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
-        PrepareStatementValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
+        IPsValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
         String preparedSqlQuery = selectQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
             paramSetterEngine.setParamsTo(ps);
@@ -166,7 +165,7 @@ class OrmDao implements IOrmDao {
         Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
         UpdateQuery updateQuery = parseUpdateQuery(daoCtx.getQuery());
         QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
-        PrepareStatementValuesSetter paramSetterEngine = filterPreparer.prepareUpdateQuery(updateQuery, daoCtx.getUpateValues(), daoCtx.getFilterValues());
+        IPsValuesSetter paramSetterEngine = filterPreparer.prepareUpdateQuery(updateQuery, daoCtx.getUpateValues(), daoCtx.getFilterValues());
         String preparedSqlQuery = updateQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
             paramSetterEngine.setParamsTo(ps);
@@ -175,12 +174,64 @@ class OrmDao implements IOrmDao {
     }
 
     @Override
+    public int[][] updates(DaoBatchUpdateContext daoCtx) throws Exception {
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
+        Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
+        UpdateQuery updateQuery = parseUpdateQuery(daoCtx.getQuery());
+        QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
+        Iterator<IUpdateValues> iterator = daoCtx.getUpateValues();
+        if (!iterator.hasNext()) {
+            throw new IllegalStateException("Не допускается указания пустого итератора по обновляемым данным");
+        }
+        IUpdateValues updateValues = iterator.next();
+        IBatcher batcher = filterPreparer.prepareUpdateQueryWithBatch(updateQuery, updateValues);
+        String preparedSqlQuery = updateQuery.toString();
+        List<int[]> batchesResult = new ArrayList<>();
+        boolean oldCommitState = connection.getAutoCommit();
+        if (oldCommitState) {
+            connection.setAutoCommit(false);
+        }
+        try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
+            batcher.add(updateValues, ps);
+            int currentBatchCount = 1;
+            while (iterator.hasNext()) {
+                updateValues = iterator.next();
+                batcher.add(updateValues, ps);
+                currentBatchCount++;
+                if (currentBatchCount == daoCtx.getBatchSize()) {
+                    currentBatchCount = 0;
+                    int[] updateStateResults = ps.executeBatch();
+                    batchesResult.add(updateStateResults);
+                }
+            }
+            if (currentBatchCount < daoCtx.getBatchSize()) {
+                currentBatchCount = 0;
+                int[] updateStateResults = ps.executeBatch();
+                batchesResult.add(updateStateResults);
+            }
+            if (oldCommitState) {
+                connection.commit();
+            }
+        } catch (Exception cause) {
+            if (oldCommitState) {
+                connection.rollback();
+            }
+            throw cause;
+        } finally {
+            if (oldCommitState) {
+                connection.setAutoCommit(true);
+            }
+        }
+        return batchesResult.toArray(new int[batchesResult.size()][]);
+    }
+
+    @Override
     public int delete(DaoDeleteContext daoCtx) throws Exception {
         IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
         DeleteQuery updateQuery = parseDeleteQuery(daoCtx.getQuery());
         QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
-        PrepareStatementValuesSetter paramSetterEngine = filterPreparer.prepareDeleteQuery(updateQuery, daoCtx.getFilterValues());
+        IPsValuesSetter paramSetterEngine = filterPreparer.prepareDeleteQuery(updateQuery, daoCtx.getFilterValues());
         String preparedSqlQuery = updateQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
             paramSetterEngine.setParamsTo(ps);
@@ -194,7 +245,7 @@ class OrmDao implements IOrmDao {
         Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
         InsertQuery insertQuery = parseInsertQuery(daoCtx.getQuery());
         QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
-        PrepareStatementValuesSetter paramSetterEngine = filterPreparer.prepareInsertQuery(insertQuery, daoCtx.getInsertValues());
+        IPsValuesSetter paramSetterEngine = filterPreparer.prepareInsertQuery(insertQuery, daoCtx.getInsertValues());
         String preparedSqlQuery = insertQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
             paramSetterEngine.setParamsTo(ps);

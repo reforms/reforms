@@ -6,26 +6,24 @@ import java.sql.SQLException;
 import com.reforms.ann.ThreadSafe;
 
 /**
- * Установить параметр типа String
+ * Установить параметр произвольного типа
  * @author evgenie
  */
 @ThreadSafe
-public class StringParamSetter implements ParamSetter {
+public class ObjectParamSetter implements ParamSetter {
 
     @Override
     public void setValue(Object value, int index, PreparedStatement ps) throws SQLException {
-        ps.setString(index, convertValue(value));
+        Object objectValue = convertValue(value);
+        ps.setObject(index, objectValue);
     }
 
     @Override
     public boolean acceptValue(Object value) {
-        return convertValue(value) != null;
+        return true;
     }
 
-    protected String convertValue(Object value) {
-        if (value instanceof String) {
-            return (String) value;
-        }
-        return null;
+    protected Object convertValue(Object value) {
+        return value;
     }
 }

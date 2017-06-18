@@ -1,9 +1,5 @@
 package com.reforms.orm.dao.filter;
 
-import com.reforms.orm.dao.column.ColumnAliasType;
-import com.reforms.orm.dao.filter.param.ParamSetter;
-import com.reforms.orm.dao.filter.param.ParamSetterFactory;
-
 import java.lang.reflect.Array;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -11,36 +7,34 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.reforms.orm.dao.filter.param.ParamSetter;
+import com.reforms.orm.dao.filter.param.ParamSetterFactory;
+
 /**
  * Устанавливает значения с заданного индекса в PrepareStatement
  * @author evgenie
  */
-public class PrepareStatementValuesSetter {
+public class PsValuesSetter implements IPsValuesSetter {
 
     private int index;
 
-    private List<ParamSetter> paramSetters = new ArrayList<>();
-    private List<Object> filterValues = new ArrayList<>();
-    private ParamSetterFactory paramSetterFactory;
+    private final List<ParamSetter> paramSetters = new ArrayList<>();
+    private final List<Object> filterValues = new ArrayList<>();
+    private final ParamSetterFactory paramSetterFactory;
 
-    public PrepareStatementValuesSetter(ParamSetterFactory paramSetterFactory) {
+    public PsValuesSetter(ParamSetterFactory paramSetterFactory) {
         this(1, paramSetterFactory);
     }
 
-    public PrepareStatementValuesSetter(int index, ParamSetterFactory paramSetterFactory) {
+    public PsValuesSetter(int index, ParamSetterFactory paramSetterFactory) {
         this.index = index;
         this.paramSetterFactory = paramSetterFactory;
     }
 
-    public int addFilterValue(Object value) {
-        ColumnAliasType filterType = getFilterType(value);
-        return addFilterValue(filterType.getMarker(), value);
-    }
-
-    private ColumnAliasType getFilterType(Object filterValue) {
+    private String getFilterType(Object filterValue) {
         String prefix = paramSetterFactory.findParamSetterMarker(filterValue);
         if (prefix != null) {
-            return ColumnAliasType.getType(prefix.charAt(0));
+            return prefix;
         }
         if (filterValue instanceof Iterable) {
             Iterable<?> values = (Iterable<?>) filterValue;
@@ -60,7 +54,11 @@ public class PrepareStatementValuesSetter {
                 "' не найдет тип для установки фильтра");
     }
 
+    @Override
     public int addFilterValue(String filterPrefix, Object filterValue) {
+        if (filterPrefix == null) {
+            filterPrefix = getFilterType(filterValue);
+        }
         int newParamCount = 0;
         ParamSetter paramSetter = paramSetterFactory.getParamSetter(filterPrefix);
         if (paramSetter == null) {
@@ -97,6 +95,7 @@ public class PrepareStatementValuesSetter {
         return newParamCount;
     }
 
+    @Override
     public int setParamsTo(PreparedStatement ps) throws SQLException {
         for (int dataIndex = 0; dataIndex < filterValues.size(); dataIndex++) {
             Object filterValue = filterValues.get(dataIndex);

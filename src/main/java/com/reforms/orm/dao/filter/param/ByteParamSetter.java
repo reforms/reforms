@@ -2,6 +2,7 @@ package com.reforms.orm.dao.filter.param;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import com.reforms.ann.ThreadSafe;
 
@@ -14,20 +15,17 @@ public class ByteParamSetter implements ParamSetter {
 
     @Override
     public void setValue(Object value, int index, PreparedStatement ps) throws SQLException {
-        ps.setByte(index, getByteValue(value));
+        Byte byteValue = convertValue(value);
+        if (byteValue == null) {
+            ps.setNull(index, Types.TINYINT);
+        } else {
+            ps.setByte(index, byteValue);
+        }
     }
 
     @Override
     public boolean acceptValue(Object value) {
         return convertValue(value) != null;
-    }
-
-    protected byte getByteValue(Object value) {
-        Byte byteValue = convertValue(value);
-        if (byteValue == null) {
-            throw new IllegalStateException("Невозможно преобразовать значение '" + value + "' к типу byte");
-        }
-        return byteValue;
     }
 
     protected Byte convertValue(Object value) {

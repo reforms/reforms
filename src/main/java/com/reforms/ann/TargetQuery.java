@@ -9,6 +9,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TargetQuery {
 
+    /** Batch size ignore value */
+    final int BATCH_IGNORE_SIZE = -1;
+
     /** Select query */
     final int QT_AUTO = -1;
 
@@ -32,6 +35,8 @@ public @interface TargetQuery {
 
     /** SQL-запрос - short style, if nothing except query */
     String value() default "";
+
+    int batchSize() default BATCH_IGNORE_SIZE;
 
     /** SQL-запрос */
     Class<?> orm() default Object.class;

@@ -1,10 +1,10 @@
 package com.reforms.orm.dao;
 
-import com.reforms.orm.dao.bobj.model.OrmHandler;
-import com.reforms.orm.dao.bobj.model.OrmIterator;
-
 import java.util.List;
 import java.util.Set;
+
+import com.reforms.orm.dao.bobj.model.OrmHandler;
+import com.reforms.orm.dao.bobj.model.OrmIterator;
 
 /**
  * Контракт на совершение базовых операций к БД
@@ -23,6 +23,8 @@ interface IOrmDao {
     void handle(DaoSelectContext daoCtx, OrmHandler<Object> handler) throws Exception;
 
     int update(DaoUpdateContext daoCtx) throws Exception;
+
+    int[][] updates(DaoBatchUpdateContext daoCtx) throws Exception;
 
     int delete(DaoDeleteContext daoCtx) throws Exception;
 

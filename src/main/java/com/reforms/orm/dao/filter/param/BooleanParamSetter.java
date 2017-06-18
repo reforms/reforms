@@ -2,6 +2,7 @@ package com.reforms.orm.dao.filter.param;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import com.reforms.ann.ThreadSafe;
 
@@ -14,20 +15,17 @@ public class BooleanParamSetter implements ParamSetter {
 
     @Override
     public void setValue(Object value, int index, PreparedStatement ps) throws SQLException {
-        ps.setBoolean(index, getBooleanValue(value));
+        Boolean booleanValue = convertValue(value);
+        if (booleanValue == null) {
+            ps.setNull(index, Types.BIT);
+        } else {
+            ps.setBoolean(index, booleanValue);
+        }
     }
 
     @Override
     public boolean acceptValue(Object value) {
         return convertValue(value) != null;
-    }
-
-    protected boolean getBooleanValue(Object value) {
-        Boolean booleanValue = convertValue(value);
-        if (booleanValue == null) {
-            throw new IllegalStateException("Невозможно преобразовать значение '" + value + "' к типу boolean");
-        }
-        return booleanValue;
     }
 
     protected Boolean convertValue(Object value) {

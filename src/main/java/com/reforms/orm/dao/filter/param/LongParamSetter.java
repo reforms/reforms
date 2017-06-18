@@ -2,6 +2,7 @@ package com.reforms.orm.dao.filter.param;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import com.reforms.ann.ThreadSafe;
 
@@ -14,20 +15,17 @@ public class LongParamSetter implements ParamSetter {
 
     @Override
     public void setValue(Object value, int index, PreparedStatement ps) throws SQLException {
-        ps.setLong(index, getLongValue(value));
+        Long longValue = convertValue(value);
+        if (longValue == null) {
+            ps.setNull(index, Types.BIGINT);
+        } else {
+            ps.setLong(index, longValue);
+        }
     }
 
     @Override
     public boolean acceptValue(Object value) {
         return convertValue(value) != null;
-    }
-
-    protected long getLongValue(Object value) {
-        Long longValue = convertValue(value);
-        if (longValue == null) {
-            throw new IllegalStateException("Невозможно преобразовать значение '" + value + "' к типу long");
-        }
-        return longValue;
     }
 
     protected Long convertValue(Object value) {

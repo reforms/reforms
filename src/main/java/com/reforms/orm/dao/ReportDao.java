@@ -11,11 +11,11 @@ import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.IConnectionHolder;
 import com.reforms.orm.OrmConfigurator;
 import com.reforms.orm.dao.column.SelectedColumn;
-import com.reforms.orm.dao.filter.PrepareStatementValuesSetter;
+import com.reforms.orm.dao.filter.IPsValuesSetter;
 import com.reforms.orm.dao.report.model.Report;
 import com.reforms.orm.dao.report.model.ReportRecord;
-import com.reforms.orm.extractor.ReportSelectColumnExtractorAndAliasModifier;
 import com.reforms.orm.extractor.QueryPreparer;
+import com.reforms.orm.extractor.ReportSelectColumnExtractorAndAliasModifier;
 import com.reforms.sql.expr.query.SelectQuery;
 import com.reforms.sql.parser.SqlParser;
 
@@ -33,7 +33,7 @@ class ReportDao implements IReportDao {
         IResultSetObjectReader reportReader = rsrFactory.resolveReader(ReportRecord.class, selectedColumns);
         Report report = new Report();
         QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
-        PrepareStatementValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
+        IPsValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
         String preparedSqlQuery = selectQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
             paramSetterEngine.setParamsTo(ps);
@@ -57,7 +57,7 @@ class ReportDao implements IReportDao {
         IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
         IResultSetObjectReader reportReader = rsrFactory.resolveReader(ReportRecord.class, selectedColumns);
         QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
-        PrepareStatementValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
+        IPsValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
         String preparedSqlQuery = selectQuery.toString();
         PreparedStatement ps = null;
         try {
@@ -84,7 +84,7 @@ class ReportDao implements IReportDao {
         IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
         IResultSetObjectReader reportReader = rsrFactory.resolveReader(ReportRecord.class, selectedColumns);
         QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
-        PrepareStatementValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
+        IPsValuesSetter paramSetterEngine = filterPreparer.prepareSelectQuery(selectQuery, daoCtx.getFilterValues());
         String preparedSqlQuery = selectQuery.toString();
         try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
             paramSetterEngine.setParamsTo(ps);

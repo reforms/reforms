@@ -15,20 +15,12 @@ public class TimestampParamSetter implements ParamSetter {
 
     @Override
     public void setValue(Object value, int index, PreparedStatement ps) throws SQLException {
-        ps.setTimestamp(index, getTimeValue(value));
+        ps.setTimestamp(index, convertValue(value));
     }
 
     @Override
     public boolean acceptValue(Object value) {
         return convertValue(value) != null;
-    }
-
-    protected Timestamp getTimeValue(Object value) {
-        Timestamp timestampValue = convertValue(value);
-        if (timestampValue == null) {
-            throw new IllegalStateException("Невозможно преобразовать значение '" + value + "' к типу java.sql.Timestamp");
-        }
-        return timestampValue;
     }
 
     protected Timestamp convertValue(Object value) {

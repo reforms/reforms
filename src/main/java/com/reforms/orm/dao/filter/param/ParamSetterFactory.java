@@ -1,8 +1,8 @@
 package com.reforms.orm.dao.filter.param;
 
-import java.util.*;
-
 import static com.reforms.orm.dao.column.ColumnAliasType.*;
+
+import java.util.*;
 
 /**
  * Фабрика установщиков параметров в ResultSet
@@ -32,6 +32,7 @@ public class ParamSetterFactory {
         baseParamSetters.put(CAT_D_DATE.getMarker(), new DateParamSetter());
         baseParamSetters.put(CAT_T_TIMESTAMP.getMarker(), new TimestampParamSetter());
         baseParamSetters.put(CAT_V_TIME.getMarker(), new TimeParamSetter());
+        baseParamSetters.put(CAT_O_OBJECT_TYPE.getMarker(), new ObjectParamSetter());
         return this;
     }
 
@@ -76,24 +77,20 @@ public class ParamSetterFactory {
     }
 
     public String findParamSetterMarker(Object value) {
-        if (value != null) {
-            for (String marker : prefixes) {
-                ParamSetter paramSetter = getParamSetter(marker);
-                if (paramSetter.acceptValue(value)) {
-                    return marker;
-                }
+        for (String marker : prefixes) {
+            ParamSetter paramSetter = getParamSetter(marker);
+            if (paramSetter.acceptValue(value)) {
+                return marker;
             }
         }
         return null;
     }
 
     public ParamSetter findParamSetter(Object value) {
-        if (value != null) {
-            for (String marker : prefixes) {
-                ParamSetter paramSetter = getParamSetter(marker);
-                if (paramSetter.acceptValue(value)) {
-                    return paramSetter;
-                }
+        for (String marker : prefixes) {
+            ParamSetter paramSetter = getParamSetter(marker);
+            if (paramSetter.acceptValue(value)) {
+                return paramSetter;
             }
         }
         return null;

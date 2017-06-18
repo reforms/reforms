@@ -15,20 +15,12 @@ public class DateParamSetter implements ParamSetter {
 
     @Override
     public void setValue(Object value, int index, PreparedStatement ps) throws SQLException {
-        ps.setDate(index, getDateValue(value));
+        ps.setDate(index, convertValue(value));
     }
 
     @Override
     public boolean acceptValue(Object value) {
         return convertValue(value) != null;
-    }
-
-    protected Date getDateValue(Object value) {
-        Date dataValue = convertValue(value);
-        if (dataValue == null) {
-            throw new IllegalStateException("Невозможно преобразовать значение '" + value + "' к типу java.sql.Date");
-        }
-        return dataValue;
     }
 
     protected Date convertValue(Object value) {

@@ -23,6 +23,7 @@ import java.util.Map;
  *  a               - java.io.InputStream as AsciiStream
  *  b               - java.io.InputStream as BinaryStream
  *  u               - User Custome Type, need Registry IReportValueConverter
+ *  o               - java.lang.Object
  * @author evgenie
  *
  */
@@ -44,7 +45,8 @@ public enum ColumnAliasType {
     CAT_T_TIMESTAMP("t"),
     CAT_A_ASCII_STREAM("a"),
     CAT_B_BINARY_STREAM("b"),
-    CAT_U_CUSTOM_TYPE("u");
+    CAT_U_CUSTOM_TYPE("u"),
+    CAT_O_OBJECT_TYPE("o");
 
     private static Map<String, ColumnAliasType> MARKER2TYPES = init();
 

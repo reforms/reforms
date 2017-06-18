@@ -22,6 +22,8 @@ public interface IOrmDaoAdapter extends ISelectedColumnFilterAdapter<IOrmDaoAdap
 
     int update() throws Exception;
 
+    int[][] updates(int batchSize) throws Exception;
+
     int delete() throws Exception;
 
     void insert() throws Exception;
