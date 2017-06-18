@@ -1,5 +1,8 @@
 package com.reforms.sql.db;
 
+import com.reforms.ann.TargetApi;
+
+@TargetApi
 public enum DbType {
 
     DBT_POSTGRESQL,

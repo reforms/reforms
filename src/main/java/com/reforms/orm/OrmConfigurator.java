@@ -1,5 +1,6 @@
 package com.reforms.orm;
 
+import com.reforms.ann.TargetApi;
 import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.dao.IParamNameConverter;
 import com.reforms.orm.dao.IResultSetReaderFactory;
@@ -11,6 +12,8 @@ import com.reforms.orm.dao.bobj.IResultSetValueAdapter;
 import com.reforms.orm.dao.bobj.ResultSetValueAdapter;
 import com.reforms.orm.dao.bobj.reader.ResultSetValueReaderFactory;
 import com.reforms.orm.dao.filter.param.ParamSetterFactory;
+import com.reforms.orm.dao.proxy.DefaultMethodInterceptor;
+import com.reforms.orm.dao.proxy.IMethodInterceptor;
 import com.reforms.orm.dao.report.ColumnToRecordNameConverter;
 import com.reforms.orm.dao.report.IColumnToRecordNameConverter;
 import com.reforms.orm.dao.report.converter.ColumnValueConverterFactory;
@@ -22,6 +25,7 @@ import com.reforms.sql.db.DbType;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@TargetApi
 public class OrmConfigurator {
 
     private static final Map<String, Object> SETTINGS = new ConcurrentHashMap<>();
@@ -49,6 +53,7 @@ public class OrmConfigurator {
         SchemeManager schemeManager = new SchemeManager();
         schemeManager.setDefaultDbType(DbType.DBT_MIX);
         putInstance(ISchemeManager.class, schemeManager);
+        putInstance(IMethodInterceptor.class, new DefaultMethodInterceptor());
     }
 
     static void putInstance(Class<?> clazz, Object instance) {

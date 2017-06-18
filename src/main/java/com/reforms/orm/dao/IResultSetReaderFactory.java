@@ -1,13 +1,16 @@
 package com.reforms.orm.dao;
 
-import java.util.List;
-
+import com.reforms.ann.TargetApi;
 import com.reforms.orm.dao.column.SelectedColumn;
+
+import java.util.List;
 
 /**
  * Контракт на получение объекта IResultSetReader
  * @author evgenie
  */
+@FunctionalInterface
+@TargetApi
 public interface IResultSetReaderFactory {
 
     /**

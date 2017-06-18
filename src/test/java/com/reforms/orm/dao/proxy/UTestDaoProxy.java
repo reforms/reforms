@@ -1,14 +1,14 @@
 package com.reforms.orm.dao.proxy;
 
-import static com.reforms.ann.TargetQuery.*;
-import static com.reforms.orm.reflex.PrivateAccess.createAccessor;
-import static org.junit.Assert.*;
-
-import org.junit.Test;
-
 import com.reforms.ann.TargetQuery;
 import com.reforms.orm.OrmDao;
 import com.reforms.orm.reflex.Mirror;
+
+import org.junit.Test;
+
+import static com.reforms.ann.TargetQuery.*;
+import static com.reforms.orm.reflex.PrivateAccess.createAccessor;
+import static org.junit.Assert.*;
 
 /**
  * Test for DaoProxy

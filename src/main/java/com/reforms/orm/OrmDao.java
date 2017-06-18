@@ -14,12 +14,14 @@ import com.reforms.orm.dao.filter.FilterSequence;
 import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 import com.reforms.orm.dao.proxy.DaoProxy;
+import com.reforms.orm.dao.proxy.IMethodInterceptor;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.Map;
 
+import static com.reforms.orm.OrmConfigurator.getInstance;
 import static com.reforms.orm.dao.filter.FilterMap.EMPTY_FILTER_MAP;
 import static com.reforms.orm.dao.filter.column.DefaultSelectedColumnFilter.DEFAULT_COLUMNS_FILTER;
 
@@ -137,7 +139,7 @@ import static com.reforms.orm.dao.filter.column.DefaultSelectedColumnFilter.DEFA
 public class OrmDao {
 
     /** Container for java.sql.Connection */
-    private Object connectionHolder;
+    private final Object connectionHolder;
 
     /**
      * Constructor with your container for java.sql.Connection.<br>
@@ -879,7 +881,8 @@ public class OrmDao {
     public static <Interfaze> Interfaze createDao(Object connectionHolder, Class<Interfaze> daoInterface) {
         ClassLoader classLoader = daoInterface.getClassLoader();
         Class<?>[] daoClasses = new Class[]{daoInterface};
-        InvocationHandler handler = new DaoProxy(connectionHolder, daoInterface);
+        IMethodInterceptor intercepter = getInstance(IMethodInterceptor.class);
+        InvocationHandler handler = new DaoProxy(connectionHolder, daoInterface, intercepter);
         return (Interfaze) Proxy.newProxyInstance(classLoader, daoClasses, handler);
     }
 }

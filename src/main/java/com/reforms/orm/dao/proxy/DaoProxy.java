@@ -43,14 +43,23 @@ public class DaoProxy implements InvocationHandler {
 
     private final Object connectionHolder;
     private final Class<?> daoInterface;
+    private final IMethodInterceptor intercepter;
 
     public DaoProxy(Object connectionHolder, Class<?> daoInterface) {
+        this(connectionHolder, daoInterface, null);
+    }
+
+    public DaoProxy(Object connectionHolder, Class<?> daoInterface, IMethodInterceptor intercepter) {
         this.connectionHolder = connectionHolder;
         this.daoInterface = daoInterface;
+        this.intercepter = intercepter;
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if (intercepter != null && intercepter.accept(daoInterface, connectionHolder, proxy, method, args)) {
+            return intercepter.invoke(connectionHolder, proxy, method, args);
+        }
         TargetQuery targetQuery = method.getAnnotation(TargetQuery.class);
         if (method.isDefault()) {
             return invokeDefaultMethod(proxy, method, args);
