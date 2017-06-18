@@ -881,8 +881,8 @@ public class OrmDao {
     public static <Interfaze> Interfaze createDao(Object connectionHolder, Class<Interfaze> daoInterface) {
         ClassLoader classLoader = daoInterface.getClassLoader();
         Class<?>[] daoClasses = new Class[]{daoInterface};
-        IMethodInterceptor intercepter = getInstance(IMethodInterceptor.class);
-        InvocationHandler handler = new DaoProxy(connectionHolder, daoInterface, intercepter);
+        IMethodInterceptor interceptor = getInstance(IMethodInterceptor.class);
+        InvocationHandler handler = new DaoProxy(connectionHolder, daoInterface, interceptor);
         return (Interfaze) Proxy.newProxyInstance(classLoader, daoClasses, handler);
     }
 }

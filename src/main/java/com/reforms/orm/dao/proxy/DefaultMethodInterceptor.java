@@ -5,7 +5,7 @@ import com.reforms.ann.ThreadSafe;
 import java.lang.reflect.Method;
 
 /**
- * Дефолтная реализация перехватчика вызов прокси объектов
+ * Дефолтная реализация перехватчика вызовов прокси объектов
  * @author evgenie
  */
 @ThreadSafe
