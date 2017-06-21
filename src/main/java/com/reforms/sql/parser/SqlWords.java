@@ -182,6 +182,8 @@ public class SqlWords {
 
     public static String SW_ONLY = "ONLY"; // MSSQL
 
+    public static String SW_CALL = "CALL";
+
     private static final Map<String, Boolean> WORDS = init();
 
     private static Map<String, Boolean> init() {
@@ -228,6 +230,7 @@ public class SqlWords {
         addWords(words, SW_OVER);
         addWords(words, SW_PARTITION);
         addWords(words, SW_FETCH, SW_NEXT, SW_FIRST, SW_ONLY, SW_ROWS, SW_ROW);
+        addWords(words, SW_CALL);
         return Collections.unmodifiableMap(words);
     }
 

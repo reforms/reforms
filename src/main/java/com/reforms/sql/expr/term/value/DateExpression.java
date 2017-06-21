@@ -36,14 +36,14 @@ public class DateExpression extends ValueExpression {
     @Override
     public void view(SqlBuilder sqlBuilder) {
         if (jdbcFormat) {
-            sqlBuilder.appendSpace();
             sqlBuilder.append("{");
             sqlBuilder.appendWord(dateWord);
+            sqlBuilder.appendSpace();
             super.view(sqlBuilder);
             sqlBuilder.append("}");
         } else {
-            sqlBuilder.appendSpace();
             sqlBuilder.appendWord(dateWord);
+            sqlBuilder.appendSpace();
             super.view(sqlBuilder);
         }
     }

@@ -38,7 +38,7 @@ import static com.reforms.sql.parser.SqlWords.*;
  *      - parse...
  *      - check...
  *  Смысловая часть:
- *      - query         (SelectQuery, InsertQuery, UpdateQuery, DeleteQuery)
+ *      - query         (SelectQuery, InsertQuery, UpdateQuery, DeleteQuery, CallQuery)
  *      - statement     (SelectStatement, FromStatement, WhereStatement, ... etc)
  *      - expression    (AliasExpression, AsteriskExpression, ... etc)
  *      - word          (ALL, NOT, ... etc, part of some expression, but exclude main word)
@@ -48,7 +48,7 @@ import static com.reforms.sql.parser.SqlWords.*;
  */
 public class SqlParser {
 
-    private SqlStream stream;
+    private final SqlStream stream;
 
     public SqlParser(String query) {
         stream = new SqlStream(query);
@@ -107,6 +107,38 @@ public class SqlParser {
         InsertQuery insertQuery = new InsertQuery();
         insertQuery.setInsertStatement(insertStatement);
         return insertQuery;
+    }
+
+    public CallQuery parseCallQuery() {
+        // {
+        stream.checkIsOpenFigureParen(true);
+        stream.moveCursor();
+        Expression questionExpr = null;
+        // ?
+        if (checkIsQuestionExpression()) {
+            questionExpr = parseQuestionExpression();
+            questionExpr.setSpacable(false);
+            int from = stream.getCursor();
+            String eqValue = stream.parseComparisonOperatorValue();
+            if (!"=".equals(eqValue)) {
+                throw stream.createException("Ожидается оператор '='", from);
+            }
+        }
+        // call
+        String callWord = stream.parseSpecialWordValueAndCheck(SW_CALL);
+        // funcName(args)
+        FuncExpression funcExpr = parseFuncExpression();
+        // }
+        stream.checkIsCloseFigureParen(true);
+        stream.moveCursor();
+        if (!stream.finished()) {
+            throw stream.createException("Не удалось до конца разобрать CALL запрос");
+        }
+        CallQuery callQuery = new CallQuery();
+        callQuery.setQuestionExpr(questionExpr);
+        callQuery.setCallWord(callWord);
+        callQuery.setFuncExpr(funcExpr);
+        return callQuery;
     }
 
     /**

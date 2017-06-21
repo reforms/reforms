@@ -36,14 +36,14 @@ public class TimeExpression extends ValueExpression {
     @Override
     public void view(SqlBuilder sqlBuilder) {
         if (jdbcFormat) {
-            sqlBuilder.appendSpace();
             sqlBuilder.append("{");
             sqlBuilder.appendWord(timeWord);
+            sqlBuilder.appendSpace();
             super.view(sqlBuilder);
             sqlBuilder.append("}");
         } else {
-            sqlBuilder.appendSpace();
             sqlBuilder.appendWord(timeWord);
+            sqlBuilder.appendSpace();
             super.view(sqlBuilder);
         }
     }

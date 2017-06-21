@@ -29,8 +29,8 @@ public class IntervalExpression extends ValueExpression {
 
     @Override
     public void view(SqlBuilder sqlBuilder) {
-        sqlBuilder.appendSpace();
         sqlBuilder.appendWord(intervalWord);
+        sqlBuilder.appendSpace();
         super.view(sqlBuilder);
     }
 }

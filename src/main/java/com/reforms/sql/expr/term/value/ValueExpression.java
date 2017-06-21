@@ -8,9 +8,9 @@ import static com.reforms.sql.expr.term.ExpressionType.ET_VALUE_EXPRESSION;
 
 public class ValueExpression extends SelectableExpression {
 
-    private String value;
+    private final String value;
 
-    private ValueExpressionType valueExprType;
+    private final ValueExpressionType valueExprType;
 
     public ValueExpression(String value, ValueExpressionType valueExprType) {
         this.value = value;
@@ -32,7 +32,6 @@ public class ValueExpression extends SelectableExpression {
 
     @Override
     public void view(SqlBuilder sqlBuilder) {
-        sqlBuilder.appendSpace();
         sqlBuilder.appendWord(value);
     }
 }
