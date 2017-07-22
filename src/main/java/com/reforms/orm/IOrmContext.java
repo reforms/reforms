@@ -3,6 +3,7 @@ package com.reforms.orm;
 import com.reforms.ann.TargetApi;
 import com.reforms.orm.dao.IParamNameConverter;
 import com.reforms.orm.dao.IResultSetReaderFactory;
+import com.reforms.orm.dao.IStoreProcedureTypeResolver;
 import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.dao.bobj.IResultSetValueAdapter;
 import com.reforms.orm.dao.bobj.reader.IResultSetValueReader;
@@ -61,6 +62,10 @@ public interface IOrmContext {
     public IMethodInterceptor changeMethodInterceptor(CreateNewInstance<IMethodInterceptor> creator);
 
     public void setMethodInterceptor(IMethodInterceptor newInterceptor);
+
+    public IStoreProcedureTypeResolver changeStoreProcedureTypeResolver(CreateNewInstance<IStoreProcedureTypeResolver> creator);
+
+    public void setStoreProcedureTypeResolver(IStoreProcedureTypeResolver newInterceptor);
 
     public void sealed();
 }

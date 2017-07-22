@@ -24,6 +24,12 @@ public class UTestCallQueryParser {
         assertCallQuery("{call NOTH(:param1, :param2)}");
         assertCallQuery("{? = CALL SEQ_ID(:param1, :param2)}");
         assertCallQuery("{? = CALL SEQ_ID()}");
+        assertCallQuery("{(id, name) = CALL LOAD_CLIENT()}");
+        assertCallQuery("{(:i#id, :s#name) = CALL LOAD_CLIENT()}");
+        assertCallQuery("{(:i#bean.innerBean.id, :s#bean.innerBean.id) = CALL LOAD_CLIENT()}");
+
+        //assertCallQuery("{? = CALL shemaName.spaceName.SEQ_ID(:param1, :param2)}");
+
     }
 
     private void assertCallQuery(String query) {

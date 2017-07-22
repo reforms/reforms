@@ -1,5 +1,8 @@
 package com.reforms.orm.dao.filter;
 
+import com.reforms.orm.dao.filter.param.ParamSetter;
+import com.reforms.orm.dao.filter.param.ParamSetterFactory;
+
 import java.lang.reflect.Array;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -7,16 +10,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.reforms.orm.dao.filter.param.ParamSetter;
-import com.reforms.orm.dao.filter.param.ParamSetterFactory;
-
 /**
  * Устанавливает значения с заданного индекса в PrepareStatement
  * @author evgenie
  */
 public class PsValuesSetter implements IPsValuesSetter {
 
-    private int index;
+    protected int index;
 
     private final List<ParamSetter> paramSetters = new ArrayList<>();
     private final List<Object> filterValues = new ArrayList<>();

@@ -113,11 +113,25 @@ public class SqlParser {
         // {
         stream.checkIsOpenFigureParen(true);
         stream.moveCursor();
-        Expression questionExpr = null;
+        QuestionExpression questionExpr = null;
+        ValueListExpression valuesExpr = null;
         // ?
         if (checkIsQuestionExpression()) {
-            questionExpr = parseQuestionExpression();
+            int from = stream.getCursor();
+            ValueExpression valueExpr = parseQuestionExpression();
+            if (!(valueExpr instanceof QuestionExpression)) {
+                throw stream.createException("Ожидается выражение типа 'QuestionExpression', а получено " +
+                        (valueExpr == null ? "null" : valueExpr.getClass()), from);
+            }
+            questionExpr = (QuestionExpression) valueExpr;
             questionExpr.setSpacable(false);
+            String eqValue = stream.parseComparisonOperatorValue();
+            if (!"=".equals(eqValue)) {
+                throw stream.createException("Ожидается оператор '='", from);
+            }
+        } else if (stream.checkIsOpenParent(false)) {
+            valuesExpr = parseValueListExpression();
+            valuesExpr.setSpacable(false);
             int from = stream.getCursor();
             String eqValue = stream.parseComparisonOperatorValue();
             if (!"=".equals(eqValue)) {
@@ -136,6 +150,8 @@ public class SqlParser {
         }
         CallQuery callQuery = new CallQuery();
         callQuery.setQuestionExpr(questionExpr);
+        callQuery.setValuesExpr(valuesExpr);
+        callQuery.setJdbcView(valuesExpr == null);
         callQuery.setCallWord(callWord);
         callQuery.setFuncExpr(funcExpr);
         return callQuery;

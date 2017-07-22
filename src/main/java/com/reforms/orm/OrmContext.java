@@ -2,6 +2,7 @@ package com.reforms.orm;
 
 import com.reforms.orm.dao.IParamNameConverter;
 import com.reforms.orm.dao.IResultSetReaderFactory;
+import com.reforms.orm.dao.IStoreProcedureTypeResolver;
 import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.dao.bobj.IResultSetValueAdapter;
 import com.reforms.orm.dao.bobj.reader.IResultSetValueReader;
@@ -210,6 +211,24 @@ class OrmContext implements IOrmContext {
     public void setMethodInterceptor(IMethodInterceptor newInterceptor) {
         checkBeforeModify();
         putInstance(IMethodInterceptor.class, newInterceptor);
+    }
+
+    @Override
+    public IStoreProcedureTypeResolver changeStoreProcedureTypeResolver(CreateNewInstance<IStoreProcedureTypeResolver> creator) {
+        checkBeforeModify();
+        IStoreProcedureTypeResolver current = getInstance(IStoreProcedureTypeResolver.class);
+        IStoreProcedureTypeResolver newResolver = creator.createNew(current);
+        if (newResolver != null) {
+            putInstance(IStoreProcedureTypeResolver.class, newResolver);
+            return current;
+        }
+        return null;
+    }
+
+    @Override
+    public void setStoreProcedureTypeResolver(IStoreProcedureTypeResolver newResolver) {
+        checkBeforeModify();
+        putInstance(IStoreProcedureTypeResolver.class, newResolver);
     }
 
     @Override

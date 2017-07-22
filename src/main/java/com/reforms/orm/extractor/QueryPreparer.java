@@ -11,6 +11,7 @@ import com.reforms.orm.dao.bobj.update.IInsertValues;
 import com.reforms.orm.dao.bobj.update.IUpdateValues;
 import com.reforms.orm.dao.column.ColumnAlias;
 import com.reforms.orm.dao.column.ColumnAliasParser;
+import com.reforms.orm.dao.filter.CallableValueSetter;
 import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.filter.IPsValuesSetter;
 import com.reforms.orm.dao.filter.PsValuesSetter;
@@ -18,14 +19,12 @@ import com.reforms.orm.dao.filter.param.ParamSetterFactory;
 import com.reforms.orm.dao.paging.IPageFilter;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.tree.QueryTree;
-import com.reforms.sql.expr.query.DeleteQuery;
-import com.reforms.sql.expr.query.InsertQuery;
-import com.reforms.sql.expr.query.SelectQuery;
-import com.reforms.sql.expr.query.UpdateQuery;
+import com.reforms.sql.expr.query.*;
 import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.from.TableExpression;
 import com.reforms.sql.expr.term.value.FilterExpression;
 import com.reforms.sql.expr.term.value.PageQuestionExpression;
+import com.reforms.sql.expr.term.value.QuestionExpression;
 import com.reforms.sql.expr.term.value.ValueExpression;
 
 import java.lang.reflect.Array;
@@ -68,6 +67,29 @@ public class QueryPreparer {
         IPageFilter newPageFilter = preparePage(selectQuery, filters);
         prepareScheme(selectQuery);
         return prepareValues(selectQuery, filters, newPageFilter);
+    }
+
+    /**
+     * Подготовка хранимой процедуры
+     * @param callQuery   call запрос
+     * @param filters     фильтры
+     * @return объект для установки значений в PS
+     */
+    public CallableValueSetter prepareCallQuery(CallQuery callQuery, IFilterValues filters) {
+        if (filters == null) {
+            filters = EMPTY_FILTER_MAP;
+        }
+        prepareScheme(callQuery);
+        // Если выборка типа курсор, нужно в хранимку добавить результат выбора ?
+        if (callQuery.getValuesExpr() != null) {
+            QuestionExpression questionExpr = new QuestionExpression();
+            callQuery.setQuestionExpr(questionExpr);
+        }
+        callQuery.setJdbcView(true);
+        ParamSetterFactory paramSetterFactory = getInstance(ParamSetterFactory.class);
+        CallableValueSetter fpss = new CallableValueSetter(callQuery.hasReturnType(), paramSetterFactory);
+        prepareValues(callQuery.getFuncExpr(), filters, null, fpss);
+        return fpss;
     }
 
     public IPsValuesSetter prepareUpdateQuery(UpdateQuery updateQuery, IUpdateValues updateValues, IFilterValues filters) {

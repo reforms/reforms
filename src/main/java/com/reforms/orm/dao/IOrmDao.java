@@ -31,4 +31,13 @@ interface IOrmDao {
     void insert(DaoInsertContext daoCtx) throws Exception;
 
     int[][] inserts(DaoBatchInsertContext daoCtx) throws Exception;
+
+    <OrmType> OrmType callAndLoad(DaoCallContext daoCtx) throws Exception;
+
+    <OrmType> List<OrmType> callAndLoads(DaoCallContext daoCtx) throws Exception;
+
+    <OrmType> OrmIterator<OrmType> callAndIterate(DaoCallContext daoCtx) throws Exception;
+
+    void callAndHandle(DaoCallContext daoCtx, OrmHandler<Object> handler) throws Exception;
+
 }

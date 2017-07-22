@@ -11,6 +11,8 @@ public @interface TargetQuery {
 
     /** Batch size ignore value */
     final int BATCH_IGNORE_SIZE = -1;
+    /** Type ignore value */
+    final int TYPE_IGNORE_SIZE = -100000;
 
     /** Select query */
     final int QT_AUTO = -1;
@@ -27,6 +29,9 @@ public @interface TargetQuery {
     /** Delete query */
     final int QT_DELETE = 3;
 
+    /** Store procedure call query */
+    final int QT_CALL = 4;
+
     /** Тип sql-запроса */
     int type() default QT_AUTO;
 
@@ -37,6 +42,9 @@ public @interface TargetQuery {
     String value() default "";
 
     int batchSize() default BATCH_IGNORE_SIZE;
+
+    /** Тип sql-запроса */
+    int returnType() default TYPE_IGNORE_SIZE;
 
     /** SQL-запрос */
     Class<?> orm() default Object.class;

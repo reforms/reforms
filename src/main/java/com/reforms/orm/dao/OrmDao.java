@@ -9,15 +9,15 @@ import com.reforms.orm.dao.bobj.model.OrmIterator;
 import com.reforms.orm.dao.bobj.update.IInsertValues;
 import com.reforms.orm.dao.bobj.update.IUpdateValues;
 import com.reforms.orm.dao.column.SelectedColumn;
+import com.reforms.orm.dao.filter.CallableValueSetter;
 import com.reforms.orm.dao.filter.IPsValuesSetter;
 import com.reforms.orm.extractor.OrmSelectColumnExtractorAndAliasModifier;
 import com.reforms.orm.extractor.QueryPreparer;
-import com.reforms.sql.expr.query.DeleteQuery;
-import com.reforms.sql.expr.query.InsertQuery;
-import com.reforms.sql.expr.query.SelectQuery;
-import com.reforms.sql.expr.query.UpdateQuery;
+import com.reforms.orm.extractor.SelectColumnCallableExtractor;
+import com.reforms.sql.expr.query.*;
 import com.reforms.sql.parser.SqlParser;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -306,6 +306,109 @@ class OrmDao implements IOrmDao {
         return batchesResult.toArray(new int[batchesResult.size()][]);
     }
 
+    @Override
+    public <OrmType> OrmType callAndLoad(DaoCallContext daoCtx) throws Exception {
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
+        Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
+        CallQuery callQuery = parseCallQuery(daoCtx.getQuery());
+        SelectColumnCallableExtractor selectedColumnExtractor = OrmConfigurator.getInstance(SelectColumnCallableExtractor.class);
+        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(callQuery, daoCtx.getSelectedColumnFilter());
+        IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
+        IResultSetObjectReader ormReader = rsrFactory.resolveReader(daoCtx.getOrmType(), selectedColumns);
+        QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
+        CallableValueSetter callSetterEngine = filterPreparer.prepareCallQuery(callQuery, daoCtx.getFilterValues());
+        String preparedSqlQuery = callQuery.toString();
+        try (CallableStatement cs = connection.prepareCall(preparedSqlQuery)) {
+            callSetterEngine.setParamsAndReturnType(daoCtx.getReturnSqlType(), cs);
+            try (ResultSet rs = cs.executeQuery()) {
+                OrmType orm = null;
+                if (ormReader.canRead(rs)) {
+                    orm = ormReader.read(rs);
+                }
+                return orm;
+            }
+        }
+    }
+
+    @Override
+    public <OrmType> List<OrmType> callAndLoads(DaoCallContext daoCtx) throws Exception {
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
+        Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
+        CallQuery callQuery = parseCallQuery(daoCtx.getQuery());
+        SelectColumnCallableExtractor selectedColumnExtractor = OrmConfigurator.getInstance(SelectColumnCallableExtractor.class);
+        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(callQuery, daoCtx.getSelectedColumnFilter());
+        IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
+        IResultSetObjectReader ormReader = rsrFactory.resolveReader(daoCtx.getOrmType(), selectedColumns);
+        QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
+        CallableValueSetter callSetterEngine = filterPreparer.prepareCallQuery(callQuery, daoCtx.getFilterValues());
+        String preparedSqlQuery = callQuery.toString();
+        List<OrmType> orms = new ArrayList<>();
+        try (CallableStatement cs = connection.prepareCall(preparedSqlQuery)) {
+            callSetterEngine.setParamsAndReturnType(daoCtx.getReturnSqlType(), cs);
+            try (ResultSet rs = cs.executeQuery()) {
+                while (ormReader.canRead(rs)) {
+                    OrmType orm = ormReader.read(rs);
+                    orms.add(orm);
+                }
+                return orms;
+            }
+        }
+    }
+
+    @Override
+    public <OrmType> OrmIterator<OrmType> callAndIterate(DaoCallContext daoCtx) throws Exception {
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
+        Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
+        CallQuery callQuery = parseCallQuery(daoCtx.getQuery());
+        SelectColumnCallableExtractor selectedColumnExtractor = OrmConfigurator.getInstance(SelectColumnCallableExtractor.class);
+        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(callQuery, daoCtx.getSelectedColumnFilter());
+        IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
+        IResultSetObjectReader ormReader = rsrFactory.resolveReader(daoCtx.getOrmType(), selectedColumns);
+        QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
+        CallableValueSetter callSetterEngine = filterPreparer.prepareCallQuery(callQuery, daoCtx.getFilterValues());
+        String preparedSqlQuery = callQuery.toString();
+        CallableStatement cs = null;
+        try {
+            cs = connection.prepareCall(preparedSqlQuery);
+            callSetterEngine.setParamsAndReturnType(daoCtx.getReturnSqlType(), cs);
+            OrmIterator<OrmType> ormIterator = new OrmIterator<OrmType>(cs, ormReader);
+            ormIterator.prepare();
+            return ormIterator;
+        } catch (Exception ex) {
+            if (cs != null) {
+                cs.close();
+            }
+            throw ex;
+        }
+    }
+
+    @Override
+    public void callAndHandle(DaoCallContext daoCtx, OrmHandler<Object> handler) throws Exception {
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
+        Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
+        CallQuery callQuery = parseCallQuery(daoCtx.getQuery());
+        SelectColumnCallableExtractor selectedColumnExtractor = OrmConfigurator.getInstance(SelectColumnCallableExtractor.class);
+        List<SelectedColumn> selectedColumns = selectedColumnExtractor.extractSelectedColumns(callQuery, daoCtx.getSelectedColumnFilter());
+        IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
+        IResultSetObjectReader ormReader = rsrFactory.resolveReader(daoCtx.getOrmType(), selectedColumns);
+        QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
+        CallableValueSetter callSetterEngine = filterPreparer.prepareCallQuery(callQuery, daoCtx.getFilterValues());
+        String preparedSqlQuery = callQuery.toString();
+        try (CallableStatement cs = connection.prepareCall(preparedSqlQuery)) {
+            callSetterEngine.setParamsAndReturnType(daoCtx.getReturnSqlType(), cs);
+            try (ResultSet rs = cs.executeQuery()) {
+                handler.startHandle();
+                while (ormReader.canRead(rs)) {
+                    Object orm = ormReader.read(rs);
+                    if (!handler.handleOrm(orm)) {
+                        break;
+                    }
+                }
+                handler.endHandle();
+            }
+        }
+    }
+
     private SelectQuery parseSelectQuery(String sqlQuery) {
         SqlParser sqlParser = new SqlParser(sqlQuery);
         SelectQuery selectQuery = sqlParser.parseSelectQuery();
@@ -330,4 +433,9 @@ class OrmDao implements IOrmDao {
         return insertQuery;
     }
 
+    private CallQuery parseCallQuery(String sqlQuery) {
+        SqlParser sqlParser = new SqlParser(sqlQuery);
+        CallQuery callQuery = sqlParser.parseCallQuery();
+        return callQuery;
+    }
 }

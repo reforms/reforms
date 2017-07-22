@@ -4,10 +4,13 @@ import com.reforms.ann.TargetDao;
 import com.reforms.ann.TargetFilter;
 import com.reforms.ann.TargetQuery;
 import com.reforms.orm.OrmDao;
+import com.reforms.orm.dao.IStoreProcedureTypeResolver;
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
+import com.reforms.orm.scheme.ISchemeManager;
+import com.reforms.sql.db.DbType;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles.Lookup;
@@ -18,6 +21,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 import static com.reforms.ann.TargetQuery.*;
+import static com.reforms.orm.OrmConfigurator.getInstance;
 
 /**
  * Proxy implementations of dao
@@ -84,6 +88,9 @@ public class DaoProxy implements InvocationHandler {
             if (QT_DELETE == queryType) {
                 return processDeleteQuery(targetQuery, method, args);
             }
+            if (QT_CALL == queryType) {
+                return processCallQuery(targetQuery, method, args);
+            }
         } else {
             if ("toString".equals(method.getName())) {
                 return daoInterface.toString();
@@ -131,6 +138,9 @@ public class DaoProxy implements InvocationHandler {
             }
             if ("UPDATE".equalsIgnoreCase(keyWord)) {
                 return QT_UPDATE;
+            }
+            if (query.startsWith("{")) {
+                return QT_CALL;
             }
         }
         throw new IllegalStateException("Не удалось определить тип запроса в " + targetQuery);
@@ -377,6 +387,62 @@ public class DaoProxy implements InvocationHandler {
         IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, getQuery(targetQuery));
         configureSelectAdapter(daoAdapter, method, args);
         return daoAdapter.delete();
+    }
+
+    private void configureCallAdapter(TargetQuery targetQuery, IOrmDaoAdapter daoAdapter, Method method) {
+        if (TYPE_IGNORE_SIZE != targetQuery.returnType()) {
+            daoAdapter.registryOutParam(targetQuery.returnType());
+        }
+        if (void.class == method.getReturnType() || Void.class == method.getReturnType()) {
+            return;
+        }
+        IStoreProcedureTypeResolver sqlTypeResolver = getInstance(IStoreProcedureTypeResolver.class);
+        Integer sqlType = sqlTypeResolver.getReturnSqlType(method.getReturnType());
+        if (sqlType == null) {
+            ISchemeManager schemeManager = getInstance(ISchemeManager.class);
+            if (schemeManager.getDefaultDbType() != null && schemeManager.isSingleDbType()) {
+                DbType dbType = schemeManager.getDefaultDbType();
+                sqlType = sqlTypeResolver.getCursorType(dbType);
+            }
+        }
+        daoAdapter.registryOutParam(sqlType);
+    }
+
+    private Object processCallQuery(TargetQuery targetQuery, Method method, Object[] args) throws Exception {
+        IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, getQuery(targetQuery));
+        boolean hasHandler = configureSelectAdapter(daoAdapter, method, args);
+        configureCallAdapter(targetQuery, daoAdapter, method);
+        Class<?> ormType = getOrmClass(targetQuery, method);
+        // Обработка списков
+        if (List.class.isAssignableFrom(method.getReturnType())) {
+            return daoAdapter.callAndLoads(ormType);
+        }
+        // Обработка множества
+        if (Set.class.isAssignableFrom(method.getReturnType())) {
+            //return daoAdapter.set(ormType);
+            throw new IllegalStateException("Set type is not supported yet");
+        }
+        // Обработка массивов
+        if (method.getReturnType().isArray()) {
+            List values = daoAdapter.callAndLoads(ormType);
+            return values.toArray((Object[]) Array.newInstance(ormType, values.size()));
+        }
+        // Обработка итераторов
+        if (OrmIterator.class.isAssignableFrom(method.getReturnType())) {
+            return daoAdapter.callAndIterate(ormType);
+        }
+        // Указан обработчик для выбираемых объектов
+        if (hasHandler) {
+            OrmHandler<Object> handler = findOrmHandler(args);
+            if (handler == null) {
+                throw new IllegalStateException("Ожидается OrmHandler, а получен null. " +
+                        "Метод '" + method.getName() + "#" + method.getParameterTypes().length);
+            }
+            daoAdapter.handle((Class<Object>) ormType, handler);
+            return null;
+        }
+        // Если ничего из перечисленных, значит одиночный объект
+        return daoAdapter.callAndLoad(ormType);
     }
 
     private TargetFilter findTargetFilter(int index, Method method) {

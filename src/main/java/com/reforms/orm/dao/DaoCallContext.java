@@ -1,0 +1,76 @@
+package com.reforms.orm.dao;
+
+import com.reforms.orm.dao.filter.IFilterValues;
+import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
+
+/**
+ * Контекст данных для совершения определенной операции
+ * @author evgenie
+ */
+class DaoCallContext {
+
+    /** Объект, который содержит доступ к БД */
+    private Object connectionHolder;
+
+    /** Запрос к БД */
+    private String query;
+
+    /** Выбираемый тип */
+    private Class<?> ormType;
+
+    /** Фильтр выбираемых колонок */
+    private ISelectedColumnFilter selectedColumnFilter;
+
+    /** Фильтр данных */
+    private IFilterValues filterValues;
+
+    private Integer returnSqlType;
+
+    Object getConnectionHolder() {
+        return connectionHolder;
+    }
+
+    void setConnectionHolder(Object connectionHolder) {
+        this.connectionHolder = connectionHolder;
+    }
+
+    String getQuery() {
+        return query;
+    }
+
+    void setQuery(String query) {
+        this.query = query;
+    }
+
+    Class<?> getOrmType() {
+        return ormType;
+    }
+
+    void setOrmType(Class<?> ormType) {
+        this.ormType = ormType;
+    }
+
+    ISelectedColumnFilter getSelectedColumnFilter() {
+        return selectedColumnFilter;
+    }
+
+    void setSelectedColumnFilter(ISelectedColumnFilter selectedColumnFilter) {
+        this.selectedColumnFilter = selectedColumnFilter;
+    }
+
+    IFilterValues getFilterValues() {
+        return filterValues;
+    }
+
+    void setFilterValues(IFilterValues filterValues) {
+        this.filterValues = filterValues;
+    }
+
+    void setReturnSqlType(Integer returnSqlType) {
+        this.returnSqlType = returnSqlType;
+    }
+
+    Integer getReturnSqlType() {
+        return returnSqlType;
+    }
+}

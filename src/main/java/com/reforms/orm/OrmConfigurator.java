@@ -2,10 +2,7 @@ package com.reforms.orm;
 
 import com.reforms.ann.TargetApi;
 import com.reforms.ann.ThreadSafe;
-import com.reforms.orm.dao.IParamNameConverter;
-import com.reforms.orm.dao.IResultSetReaderFactory;
-import com.reforms.orm.dao.ParamNameConverter;
-import com.reforms.orm.dao.ResultSetReaderFactory;
+import com.reforms.orm.dao.*;
 import com.reforms.orm.dao.bobj.ColumnToFieldNameConverter;
 import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.dao.bobj.IResultSetValueAdapter;
@@ -54,6 +51,7 @@ public class OrmConfigurator {
         schemeManager.setDefaultDbType(DbType.DBT_MIX);
         putInstance(ISchemeManager.class, schemeManager);
         putInstance(IMethodInterceptor.class, new DefaultMethodInterceptor());
+        putInstance(IStoreProcedureTypeResolver.class, new StoreProcedureTypeResolver());
     }
 
     static void putInstance(Class<?> clazz, Object instance) {

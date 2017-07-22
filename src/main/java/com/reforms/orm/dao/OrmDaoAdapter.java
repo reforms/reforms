@@ -41,6 +41,9 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     private Integer pageOffset;
     private IPageFilter pageFilter;
 
+    // Тип возращаемый хранимой процедурой
+    private Integer returnSqlType;
+
     // updates OR insert info
     private List<Object> simpleUpdateValues;
     private Object updateBobj;
@@ -242,6 +245,12 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     }
 
     @Override
+    public IOrmDaoAdapter registryOutParam(Integer returnSqlType) {
+        this.returnSqlType = returnSqlType;
+        return this;
+    }
+
+    @Override
     public IOrmDaoAdapter setInsertValue(IInsertValues insertValues) {
         if (insertValues instanceof IUpdateValues) {
             return setUpdateValue((IUpdateValues) insertValues);
@@ -317,6 +326,17 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         daoCtx.setOrmType(ormClass);
         daoCtx.setSelectedColumnFilter(buildSelectedColumnFilter());
         daoCtx.setFilterValues(buildFilterValues());
+        return daoCtx;
+    }
+
+    private DaoCallContext buildDaoCallContext(Class<?> ormClass) {
+        DaoCallContext daoCtx = new DaoCallContext();
+        daoCtx.setConnectionHolder(connectionHolder);
+        daoCtx.setQuery(query);
+        daoCtx.setOrmType(ormClass);
+        daoCtx.setSelectedColumnFilter(buildSelectedColumnFilter());
+        daoCtx.setFilterValues(buildFilterValues());
+        daoCtx.setReturnSqlType(returnSqlType);
         return daoCtx;
     }
 
@@ -434,4 +454,32 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         return dao.inserts(daoCtx);
     }
 
+    @Override
+    public <OrmType> OrmType callAndLoad(Class<OrmType> ormClass) throws Exception {
+        IOrmDao dao = new OrmDao();
+        DaoCallContext daoCtx = buildDaoCallContext(ormClass);
+        return dao.callAndLoad(daoCtx);
+    }
+
+    @Override
+    public <OrmType> List<OrmType> callAndLoads(Class<OrmType> ormClass) throws Exception {
+        IOrmDao dao = new OrmDao();
+        DaoCallContext daoCtx = buildDaoCallContext(ormClass);
+        return dao.callAndLoads(daoCtx);
+    }
+
+    @Override
+    public <OrmType> OrmIterator<OrmType> callAndIterate(Class<OrmType> ormClass) throws Exception {
+        IOrmDao dao = new OrmDao();
+        DaoCallContext daoCtx = buildDaoCallContext(ormClass);
+        return dao.callAndIterate(daoCtx);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <OrmType> void callAndHandle(Class<OrmType> ormClass, OrmHandler<OrmType> handler) throws Exception {
+        IOrmDao dao = new OrmDao();
+        DaoCallContext daoCtx = buildDaoCallContext(ormClass);
+        dao.callAndHandle(daoCtx, (OrmHandler<Object>) handler);
+    }
 }
