@@ -13,6 +13,10 @@ public class FuncExpression extends SelectableExpression {
 
     private boolean shortStyle;
 
+    private String schemeName;
+
+    private String spaceName;
+
     private String name;
 
     private ValueListExpression args;
@@ -25,6 +29,31 @@ public class FuncExpression extends SelectableExpression {
 
     public void setShortStyle(boolean shortStyle) {
         this.shortStyle = shortStyle;
+    }
+
+    public String getSchemeName() {
+        return schemeName;
+    }
+
+    public boolean hasSchemeName() {
+        return schemeName != null;
+    }
+
+    public void setSchemeName(String schemeName) {
+        this.schemeName = schemeName;
+    }
+
+    public String getSpaceName() {
+        return spaceName;
+    }
+
+    public void setSpaceName(String spaceName) {
+        this.spaceName = spaceName;
+    }
+
+    @Override
+    public void setSpacable(boolean spacable) {
+        super.setSpacable(spacable);
     }
 
     public String getName() {
@@ -59,6 +88,12 @@ public class FuncExpression extends SelectableExpression {
 
     @Override
     public void view(SqlBuilder sqlBuilder) {
+        if (schemeName != null) {
+            sqlBuilder.appendWord(schemeName).append(".");
+        }
+        if (spaceName != null) {
+            sqlBuilder.appendWord(spaceName).append(".");
+        }
         sqlBuilder.appendWord(name);
         if (args != null && (!args.isEmpty() || !shortStyle)) {
             sqlBuilder.appendExpression(args);

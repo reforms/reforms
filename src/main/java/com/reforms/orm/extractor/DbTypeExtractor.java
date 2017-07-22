@@ -4,9 +4,14 @@ import com.reforms.ann.ThreadSafe;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.sql.db.DbType;
 import com.reforms.sql.expr.query.SelectQuery;
+import com.reforms.sql.expr.term.Expression;
+import com.reforms.sql.expr.term.ExpressionType;
+import com.reforms.sql.expr.term.FuncExpression;
 import com.reforms.sql.expr.term.from.TableExpression;
 
 import static com.reforms.orm.OrmConfigurator.getInstance;
+import static com.reforms.sql.expr.term.ExpressionType.ET_FUNC_EXPRESSION;
+import static com.reforms.sql.expr.term.ExpressionType.ET_TABLE_EXPRESSION;
 
 /**
  * Получить тип БД
@@ -28,18 +33,55 @@ public class DbTypeExtractor {
     }
 
     private DbType extractDbType(SelectQuery selectQuery, ISchemeManager schemeManager) {
-        TableExpressionExtractor tableExprExtractor = new TableExpressionExtractor();
-        for (TableExpression tableExpr : tableExprExtractor.extractTableExpressions(selectQuery)) {
-            if (tableExpr.hasSchemeName()) {
-                String schemeKey = tableExpr.getSchemeName();
-                DbType dbType = schemeManager.getDbType(schemeKey);
-                return dbType != null ? dbType : DbType.DBT_MIX;
-            }
-        }
-        if (schemeManager.getDefaultSchemeName() != null) {
-            return schemeManager.getDefaultDbType();
-        }
-        return DbType.DBT_MIX;
+        ExpressionScanner scanner = new ExpressionScanner();
+        DbTypeFinder dbFinder = new DbTypeFinder(schemeManager);
+        scanner.scan(selectQuery, dbFinder);
+        return dbFinder.getDbType();
     }
 
+    private static class DbTypeFinder implements IExpressionProcessor {
+
+        private final ISchemeManager schemeManager;
+
+        private DbType dbType;
+
+        DbTypeFinder(ISchemeManager schemeManager) {
+            this.schemeManager = schemeManager;
+        }
+
+        public DbType getDbType() {
+            return dbType == null ? DbType.DBT_MIX : dbType;
+        }
+
+        @Override
+        public boolean accept(ExpressionType exprType) {
+            return ET_TABLE_EXPRESSION == exprType || ET_FUNC_EXPRESSION == exprType;
+        }
+
+
+        @Override
+        public boolean process(ExpressionType exprType, Expression expr) {
+            if (ET_TABLE_EXPRESSION == exprType) {
+                TableExpression tableExpr = (TableExpression) expr;
+                if (tableExpr.hasSchemeName()) {
+                    String schemeKey = tableExpr.getSchemeName();
+                    dbType = schemeManager.getDbType(schemeKey);
+                    if (dbType == null) {
+                        dbType = DbType.DBT_MIX;
+                    }
+                }
+            }
+            if (ET_FUNC_EXPRESSION == exprType) {
+                FuncExpression funcExpr = (FuncExpression) expr;
+                if (funcExpr.hasSchemeName()) {
+                    String schemeKey = funcExpr.getSchemeName();
+                    dbType = schemeManager.getDbType(schemeKey);
+                    if (dbType == null) {
+                        dbType = DbType.DBT_MIX;
+                    }
+                }
+            }
+            return dbType == null;
+        }
+    }
 }

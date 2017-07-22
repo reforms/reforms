@@ -27,8 +27,8 @@ public class UTestCallQueryParser {
         assertCallQuery("{(id, name) = CALL LOAD_CLIENT()}");
         assertCallQuery("{(:i#id, :s#name) = CALL LOAD_CLIENT()}");
         assertCallQuery("{(:i#bean.innerBean.id, :s#bean.innerBean.id) = CALL LOAD_CLIENT()}");
-
-        //assertCallQuery("{? = CALL shemaName.spaceName.SEQ_ID(:param1, :param2)}");
+        assertCallQuery("{? = CALL shemaName.spaceName.SEQ_ID(:param1, :param2)}");
+        assertCallQuery("{? = CALL shemaName.SEQ_ID(:param1, :param2)}");
 
     }
 

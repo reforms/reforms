@@ -830,14 +830,34 @@ public class SqlParser {
     }
 
     private FuncExpression parseCommonFuncExpression() {
-        String funcName = stream.parseSpecialWordValue();
-        if (funcName == null) {
+        String id3 = null; // schemaName
+        String id2 = null; // spaceName
+        String id1 = stream.parseSpecialWordValue(); // funcName (inverse order)
+        if (id1 == null) {
             throw stream.createException("Ожидается наименование функции");
+        }
+        if (stream.checkIsDot(false)) {
+            stream.moveCursor();
+            id3 = id1; // set schema name
+            id1 = stream.parseSpecialWordValue();
+            if (id1 == null) {
+                throw stream.createException("Ожидается наименование функции и пространство имен");
+            }
+            if (stream.checkIsDot(false)) {
+                stream.moveCursor();
+                id2 = id1; // set space name
+                id1 = stream.parseSpecialWordValue();
+                if (id1 == null) {
+                    throw stream.createException("Ожидается наименование функции");
+                }
+            }
         }
         ValueListExpression funcArgs = parseFuncArgListExpression();
         OverStatement overStatement = parseOverStatement();
         FuncExpression funcExpr = new FuncExpression();
-        funcExpr.setName(funcName);
+        funcExpr.setSchemeName(id3);
+        funcExpr.setSpaceName(id2);
+        funcExpr.setName(id1);
         funcExpr.setArgs(funcArgs);
         funcExpr.setOverStatement(overStatement);
         return funcExpr;

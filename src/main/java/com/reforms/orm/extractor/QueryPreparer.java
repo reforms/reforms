@@ -17,11 +17,9 @@ import com.reforms.orm.dao.filter.IPsValuesSetter;
 import com.reforms.orm.dao.filter.PsValuesSetter;
 import com.reforms.orm.dao.filter.param.ParamSetterFactory;
 import com.reforms.orm.dao.paging.IPageFilter;
-import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.tree.QueryTree;
 import com.reforms.sql.expr.query.*;
 import com.reforms.sql.expr.term.Expression;
-import com.reforms.sql.expr.term.from.TableExpression;
 import com.reforms.sql.expr.term.value.FilterExpression;
 import com.reforms.sql.expr.term.value.PageQuestionExpression;
 import com.reforms.sql.expr.term.value.QuestionExpression;
@@ -149,19 +147,9 @@ public class QueryPreparer {
     }
 
     private void prepareScheme(Expression query) {
-        TableExpressionExtractor tableExprExtractor = new TableExpressionExtractor();
-        ISchemeManager schemeManager = getInstance(ISchemeManager.class);
-        for (TableExpression tableExpr : tableExprExtractor.extractTableExpressions(query)) {
-            if (tableExpr.hasSchemeName()) {
-                String schemeKey = tableExpr.getSchemeName();
-                String originScheme = schemeManager.getSchemeName(schemeKey);
-                if (originScheme != null) {
-                    tableExpr.setSchemeName(originScheme);
-                }
-            } else if (schemeManager.getDefaultSchemeName() != null) {
-                tableExpr.setSchemeName(schemeManager.getDefaultSchemeName());
-            }
-        }
+        SchemaPreparer schemaPreparer = getInstance(SchemaPreparer.class);
+        ExpressionScanner scanner = new ExpressionScanner();
+        scanner.scan(query, schemaPreparer);
     }
 
     private IPsValuesSetter prepareValues(Expression query, IPriorityValues values) {
