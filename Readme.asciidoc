@@ -20,31 +20,35 @@ Why the project is useful:
 
 How users can get started with the project:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Download link:https://github.com/RefOrms2017/reforms/raw/dist/dist/2017-06/reforms-2017.06.jar[reforms.jar] and include it to your project or take advantage of Maven dependency
 [source,xml]
 ----
 <dependency>
     <groupId>com.github.reforms</groupId>
     <artifactId>reforms</artifactId>
-    <version>2017.06.11</version>
+    <version>2017.07.23</version>
 </dependency>
 ----
 
-Short example and two ways usaging reforms framework:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Short example usaging reforms framework in interface programming style:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [source,java]
 ----
-// 1. Common dao style: Inside your client ClintDao class
-public Client findClientById(long clientId) throws Exception {
-    com.reforms.orm.OrmDao ormDao = new com.reforms.orm.OrmDao(connection);
-    return ormDao.select(Client.class,
-                         "SELECT id, name, state FROM clients WHERE id = ?",
-                         clientId);
+// Your IClientDao dao interface
+public interface IClientDao {
+
+    @TargetQuery("SELECT id, name, state FROM clients WHERE name = ?")
+    public Client findClientByName(String clientName);
 }
-/** OR */
-// 2. Interface programming style: Inside your IClientDao dao interface
-@TargetQuery(query = "SELECT id, name, state FROM clients WHERE name = ?", type = QT_SELECT)
-public Client findClientByName(String clientName);
+// Your needs
+public class ClientHelper {
+
+    public void doSomeWork(java.sql.Connection connection) throws Exception {
+        // ... code before
+        IClientDao clientdao = com.reforms.orm.OrmDao.createDao(IClientDao.class, connection);
+        Client client = clientdao.findClientByName("Gaius Iulius Caesar");
+        // ... code after
+    }
+}
 ----
 
 Concept of Usage as Best Practices:
