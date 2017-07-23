@@ -1,14 +1,19 @@
 package com.reforms.sql.parser;
 
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Test;
-
 import com.reforms.sql.expr.query.InsertQuery;
 import com.reforms.sql.expr.viewer.SqlBuilder;
 
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author evgenie
+ * TODO есть кейсы sql запросов:
+ * INSERT INTO users (email, appName, region, name, pass, last_modified, last_logged, last_logged_ip, is_facebook_user, is_super_admin, energy, json)
+ *  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ *      ON CONFLICT (email, appName)
+ *          DO UPDATE SET pass = EXCLUDED.pass, name = EXCLUDED.name, last_modified = EXCLUDED.last_modified, last_logged = EXCLUDED.last_logged, last_logged_ip = EXCLUDED.last_logged_ip, is_facebook_user = EXCLUDED.is_facebook_user, is_super_admin = EXCLUDED.is_super_admin, energy = EXCLUDED.energy, json = EXCLUDED.json, region = EXCLUDED.region
  */
 public class UTestInsertQueryParser {
 
