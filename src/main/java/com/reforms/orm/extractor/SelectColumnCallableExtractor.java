@@ -12,13 +12,13 @@ import com.reforms.sql.expr.term.ColumnExpression;
 import com.reforms.sql.expr.term.Expression;
 import com.reforms.sql.expr.term.ExpressionType;
 import com.reforms.sql.expr.term.ValueListExpression;
-import com.reforms.sql.expr.term.value.QuestionExpression;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import static com.reforms.orm.OrmConfigurator.getInstance;
+import static com.reforms.orm.dao.column.SelectedColumnConst.SCC_NO_NAME_INDEX_1;
 import static com.reforms.sql.expr.term.ExpressionType.ET_COLUMN_EXPRESSION;
 
 /**
@@ -42,9 +42,9 @@ public class SelectColumnCallableExtractor {
         if (selectedColumnFilter == null) {
             selectedColumnFilter = getInstance(DefaultSelectedColumnFilter.class);
         }
-        int index = 1;
         List<SelectedColumn> columns = new ArrayList<>();
         if (callQuery.getValuesExpr() != null) {
+            int index = 1;
             ValueListExpression valueListExpr = callQuery.getValuesExpr();
             Iterator<Expression> selectableExprIterator = valueListExpr.getValueExprs().iterator();
             while (selectableExprIterator.hasNext()) {
@@ -70,7 +70,7 @@ public class SelectColumnCallableExtractor {
                 index++;
             }
         } else if (callQuery.getQuestionExpr() != null) {
-            columns.add(fromQuestionExpression(index, callQuery.getQuestionExpr()));
+            columns.add(SCC_NO_NAME_INDEX_1);
         }
         return columns;
     }
@@ -94,19 +94,6 @@ public class SelectColumnCallableExtractor {
         }
         String fieldName = columnToFieldNameConverter.getFieldName(selectedColumn);
         selectedColumn.setFieldName(fieldName);
-        return selectedColumn;
-    }
-
-    protected SelectedColumn fromQuestionExpression(int index, QuestionExpression questionExpr) {
-        SelectedColumn selectedColumn = new SelectedColumn();
-        String columnName = "__no_name__";
-        selectedColumn.setIndex(index);
-        selectedColumn.setPrefixColumnName(null);
-        selectedColumn.setColumnName(columnName);
-        ColumnAlias cAlias = new ColumnAlias();
-        cAlias.setAlias(columnName);
-        cAlias.setJavaAliasKey(columnName);
-        selectedColumn.setColumnAlias(cAlias);
         return selectedColumn;
     }
 

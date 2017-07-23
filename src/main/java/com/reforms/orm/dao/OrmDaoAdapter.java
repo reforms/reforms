@@ -51,6 +51,7 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     private IUpdateValues updateValues;
     private Iterator<IUpdateValues> batchUpdateValues;
     private Iterator<IInsertValues> batchInsertValues;
+    private Class<?> keyClass;
 
     public OrmDaoAdapter(Object connectionHolder, String query) {
         this.connectionHolder = connectionHolder;
@@ -251,6 +252,12 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     }
 
     @Override
+    public IOrmDaoAdapter setKeyClass(Class<?> keyClass) {
+        this.keyClass = keyClass;
+        return this;
+    }
+
+    @Override
     public IOrmDaoAdapter setInsertValue(IInsertValues insertValues) {
         if (insertValues instanceof IUpdateValues) {
             return setUpdateValue((IUpdateValues) insertValues);
@@ -380,6 +387,7 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
         daoCtx.setConnectionHolder(connectionHolder);
         daoCtx.setQuery(query);
         daoCtx.setInsertValues(buildInsertValues());
+        daoCtx.setKeyClass(keyClass);
         return daoCtx;
     }
 
@@ -441,10 +449,10 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     }
 
     @Override
-    public void insert() throws Exception {
+    public Object insert() throws Exception {
         IOrmDao dao = new OrmDao();
         DaoInsertContext daoCtx = buildDaoInsertContext();
-        dao.insert(daoCtx);
+        return dao.insert(daoCtx);
     }
 
     @Override

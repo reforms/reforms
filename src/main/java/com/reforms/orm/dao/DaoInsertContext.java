@@ -17,6 +17,9 @@ class DaoInsertContext {
     /** Данные для вставки */
     private IInsertValues insertValues;
 
+    /** Возращаемое значение в insert есть (поле автоинкремент) */
+    private Class<?> keyClass;
+
     Object getConnectionHolder() {
         return connectionHolder;
     }
@@ -39,6 +42,14 @@ class DaoInsertContext {
 
     public void setInsertValues(IInsertValues insertValues) {
         this.insertValues = insertValues;
+    }
+
+    public void setKeyClass(Class<?> keyClass) {
+        this.keyClass = keyClass;
+    }
+
+    public Class<?> getKeyClass() {
+        return keyClass;
     }
 
 }

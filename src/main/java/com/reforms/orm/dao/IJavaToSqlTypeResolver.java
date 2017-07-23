@@ -6,7 +6,7 @@ import com.reforms.sql.db.DbType;
  * Контракт, который определяет возращаемый тип храномиой процедуры по объекту
  * @author evgenie
  */
-public interface IStoreProcedureTypeResolver {
+public interface IJavaToSqlTypeResolver {
 
     /**
      * Преобразует java тип в sql тип

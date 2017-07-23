@@ -867,10 +867,10 @@ public class OrmDao {
         return daoAdapter.delete();
     }
 
-    public void insertOrm(String sqlQuery, IUpdateValues values) throws Exception {
+    public Object insertOrm(String sqlQuery, IUpdateValues values) throws Exception {
         IOrmDaoAdapter daoAdapter = createDao(connectionHolder, sqlQuery);
         daoAdapter.setInsertValue(values);
-        daoAdapter.insert();
+        return daoAdapter.insert();
     }
 
     public static IOrmDaoAdapter createDao(Object connectionHolder, String sqlQuery) {

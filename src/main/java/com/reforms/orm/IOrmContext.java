@@ -1,9 +1,9 @@
 package com.reforms.orm;
 
 import com.reforms.ann.TargetApi;
+import com.reforms.orm.dao.IJavaToSqlTypeResolver;
 import com.reforms.orm.dao.IParamNameConverter;
 import com.reforms.orm.dao.IResultSetReaderFactory;
-import com.reforms.orm.dao.IStoreProcedureTypeResolver;
 import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.dao.bobj.IResultSetValueAdapter;
 import com.reforms.orm.dao.bobj.reader.IResultSetValueReader;
@@ -63,9 +63,9 @@ public interface IOrmContext {
 
     public void setMethodInterceptor(IMethodInterceptor newInterceptor);
 
-    public IStoreProcedureTypeResolver changeStoreProcedureTypeResolver(CreateNewInstance<IStoreProcedureTypeResolver> creator);
+    public IJavaToSqlTypeResolver changeJavaToSqlTypeResolver(CreateNewInstance<IJavaToSqlTypeResolver> creator);
 
-    public void setStoreProcedureTypeResolver(IStoreProcedureTypeResolver newInterceptor);
+    public void setJavaToSqlTypeResolver(IJavaToSqlTypeResolver newInterceptor);
 
     public void sealed();
 }

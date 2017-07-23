@@ -2,7 +2,7 @@ package com.reforms.orm;
 
 import com.reforms.orm.dao.IParamNameConverter;
 import com.reforms.orm.dao.IResultSetReaderFactory;
-import com.reforms.orm.dao.IStoreProcedureTypeResolver;
+import com.reforms.orm.dao.IJavaToSqlTypeResolver;
 import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.dao.bobj.IResultSetValueAdapter;
 import com.reforms.orm.dao.bobj.reader.IResultSetValueReader;
@@ -214,21 +214,21 @@ class OrmContext implements IOrmContext {
     }
 
     @Override
-    public IStoreProcedureTypeResolver changeStoreProcedureTypeResolver(CreateNewInstance<IStoreProcedureTypeResolver> creator) {
+    public IJavaToSqlTypeResolver changeJavaToSqlTypeResolver(CreateNewInstance<IJavaToSqlTypeResolver> creator) {
         checkBeforeModify();
-        IStoreProcedureTypeResolver current = getInstance(IStoreProcedureTypeResolver.class);
-        IStoreProcedureTypeResolver newResolver = creator.createNew(current);
+        IJavaToSqlTypeResolver current = getInstance(IJavaToSqlTypeResolver.class);
+        IJavaToSqlTypeResolver newResolver = creator.createNew(current);
         if (newResolver != null) {
-            putInstance(IStoreProcedureTypeResolver.class, newResolver);
+            putInstance(IJavaToSqlTypeResolver.class, newResolver);
             return current;
         }
         return null;
     }
 
     @Override
-    public void setStoreProcedureTypeResolver(IStoreProcedureTypeResolver newResolver) {
+    public void setJavaToSqlTypeResolver(IJavaToSqlTypeResolver newResolver) {
         checkBeforeModify();
-        putInstance(IStoreProcedureTypeResolver.class, newResolver);
+        putInstance(IJavaToSqlTypeResolver.class, newResolver);
     }
 
     @Override

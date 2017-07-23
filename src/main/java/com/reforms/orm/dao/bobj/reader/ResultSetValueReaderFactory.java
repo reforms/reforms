@@ -1,7 +1,5 @@
 package com.reforms.orm.dao.bobj.reader;
 
-import static com.reforms.orm.dao.column.ColumnAliasType.*;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Time;
@@ -9,6 +7,8 @@ import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.reforms.orm.dao.column.ColumnAliasType.*;
 
 public class ResultSetValueReaderFactory {
 
@@ -28,7 +28,7 @@ public class ResultSetValueReaderFactory {
         addParamRsReader(new EnumResultSetValueReader(this), CAT_E_ENUM.getMarker(), Enum.class);
         addParamRsReader(new StringResultSetValueReader(), CAT_S_STRING.getMarker(), String.class);
         addParamRsReader(new BigDecimalResultSetValueReader(), CAT_N_BIGDECIMAL.getMarker(), BigDecimal.class);
-        addParamRsReader(new BigDecimalResultSetValueReader(), CAT_I_BIGINTEGER.getMarker(), BigInteger.class);
+        addParamRsReader(new BigIntegerResultSetValueReader(), CAT_I_BIGINTEGER.getMarker(), BigInteger.class);
         addParamRsReader(new DateResultSetValueReader(), CAT_D_DATE.getMarker(), java.sql.Date.class, java.util.Date.class);
         addParamRsReader(new TimestampResultSetValueReader(), CAT_T_TIMESTAMP.getMarker(), Timestamp.class);
         addParamRsReader(new TimeResultSetValueReader(), CAT_V_TIME.getMarker(), Time.class);

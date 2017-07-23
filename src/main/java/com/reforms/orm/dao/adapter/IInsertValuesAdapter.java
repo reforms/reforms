@@ -25,4 +25,6 @@ public interface IInsertValuesAdapter<Adapter> {
 
     Adapter setBatchInsertValues(Iterator<IInsertValues> updateValues);
 
+    Adapter setKeyClass(Class<?> keyClass);
+
 }

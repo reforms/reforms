@@ -17,13 +17,11 @@ import com.reforms.orm.extractor.SelectColumnCallableExtractor;
 import com.reforms.sql.expr.query.*;
 import com.reforms.sql.parser.SqlParser;
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 import java.util.*;
 
 import static com.reforms.orm.OrmConfigurator.getInstance;
+import static com.reforms.orm.dao.column.SelectedColumnConst.SCC_SINGLE_COLUMN;
 
 /**
  *
@@ -241,17 +239,33 @@ class OrmDao implements IOrmDao {
     }
 
     @Override
-    public void insert(DaoInsertContext daoCtx) throws Exception {
+    public Object insert(DaoInsertContext daoCtx) throws Exception {
         IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
         Connection connection = cHolder.getConnection(daoCtx.getConnectionHolder());
         InsertQuery insertQuery = parseInsertQuery(daoCtx.getQuery());
         QueryPreparer filterPreparer = OrmConfigurator.getInstance(QueryPreparer.class);
         IPsValuesSetter paramSetterEngine = filterPreparer.prepareInsertQuery(insertQuery, daoCtx.getInsertValues());
         String preparedSqlQuery = insertQuery.toString();
-        try (PreparedStatement ps = connection.prepareStatement(preparedSqlQuery)) {
+        Class<?> keyClass = daoCtx.getKeyClass();
+        boolean hasKey = keyClass != null;
+        int updaterecordCount = 0;
+        try (PreparedStatement ps = hasKey ?
+                connection.prepareStatement(preparedSqlQuery, Statement.RETURN_GENERATED_KEYS) :
+                    connection.prepareStatement(preparedSqlQuery)) {
             paramSetterEngine.setParamsTo(ps);
-            ps.executeUpdate();
+            updaterecordCount = ps.executeUpdate();
+            if (hasKey && updaterecordCount > 0) {
+                IResultSetReaderFactory rsrFactory = getInstance(IResultSetReaderFactory.class);
+                IResultSetObjectReader rsReader = rsrFactory.resolveReader(keyClass, SCC_SINGLE_COLUMN);
+                try (ResultSet rsKeys = ps.getGeneratedKeys()) {
+                    if (rsReader.canRead(rsKeys)) {
+                        return rsReader.read(rsKeys);
+                    }
+                }
+                throw new IllegalStateException("Невозможно получить автогенерируемый ключ");
+            }
         }
+        return updaterecordCount;
     }
 
     @Override

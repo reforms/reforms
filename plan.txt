@@ -82,9 +82,11 @@
         [-] @TargetQuery(type = QT_SCRIPT, separator = "GO") executeScript(InputStream or File)
         [-] @TargetQuery(type = QT_SCRIPT, separator = ";" resourcePath = "rc/script.sql") executeScript(InputStream or File)
 
-23. Автоинкременируемый идентификатор - возращение значения
-        [-] Пример см https://github.com/RusZ/TextClassifier/
+[+] 23. Автоинкременируемый идентификатор - возращение значения
+        [+] Пример см https://github.com/RusZ/TextClassifier/
             statement.executeUpdate(); ResultSet generatedKeys = statement.getGeneratedKeys();
+            Теперь, в insert statement можно указывать тип автогенерируемго значения
+            Теперь, в insert statement можно boolean как флаг успешной встаки объекта
 
 24. Типы данных:
         [-] Проверить корректность работы с датой и временем.

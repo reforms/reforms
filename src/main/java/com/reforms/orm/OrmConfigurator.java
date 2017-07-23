@@ -51,7 +51,7 @@ public class OrmConfigurator {
         schemeManager.setDefaultDbType(DbType.DBT_MIX);
         putInstance(ISchemeManager.class, schemeManager);
         putInstance(IMethodInterceptor.class, new DefaultMethodInterceptor());
-        putInstance(IStoreProcedureTypeResolver.class, new StoreProcedureTypeResolver());
+        putInstance(IJavaToSqlTypeResolver.class, new JavaToSqlTypeResolver());
     }
 
     static void putInstance(Class<?> clazz, Object instance) {

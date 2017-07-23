@@ -4,7 +4,7 @@ import com.reforms.ann.TargetDao;
 import com.reforms.ann.TargetFilter;
 import com.reforms.ann.TargetQuery;
 import com.reforms.orm.OrmDao;
-import com.reforms.orm.dao.IStoreProcedureTypeResolver;
+import com.reforms.orm.dao.IJavaToSqlTypeResolver;
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
@@ -324,13 +324,17 @@ public class DaoProxy implements InvocationHandler {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private Object processInsertQuery(TargetQuery targetQuery, Method method, Object[] args) throws Exception {
         IOrmDaoAdapter daoAdapter = OrmDao.createDao(connectionHolder, getQuery(targetQuery));
         if (targetQuery.batchSize() == BATCH_IGNORE_SIZE) {
-            configureInsertAdapter(daoAdapter, method, args);
-            daoAdapter.insert();
-            return null;
+            configureInsertAdapter(targetQuery, daoAdapter, method, args);
+            Object value = daoAdapter.insert();
+            Class returnType = method.getReturnType();
+            if (boolean.class == returnType || Boolean.class == returnType) {
+                return !Integer.valueOf(0).equals(value);
+            }
+            return value;
         }
         Class<?>[] paramTypes = method.getParameterTypes();
         if (paramTypes.length == 1) {
@@ -351,7 +355,7 @@ public class DaoProxy implements InvocationHandler {
     }
 
     @SuppressWarnings("unchecked")
-    private void configureInsertAdapter(IOrmDaoAdapter daoAdapter, Method method, Object[] args) {
+    private void configureInsertAdapter(TargetQuery targetQuery, IOrmDaoAdapter daoAdapter, Method method, Object[] args) {
         if (args.length == 0) {
             return;
         }
@@ -372,6 +376,13 @@ public class DaoProxy implements InvocationHandler {
                 continue;
             }
             daoAdapter.addInsertValue(argValue);
+        }
+        Class<?> keyClass = method.getReturnType();
+        if (void.class != keyClass
+                && Void.class != keyClass
+                && boolean.class != keyClass
+                && Boolean.class != keyClass) {
+            daoAdapter.setKeyClass(keyClass);
         }
     }
 
@@ -396,7 +407,7 @@ public class DaoProxy implements InvocationHandler {
         if (void.class == method.getReturnType() || Void.class == method.getReturnType()) {
             return;
         }
-        IStoreProcedureTypeResolver sqlTypeResolver = getInstance(IStoreProcedureTypeResolver.class);
+        IJavaToSqlTypeResolver sqlTypeResolver = getInstance(IJavaToSqlTypeResolver.class);
         Integer sqlType = sqlTypeResolver.getReturnSqlType(method.getReturnType());
         if (sqlType == null) {
             ISchemeManager schemeManager = getInstance(ISchemeManager.class);

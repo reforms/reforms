@@ -19,13 +19,13 @@ import static com.reforms.sql.db.DbType.*;
  */
 @ThreadSafe
 @TargetApi
-public class StoreProcedureTypeResolver implements IStoreProcedureTypeResolver {
+public class JavaToSqlTypeResolver implements IJavaToSqlTypeResolver {
 
     private final Map<Class<?>, Integer> java2sql;
 
     private final Map<DbType, Integer> cursorTypes;
 
-    public StoreProcedureTypeResolver() {
+    public JavaToSqlTypeResolver() {
         Map<Class<?>, Integer> jTypes = new HashMap<>();
         jTypes.put(String.class, Types.VARCHAR);
         jTypes.put(BigDecimal.class, Types.NUMERIC);
