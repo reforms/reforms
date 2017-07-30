@@ -3,14 +3,19 @@ package com.reforms.orm.reflex;
 import com.reforms.ann.TargetField;
 import com.reforms.ann.TargetMethod;
 
+import sun.misc.SharedSecrets;
+
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.*;
 
 import static com.reforms.orm.OrmConfigurator.getInstance;
 import static com.reforms.orm.reflex.ClassUtils.isEnumClass;
 
 /**
- * Реализация контракта
+ * Реализация контракта по работе c enum
  * @author evgenie
  */
 public class EnumReflexor implements IEnumReflexor {
@@ -23,11 +28,29 @@ public class EnumReflexor implements IEnumReflexor {
 
     private final Method getEnumMethod;
 
+    private Map<Object, Object> enum2Value;
+    private Map<Object, Object> value2Enum;
+    private Class<?> assignValueClass;
+
     EnumReflexor(Class<?> enumClass) {
         this.enumClass = enumClass;
         getAssignValueField = findAssignField(enumClass);
         getAssignValueMethod = findAssignMethod(enumClass);
         getEnumMethod = findEnumMethod(enumClass);
+        // 1. Этого достаточно, чтобы установить связь
+        if (getAssignValueField != null && getAssignValueMethod == null && getEnumMethod == null) {
+            Params fieldBaseParams = getParamsForField(getAssignValueField);
+            enum2Value = fieldBaseParams.enum2Value;
+            value2Enum = fieldBaseParams.value2Enum;
+            assignValueClass = fieldBaseParams.assignValueClass;
+        }
+        // 2. Нет аннотаций вообще. Пытаемся слинковать любое поле по типу из конструктора как наиболее ожидаемое
+        if (getAssignValueField == null && getAssignValueMethod == null && getEnumMethod == null) {
+            Params autoLinkParams = autoLink();
+            enum2Value = autoLinkParams.enum2Value;
+            value2Enum = autoLinkParams.value2Enum;
+            assignValueClass = autoLinkParams.assignValueClass;
+        }
     }
 
     @Override
@@ -41,7 +64,11 @@ public class EnumReflexor implements IEnumReflexor {
         if (getAssignValueField != null) {
             return getValueFromField(enumValue, getAssignValueField);
         }
-        throw new IllegalStateException("Невозможно получить ассоциированное значение из '" + enumValue + "' в классе '" + enumClass + "'");
+        if (enum2Value != null && enum2Value.containsKey(enumValue)) {
+            return enum2Value.get(enumValue);
+        }
+        throw new IllegalStateException("Невозможно получить ассоциированное значение из '" + enumValue + "' в классе '" + enumClass + "'. " +
+                "Добавьте аннотацию @TargetField к полю или @TargetMethod к методу (no static) enum, который возращает ассоциированное с ним значение");
     }
 
     @Override
@@ -49,8 +76,11 @@ public class EnumReflexor implements IEnumReflexor {
         if (getEnumMethod != null) {
             return invokeMethod(getEnumMethod, null, assignValue);
         }
+        if (value2Enum != null && value2Enum.containsKey(assignValue)) {
+            return value2Enum.get(assignValue);
+        }
         throw new IllegalStateException("Невозможно получить одно из значений перечислений по ассоциированному значению '" + assignValue + "' в классе '" +
-                enumClass + "'");
+                enumClass + "'. Добавьте аннотацию @TargetMethod к методу (static) enum, который возращает enum объект");
     }
 
     @Override
@@ -64,7 +94,11 @@ public class EnumReflexor implements IEnumReflexor {
         if (getAssignValueMethod != null) {
             return getAssignValueMethod.getReturnType();
         }
-        throw new IllegalStateException("Невозможно получить тип ассоциированного значения в классе '" + enumClass + "'");
+        if (assignValueClass != null) {
+            return assignValueClass;
+        }
+        throw new IllegalStateException("Невозможно получить тип ассоциированного значения в классе '" + enumClass + "'. " +
+                "Добавьте аннотацию @TargetField к полю или @TargetMethod к методу (no static) enum, который возращает ассоциированное с ним значение");
     }
 
     private Field findAssignField(Class<?> clazz) {
@@ -157,7 +191,7 @@ public class EnumReflexor implements IEnumReflexor {
         }
     }
 
-    private Object invokeMethod(Method method, Object instance, Object ... args) {
+    private Object invokeMethod(Method method, Object instance, Object... args) {
         boolean methodAccessible = method.isAccessible();
         if (!methodAccessible) {
             method.setAccessible(true);
@@ -174,8 +208,110 @@ public class EnumReflexor implements IEnumReflexor {
         }
     }
 
+    /**
+     * Пытаемся определить используя интелект, какое поле с каким методом косвенно связано?
+     * @return связи NOT NULL
+     */
+    private Params autoLink() {
+        // 1. Определим допустимые типы для преобразования
+        Set<Class<?>> candidateTypes = getCandidateTypeForAutoLink();
+        // 2. Определим допустимые поля для связывания
+        Field candidateField = getCandidateFieldAutoLink(candidateTypes);
+        if (candidateField != null) {
+            return getParamsForField(candidateField);
+        }
+        // Этот случай меппинг на мена enum
+        try {
+            return getParamsForField(Enum.class.getDeclaredField("name"));
+        } catch (NoSuchFieldException nsfe) {
+            throw new IllegalStateException("Not a enum", nsfe);
+        }
+    }
+
+    private Set<Class<?>> getCandidateTypeForAutoLink() {
+        Class<?> scanClass = enumClass;
+        // 1. Определим допустимые типы для преобразования
+        Set<Class<?>> candidateTypes = new HashSet<Class<?>>();
+        while (scanClass != null && scanClass != Enum.class && scanClass != Object.class) {
+            for (Constructor<?> constructor : scanClass.getDeclaredConstructors()) {
+                // всегда игнорируем 1ый int - это порядковый номер enum но только для enum
+                boolean wasInt = !constructor.getDeclaringClass().isEnum();
+                // всегда игнорируем 1ый String - это имя для enum но только для enum
+                boolean wasString = !constructor.getDeclaringClass().isEnum();
+                for (Class<?> paramType : constructor.getParameterTypes()) {
+                    // всегда игнорируем 1ый int - это порядковый номер enum но только для enum
+                    if (int.class == paramType && !wasInt) {
+                        wasInt = true;
+                        continue;
+                    }
+                    // всегда игнорируем 1ый int - это порядковый номер enum но только для enum
+                    if (String.class == paramType && !wasString) {
+                        wasString = true;
+                        continue;
+                    }
+                    candidateTypes.add(paramType);
+                }
+            }
+            scanClass = scanClass.getSuperclass();
+        }
+        return candidateTypes;
+    }
+
+    private Field getCandidateFieldAutoLink(Set<Class<?>> candidateTypes) {
+        Class<?> scanClass = enumClass;
+        Field candidateField = null;
+        while (scanClass != null && scanClass != Enum.class && scanClass != Object.class && candidateField == null) {
+            for (Field field : scanClass.getDeclaredFields()) {
+                int modifier = field.getModifiers();
+                if (candidateField == null
+                        && !Modifier.isStatic(modifier)
+                        && candidateTypes.contains(field.getType())
+                        && !field.getType().isArray()) {
+                    candidateField = field;
+                    break;
+                }
+            }
+            scanClass = scanClass.getSuperclass();
+        }
+        return candidateField;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private Params getParamsForField(Field candidateField) {
+        Class<?> scanClass = null;
+        Map<Object, Object> tmpEnum2Value = new HashMap<>();
+        Map<Object, Object> tmpValue2Enum = new HashMap<>();
+        // Этот случай совсем хорошо
+        scanClass = enumClass;
+        if (!scanClass.isEnum()) {
+            scanClass = scanClass.getSuperclass();
+        }
+        Enum<?>[] enumValues = SharedSecrets.getJavaLangAccess().getEnumConstantsShared((Class<Enum>) scanClass);
+        // для каждого значения ENUM берем значение его поля
+        for (Enum<?> enumValue : enumValues) {
+            Object assignValue = getValueFromField(enumValue, candidateField);
+            tmpEnum2Value.put(enumValue, assignValue);
+            tmpValue2Enum.put(assignValue, enumValue);
+        }
+        return new Params(tmpEnum2Value, tmpValue2Enum, scanClass);
+    }
+
     public static IEnumReflexor createEnumReflexor(Class<?> instanceClass) {
         LocalCache localCache = getInstance(LocalCache.class);
         return localCache.getEnumReflexor(instanceClass);
+    }
+
+    private static class Params {
+        private final Map<Object, Object> enum2Value;
+        private final Map<Object, Object> value2Enum;
+        private final Class<?> assignValueClass;
+
+        Params(Map<Object, Object> enum2Value, Map<Object, Object> value2Enum, Class<?> assignValueClass) {
+            this.enum2Value = Collections.unmodifiableMap(enum2Value);
+            this.value2Enum = Collections.unmodifiableMap(value2Enum);
+            this.assignValueClass = assignValueClass;
+        }
+
+
     }
 }
