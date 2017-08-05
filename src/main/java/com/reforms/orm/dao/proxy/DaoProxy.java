@@ -3,6 +3,7 @@ package com.reforms.orm.dao.proxy;
 import com.reforms.ann.TargetDao;
 import com.reforms.ann.TargetFilter;
 import com.reforms.ann.TargetQuery;
+import com.reforms.orm.IConnectionHolder;
 import com.reforms.orm.OrmDao;
 import com.reforms.orm.dao.IJavaToSqlTypeResolver;
 import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
@@ -18,6 +19,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.sql.Connection;
 import java.util.*;
 
 import static com.reforms.ann.TargetQuery.*;
@@ -103,6 +105,9 @@ public class DaoProxy implements InvocationHandler {
             }
             if (isCreateDaoMethod(method, args)) {
                 return createDao(method, args);
+            }
+            if (isGetConnectionMethod(method, args)) {
+                return getConnection(method, args);
             }
         }
         throw new IllegalStateException("Method '" + method + "' not implemented yet. Class '" + daoInterface + "'");
@@ -498,6 +503,17 @@ public class DaoProxy implements InvocationHandler {
 
     private Object createDao(Method method, Object[] args) {
         return OrmDao.createDao(connectionHolder, method.getReturnType());
+    }
+
+    private boolean isGetConnectionMethod(Method method, Object[] args) {
+        Class<?> resultClass = method.getReturnType();
+        Class<?>[] paramTypes = method.getParameterTypes();
+        return Connection.class == resultClass && paramTypes.length == 0;
+    }
+
+    private Connection getConnection(Method method, Object[] args) throws Exception {
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
+        return cHolder.getConnection(connectionHolder);
     }
 
 }

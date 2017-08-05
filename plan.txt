@@ -96,3 +96,13 @@
         [-] Можно использовать для схемы+имя_пакета ключ. Пример: schema_name.package_name.tabla_name заменить в
             на schema_name$package_name.tabla_name  и добавить Мерринг ключа
              schema_name$package_name на schema_name.package_name в SchemaManager
+
+26. Сигнатуры методов List<OrmType> - добывать тип OrmType из констант-пула самого класса!!!
+
+
+27. Необходимо повысить информативность ошибок - сейчас они крайне не информативные:
+            - 1)   Сделать в объекте поле int, а в БД для этого поля сделать NULL
+            - 2)   Сделать в объекте 3 поля, а выбрать 2 -> start_date t#end_date t# - пропусти запятую
+
+28. ДИНАМИЧЕСКИЕ ФИЛЬТРЫ: проработать вопрос с вырезанием из INSERT SQL-запросов
+            - 1)  INSERT (name, value) VALUES (:name, ::value) - сейчас упадет

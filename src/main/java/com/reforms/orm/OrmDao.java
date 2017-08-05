@@ -15,9 +15,11 @@ import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 import com.reforms.orm.dao.proxy.DaoProxy;
 import com.reforms.orm.dao.proxy.IMethodInterceptor;
+import com.reforms.orm.dao.proxy.TxScope;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
+import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
 
@@ -884,5 +886,29 @@ public class OrmDao {
         IMethodInterceptor interceptor = getInstance(IMethodInterceptor.class);
         InvocationHandler handler = new DaoProxy(connectionHolder, daoInterface, interceptor);
         return (Interfaze) Proxy.newProxyInstance(classLoader, daoClasses, handler);
+    }
+
+    public static void txAction(Object connectionHolder, TxScope txWork) throws Exception {
+        IConnectionHolder cHolder = getInstance(IConnectionHolder.class);
+        Connection connection = cHolder.getConnection(connectionHolder);
+        boolean wasState = connection.getAutoCommit();
+        // транзакцию открыл кто-то за нас, значит не нам ее и выполнять
+        if (! wasState) {
+            txWork.apply();
+            return;
+        }
+        connection.setAutoCommit(false);
+        try {
+            txWork.apply();
+            connection.commit();
+        } catch (Throwable cause) {
+            connection.rollback();
+            if (cause instanceof Exception) {
+                throw (Exception) cause;
+            }
+            throw new Exception(cause);
+        } finally {
+            connection.setAutoCommit(true);
+        }
     }
 }
