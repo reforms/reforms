@@ -10,6 +10,7 @@ import com.reforms.orm.dao.bobj.IOrmDaoAdapter;
 import com.reforms.orm.dao.bobj.model.OrmHandler;
 import com.reforms.orm.dao.bobj.model.OrmIterator;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
+import com.reforms.orm.reflex.IGenericTypeResolver;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.sql.db.DbType;
 
@@ -21,6 +22,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.reforms.ann.TargetQuery.*;
 import static com.reforms.orm.OrmConfigurator.getInstance;
@@ -30,6 +32,8 @@ import static com.reforms.orm.OrmConfigurator.getInstance;
  * @author evgenie
  */
 public class DaoProxy implements InvocationHandler {
+
+    private static final Map<Method, Class<?>> ORM_TYPES = new ConcurrentHashMap<>();
 
     /** Доверяет всем */
     private static final Lookup TRUSTED_LOOKUP = getLookupField();
@@ -474,6 +478,15 @@ public class DaoProxy implements InvocationHandler {
     }
 
     private Class<?> getOrmClass(TargetQuery targetQuery, Method method) {
+        Class<?> ormType = ORM_TYPES.get(method);
+        if (ormType == null) {
+            ormType = findOrmClass(targetQuery, method);
+            ORM_TYPES.put(method, ormType);
+        }
+        return ormType;
+    }
+
+    private Class<?> findOrmClass(TargetQuery targetQuery, Method method) {
         Class<?> ormTypeFromMethod = targetQuery.orm();
         if (ormTypeFromMethod != Object.class) {
             return ormTypeFromMethod;
@@ -491,6 +504,13 @@ public class DaoProxy implements InvocationHandler {
         Class<?> returnType = method.getReturnType();
         if (returnType.isArray()) {
             return returnType.getComponentType();
+        }
+        if (Collection.class.isAssignableFrom(returnType)) {
+            IGenericTypeResolver extractType = getInstance(IGenericTypeResolver.class);
+            Class<?> ormType = extractType.getGenericWithCollection(method);
+            if (ormType != null) {
+                return ormType;
+            }
         }
         return returnType;
     }

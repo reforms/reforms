@@ -10,10 +10,12 @@ import com.reforms.orm.dao.bobj.ResultSetValueAdapter;
 import com.reforms.orm.dao.bobj.reader.ResultSetValueReaderFactory;
 import com.reforms.orm.dao.filter.param.ParamSetterFactory;
 import com.reforms.orm.dao.proxy.DefaultMethodInterceptor;
+import com.reforms.orm.dao.proxy.GenericTypeScanner;
 import com.reforms.orm.dao.proxy.IMethodInterceptor;
 import com.reforms.orm.dao.report.ColumnToRecordNameConverter;
 import com.reforms.orm.dao.report.IColumnToRecordNameConverter;
 import com.reforms.orm.dao.report.converter.ColumnValueConverterFactory;
+import com.reforms.orm.reflex.IGenericTypeResolver;
 import com.reforms.orm.reflex.LocalCache;
 import com.reforms.orm.scheme.ISchemeManager;
 import com.reforms.orm.scheme.SchemeManager;
@@ -52,6 +54,7 @@ public class OrmConfigurator {
         putInstance(ISchemeManager.class, schemeManager);
         putInstance(IMethodInterceptor.class, new DefaultMethodInterceptor());
         putInstance(IJavaToSqlTypeResolver.class, new JavaToSqlTypeResolver());
+        putInstance(IGenericTypeResolver.class, new GenericTypeScanner(true, true));
     }
 
     static void putInstance(Class<?> clazz, Object instance) {
