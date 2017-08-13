@@ -1,14 +1,14 @@
 package com.reforms.orm.dao.report.converter;
 
-import static com.reforms.orm.dao.column.ColumnAliasType.*;
+import com.reforms.orm.ConverterConfig;
+import com.reforms.orm.dao.report.tl.DateTimeFormatterTl;
+import com.reforms.orm.dao.report.tl.NumberFormatterTl;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.reforms.orm.ConverterConfig;
-import com.reforms.orm.dao.report.tl.DateTimeFormatterTl;
-import com.reforms.orm.dao.report.tl.NumberFormatterTl;
+import static com.reforms.orm.dao.column.ColumnAliasType.*;
 
 public class ColumnValueConverterFactory {
 
@@ -25,6 +25,7 @@ public class ColumnValueConverterFactory {
         baseConverters.put(CAT_F_FLOAT.getMarker(), new FloatColumnValueConverter());
         baseConverters.put(CAT_W_DOUBLE.getMarker(), new DoubleColumnValueConverter());
         baseConverters.put(CAT_L_LONG.getMarker(), new LongColumnValueConverter());
+        baseConverters.put(CAT_C_CHARACTER.getMarker(), new StringColumnValueConverter());
         baseConverters.put(CAT_S_STRING.getMarker(), new StringColumnValueConverter());
         NumberFormatterTl tlNumberFormatter = new NumberFormatterTl(config.getNumberPattern());
         baseConverters.put(CAT_N_BIGDECIMAL.getMarker(), new BigDecimalColumnValueConverter(tlNumberFormatter));

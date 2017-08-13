@@ -21,6 +21,7 @@ public class ResultSetValueReaderFactory {
         addParamRsReader(new BooleanResultSetValueReader(), CAT_Z_BOOLEAN.getMarker(), Boolean.class, boolean.class);
         addParamRsReader(new ByteResultSetValueReader(), CAT_Y_BYTE.getMarker(), Byte.class, byte.class);
         addParamRsReader(new ShortResultSetValueReader(), CAT_X_SHORT.getMarker(), Short.class, short.class);
+        addParamRsReader(new CharResultSetValueReader(), CAT_C_CHARACTER.getMarker(), Character.class, char.class);
         addParamRsReader(new IntResultSetValueReader(), CAT_I_INT.getMarker(), Integer.class, int.class);
         addParamRsReader(new FloatResultSetValueReader(), CAT_F_FLOAT.getMarker(), Float.class, float.class);
         addParamRsReader(new DoubleResultSetValueReader(), CAT_W_DOUBLE.getMarker(), Double.class, double.class);

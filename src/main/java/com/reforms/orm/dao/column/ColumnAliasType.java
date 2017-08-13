@@ -32,6 +32,7 @@ public enum ColumnAliasType {
     CAT_Z_BOOLEAN("z"),
     CAT_Y_BYTE("y"),
     CAT_X_SHORT("x"),
+    CAT_C_CHARACTER("c"),
     CAT_I_INT("i"),
     CAT_F_FLOAT("f"),
     CAT_W_DOUBLE("w"),

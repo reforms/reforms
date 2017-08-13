@@ -1,8 +1,8 @@
 package com.reforms.orm.dao.filter.param;
 
-import static com.reforms.orm.dao.column.ColumnAliasType.*;
-
 import java.util.*;
+
+import static com.reforms.orm.dao.column.ColumnAliasType.*;
 
 /**
  * Фабрика установщиков параметров в ResultSet
@@ -21,6 +21,7 @@ public class ParamSetterFactory {
         baseParamSetters.put(CAT_Z_BOOLEAN.getMarker(), new BooleanParamSetter());
         baseParamSetters.put(CAT_Y_BYTE.getMarker(), new ByteParamSetter());
         baseParamSetters.put(CAT_X_SHORT.getMarker(), new ShortParamSetter());
+        baseParamSetters.put(CAT_C_CHARACTER.getMarker(), new CharParamSetter());
         baseParamSetters.put(CAT_I_INT.getMarker(), new IntParamSetter());
         baseParamSetters.put(CAT_F_FLOAT.getMarker(), new FloatParamSetter());
         baseParamSetters.put(CAT_W_DOUBLE.getMarker(), new DoubleParamSetter());

@@ -1,10 +1,10 @@
 package com.reforms.orm.dao.filter.param;
 
-import static com.reforms.orm.dao.column.ColumnAliasType.*;
+import com.reforms.orm.dao.column.ColumnAliasType;
 
 import java.util.Comparator;
 
-import com.reforms.orm.dao.column.ColumnAliasType;
+import static com.reforms.orm.dao.column.ColumnAliasType.*;
 
 /**
  * Компаратор
@@ -84,6 +84,10 @@ class ParamSetterMarkerComparator implements Comparator<String> {
         }
         index++;
         if (CAT_I_INT== cat) {
+            return index;
+        }
+        index++;
+        if (CAT_C_CHARACTER == cat) {
             return index;
         }
         index++;

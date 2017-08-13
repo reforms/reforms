@@ -59,10 +59,10 @@ public class DaoProxy implements InvocationHandler {
         this(connectionHolder, daoInterface, null);
     }
 
-    public DaoProxy(Object connectionHolder, Class<?> daoInterface, IMethodInterceptor intercepter) {
+    public DaoProxy(Object connectionHolder, Class<?> daoInterface, IMethodInterceptor interceptor) {
         this.connectionHolder = connectionHolder;
         this.daoInterface = daoInterface;
-        this.interceptor = intercepter;
+        this.interceptor = interceptor;
     }
 
     @Override
