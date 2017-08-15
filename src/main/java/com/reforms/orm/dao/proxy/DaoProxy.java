@@ -107,11 +107,11 @@ public class DaoProxy implements InvocationHandler {
             if ("hashCode".equals(method.getName())) {
                 return System.identityHashCode(proxy);
             }
-            if (isCreateDaoMethod(method, args)) {
-                return createDao(method, args);
-            }
             if (isGetConnectionMethod(method, args)) {
                 return getConnection(method, args);
+            }
+            if (isCreateDaoMethod(method, args)) {
+                return createDao(method, args);
             }
         }
         throw new IllegalStateException("Method '" + method + "' not implemented yet. Class '" + daoInterface + "'");
