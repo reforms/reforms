@@ -169,7 +169,8 @@ public class DaoProxy implements InvocationHandler {
             return daoAdapter.set(ormType);
         }
         // Обработка массивов
-        if (method.getReturnType().isArray()) {
+        Class<?> returnType = method.getReturnType();
+        if (returnType.isArray() && byte[].class != returnType) {
             List values = daoAdapter.loads(ormType);
             return values.toArray((Object[]) Array.newInstance(ormType, values.size()));
         }
@@ -443,7 +444,8 @@ public class DaoProxy implements InvocationHandler {
             throw new IllegalStateException("Set type is not supported yet");
         }
         // Обработка массивов
-        if (method.getReturnType().isArray()) {
+        Class<?> returnType = method.getReturnType();
+        if (returnType.isArray() && byte[].class != returnType) {
             List values = daoAdapter.callAndLoads(ormType);
             return values.toArray((Object[]) Array.newInstance(ormType, values.size()));
         }
@@ -502,7 +504,7 @@ public class DaoProxy implements InvocationHandler {
             }
         }
         Class<?> returnType = method.getReturnType();
-        if (returnType.isArray()) {
+        if (returnType.isArray() && byte[].class != returnType) {
             return returnType.getComponentType();
         }
         if (Collection.class.isAssignableFrom(returnType)) {
