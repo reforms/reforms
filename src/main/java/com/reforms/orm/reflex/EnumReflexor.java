@@ -293,7 +293,7 @@ public class EnumReflexor implements IEnumReflexor {
             tmpEnum2Value.put(enumValue, assignValue);
             tmpValue2Enum.put(assignValue, enumValue);
         }
-        return new Params(tmpEnum2Value, tmpValue2Enum, scanClass);
+        return new Params(tmpEnum2Value, tmpValue2Enum, candidateField.getType());
     }
 
     public static IEnumReflexor createEnumReflexor(Class<?> instanceClass) {
