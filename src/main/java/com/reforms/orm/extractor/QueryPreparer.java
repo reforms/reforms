@@ -208,7 +208,7 @@ public class QueryPreparer {
                     String preapredName = paramNameConverter.convertName(paramNameType, shortFilterName);
                     Object filterValue = values.getPriorityValue(priority, preapredName);
                     boolean nullNotAllowed = filterValue == null && !(PV_UPDATE == priority || PV_INSERT == priority);
-                    if (nullNotAllowed) {
+                    if (nullNotAllowed && filterDetails.getAliasPrefix() == null) {
                         filterValue = values.getPriorityValue(priority, filterName);
                     }
                     if (nullNotAllowed && filterExpr.isStaticFilter() && !filterExpr.isQuestionFlag()) {
