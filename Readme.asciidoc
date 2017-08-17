@@ -25,7 +25,7 @@ How users can get started with the project:
 <dependency>
     <groupId>com.github.reforms</groupId>
     <artifactId>reforms</artifactId>
-    <version>2017.07.23</version>
+    <version>2017.08.17</version>
 </dependency>
 ----
 
