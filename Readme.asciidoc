@@ -4,8 +4,8 @@ License is free for everything
 RefOrms
 -------
 Hello, its RefOrms framework.
-RefOrms is SQL-oriented JDBC framework, similar to Spring Framework JDBC but having several advantages over it
-See [`RefOrms Manual`][1]
+RefOrms is SQL-oriented JDBC framework, similar to Spring Framework JDBC but having several advantages over it.
+See link:https://htmlpreview.github.io/?https://github.com/reforms/ReformsDoc/blob/master/doc.html[RefOrms Manual] with html preview.
 
 What the project does:
 ~~~~~~~~~~~~~~~~~~~~~
@@ -410,5 +410,3 @@ SELECT  cl.id AS cid:clientId,                  -- map column 'cl.id' to 'client
             FROM client AS cl,
                  address AS addr
 ----
-
-[1]: https://htmlpreview.github.io/?https://github.com/reforms/ReformsDoc/blob/master/doc.html
