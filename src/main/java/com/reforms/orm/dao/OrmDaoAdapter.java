@@ -9,6 +9,7 @@ import com.reforms.orm.dao.filter.FilterObject;
 import com.reforms.orm.dao.filter.FilterSequence;
 import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.filter.column.CompositeSelectedColumnFilter;
+import com.reforms.orm.dao.filter.column.FilterState;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.IndexSelectFilter;
 import com.reforms.orm.dao.paging.IPageFilter;
@@ -268,7 +269,7 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     private ISelectedColumnFilter buildSelectedColumnFilter() {
         ISelectedColumnFilter firstFilter = null;
         if (selectedColumnIndexes != null) {
-            firstFilter = new IndexSelectFilter(selectedColumnIndexes);
+            firstFilter = new IndexSelectFilter(FilterState.FS_NOT_ACCEPT, selectedColumnIndexes);
         }
         ISelectedColumnFilter secondFilter = selectedColumnFilter;
         if (secondFilter == null) {
@@ -327,9 +328,7 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     }
 
     private DaoSelectContext buildDaoSelectContext(Class<?> ormClass) {
-        DaoSelectContext daoCtx = new DaoSelectContext();
-        daoCtx.setConnectionHolder(connectionHolder);
-        daoCtx.setQuery(query);
+        DaoSelectContext daoCtx = new DaoSelectContext(connectionHolder, query);
         daoCtx.setOrmType(ormClass);
         daoCtx.setSelectedColumnFilter(buildSelectedColumnFilter());
         daoCtx.setFilterValues(buildFilterValues());
@@ -337,9 +336,7 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     }
 
     private DaoCallContext buildDaoCallContext(Class<?> ormClass) {
-        DaoCallContext daoCtx = new DaoCallContext();
-        daoCtx.setConnectionHolder(connectionHolder);
-        daoCtx.setQuery(query);
+        DaoCallContext daoCtx = new DaoCallContext(connectionHolder, query);
         daoCtx.setOrmType(ormClass);
         daoCtx.setSelectedColumnFilter(buildSelectedColumnFilter());
         daoCtx.setFilterValues(buildFilterValues());
@@ -348,44 +345,34 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     }
 
     private DaoUpdateContext buildDaoUpdateContext() {
-        DaoUpdateContext daoCtx = new DaoUpdateContext();
-        daoCtx.setConnectionHolder(connectionHolder);
-        daoCtx.setQuery(query);
+        DaoUpdateContext daoCtx = new DaoUpdateContext(connectionHolder, query);
         daoCtx.setUpateValues(buildUpdateValues());
         daoCtx.setFilterValues(buildFilterValues());
         return daoCtx;
     }
 
     private DaoBatchUpdateContext buildDaoBatchUpdateContext(int batchSize) {
-        DaoBatchUpdateContext daoCtx = new DaoBatchUpdateContext();
-        daoCtx.setConnectionHolder(connectionHolder);
-        daoCtx.setQuery(query);
+        DaoBatchUpdateContext daoCtx = new DaoBatchUpdateContext(connectionHolder, query);
         daoCtx.setBatchSize(batchSize);
         daoCtx.setUpateValues(batchUpdateValues);
         return daoCtx;
     }
 
     private DaoBatchInsertContext buildDaoBatchInsertContext(int batchSize) {
-        DaoBatchInsertContext daoCtx = new DaoBatchInsertContext();
-        daoCtx.setConnectionHolder(connectionHolder);
-        daoCtx.setQuery(query);
+        DaoBatchInsertContext daoCtx = new DaoBatchInsertContext(connectionHolder, query);
         daoCtx.setBatchSize(batchSize);
         daoCtx.setInsertValues(batchInsertValues);
         return daoCtx;
     }
 
     private DaoDeleteContext buildDaoDeleteContext() {
-        DaoDeleteContext daoCtx = new DaoDeleteContext();
-        daoCtx.setConnectionHolder(connectionHolder);
-        daoCtx.setQuery(query);
+        DaoDeleteContext daoCtx = new DaoDeleteContext(connectionHolder, query);
         daoCtx.setFilterValues(buildFilterValues());
         return daoCtx;
     }
 
     private DaoInsertContext buildDaoInsertContext() {
-        DaoInsertContext daoCtx = new DaoInsertContext();
-        daoCtx.setConnectionHolder(connectionHolder);
-        daoCtx.setQuery(query);
+        DaoInsertContext daoCtx = new DaoInsertContext(connectionHolder, query);
         daoCtx.setInsertValues(buildInsertValues());
         daoCtx.setKeyClass(keyClass);
         return daoCtx;

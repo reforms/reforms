@@ -8,33 +8,15 @@ import java.util.Iterator;
  * Контекст данных для совершения определенной операции встакви в 'batch' режиме
  * @author evgenie
  */
-class DaoBatchInsertContext {
-
-    /** Объект, который содержит доступ к БД */
-    private Object connectionHolder;
-
-    /** Запрос к БД */
-    private String query;
+class DaoBatchInsertContext extends DaoContext {
 
     /** Размер пакета для отправки на сервер БД*/
     private int batchSize;
 
     private Iterator<IInsertValues> insertValues;
 
-    Object getConnectionHolder() {
-        return connectionHolder;
-    }
-
-    void setConnectionHolder(Object connectionHolder) {
-        this.connectionHolder = connectionHolder;
-    }
-
-    String getQuery() {
-        return query;
-    }
-
-    void setQuery(String query) {
-        this.query = query;
+    DaoBatchInsertContext(Object connectionHolder, String query) {
+        super(connectionHolder, query);
     }
 
     void setBatchSize(int batchSize) {

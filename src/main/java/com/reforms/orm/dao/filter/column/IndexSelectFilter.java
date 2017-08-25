@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.reforms.orm.dao.filter.column.FilterState.FS_ACCEPT;
-import static com.reforms.orm.dao.filter.column.FilterState.FS_REMOVE;
+import static com.reforms.orm.dao.filter.column.FilterState.FS_NOT_ACCEPT;;
 
 /**
  * Фильтр на основе индексов: Индексы начинаются с 1
@@ -15,19 +15,20 @@ import static com.reforms.orm.dao.filter.column.FilterState.FS_REMOVE;
  */
 public class IndexSelectFilter implements ISelectedColumnFilter {
 
-    private FilterState ignoreFilterState;
-    private List<Integer> indexes = new ArrayList<>();
+    private final FilterState ignoreFilterState;
+    private final List<Integer> indexes;
 
     public IndexSelectFilter() {
-        this(FS_REMOVE);
+        this(FS_NOT_ACCEPT);
     }
 
     public IndexSelectFilter(FilterState ignoreFilterState) {
-        this.ignoreFilterState = ignoreFilterState;
+        this(ignoreFilterState, new ArrayList<>());
     }
 
-    public IndexSelectFilter(List<Integer> indexes) {
-        this.indexes.addAll(indexes);
+    public IndexSelectFilter(FilterState ignoreFilterState, List<Integer> indexes) {
+        this.ignoreFilterState = ignoreFilterState;
+        this.indexes = indexes;
     }
 
     public void addIndex(int index) {

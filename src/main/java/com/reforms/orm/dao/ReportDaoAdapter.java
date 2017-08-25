@@ -5,6 +5,7 @@ import com.reforms.orm.dao.filter.FilterObject;
 import com.reforms.orm.dao.filter.FilterSequence;
 import com.reforms.orm.dao.filter.IFilterValues;
 import com.reforms.orm.dao.filter.column.CompositeSelectedColumnFilter;
+import com.reforms.orm.dao.filter.column.FilterState;
 import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 import com.reforms.orm.dao.filter.column.IndexSelectFilter;
 import com.reforms.orm.dao.paging.IPageFilter;
@@ -143,7 +144,7 @@ public class ReportDaoAdapter implements IReportDaoAdapter {
     private ISelectedColumnFilter buildSelectedColumnFilter() {
         ISelectedColumnFilter firstFilter = null;
         if (selectedColumnIndexes != null) {
-            firstFilter = new IndexSelectFilter(selectedColumnIndexes);
+            firstFilter = new IndexSelectFilter(FilterState.FS_NOT_ACCEPT, selectedColumnIndexes);
         }
         ISelectedColumnFilter secondFilter = selectedColumnFilter;
         if (secondFilter == null) {
@@ -183,9 +184,7 @@ public class ReportDaoAdapter implements IReportDaoAdapter {
     }
 
     private DaoSelectContext buildDaoContext() {
-        DaoSelectContext daoCtx = new DaoSelectContext();
-        daoCtx.setConnectionHolder(connectionHolder);
-        daoCtx.setQuery(query);
+        DaoSelectContext daoCtx = new DaoSelectContext(connectionHolder, query);
         daoCtx.setSelectedColumnFilter(buildSelectedColumnFilter());
         daoCtx.setFilterValues(buildFilterValues());
         return daoCtx;

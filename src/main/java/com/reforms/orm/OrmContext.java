@@ -1,8 +1,8 @@
 package com.reforms.orm;
 
+import com.reforms.orm.dao.IJavaToSqlTypeResolver;
 import com.reforms.orm.dao.IParamNameConverter;
 import com.reforms.orm.dao.IResultSetReaderFactory;
-import com.reforms.orm.dao.IJavaToSqlTypeResolver;
 import com.reforms.orm.dao.bobj.IColumnToFieldNameConverter;
 import com.reforms.orm.dao.bobj.IResultSetValueAdapter;
 import com.reforms.orm.dao.bobj.reader.IResultSetValueReader;
@@ -211,6 +211,24 @@ class OrmContext implements IOrmContext {
     public void setMethodInterceptor(IMethodInterceptor newInterceptor) {
         checkBeforeModify();
         putInstance(IMethodInterceptor.class, newInterceptor);
+    }
+
+    @Override
+    public IQuerySniffer changeQuerySniffer(CreateNewInstance<IQuerySniffer> creator) {
+        checkBeforeModify();
+        IQuerySniffer current = getInstance(IQuerySniffer.class);
+        IQuerySniffer newInterceptor = creator.createNew(current);
+        if (newInterceptor != null) {
+            putInstance(IQuerySniffer.class, newInterceptor);
+            return current;
+        }
+        return null;
+    }
+
+    @Override
+    public void setQuerySniffer(IQuerySniffer newQuerySniffer) {
+        checkBeforeModify();
+        putInstance(IQuerySniffer.class, newQuerySniffer);
     }
 
     @Override

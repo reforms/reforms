@@ -7,13 +7,7 @@ import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
  * Контекст данных для совершения определенной операции
  * @author evgenie
  */
-class DaoSelectContext {
-
-    /** Объект, который содержит доступ к БД */
-    private Object connectionHolder;
-
-    /** Запрос к БД */
-    private String query;
+class DaoSelectContext extends DaoContext {
 
     /** Выбираемый тип */
     private Class<?> ormType;
@@ -24,20 +18,8 @@ class DaoSelectContext {
     /** Фильтр данных */
     private IFilterValues filterValues;
 
-    Object getConnectionHolder() {
-        return connectionHolder;
-    }
-
-    void setConnectionHolder(Object connectionHolder) {
-        this.connectionHolder = connectionHolder;
-    }
-
-    String getQuery() {
-        return query;
-    }
-
-    void setQuery(String query) {
-        this.query = query;
+    DaoSelectContext(Object connectionHolder, String query) {
+        super(connectionHolder, query);
     }
 
     Class<?> getOrmType() {

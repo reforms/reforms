@@ -55,6 +55,7 @@ public class OrmConfigurator {
         putInstance(IMethodInterceptor.class, new DefaultMethodInterceptor());
         putInstance(IJavaToSqlTypeResolver.class, new JavaToSqlTypeResolver());
         putInstance(IGenericTypeResolver.class, new GenericTypeScanner(true, true));
+        putInstance(IQuerySniffer.class, new QuerySniffer());
     }
 
     static void putInstance(Class<?> clazz, Object instance) {

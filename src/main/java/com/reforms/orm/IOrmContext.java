@@ -63,6 +63,10 @@ public interface IOrmContext {
 
     public void setMethodInterceptor(IMethodInterceptor newInterceptor);
 
+    public IQuerySniffer changeQuerySniffer(CreateNewInstance<IQuerySniffer> creator);
+
+    public void setQuerySniffer(IQuerySniffer newQuerySniffer);
+
     public IJavaToSqlTypeResolver changeJavaToSqlTypeResolver(CreateNewInstance<IJavaToSqlTypeResolver> creator);
 
     public void setJavaToSqlTypeResolver(IJavaToSqlTypeResolver newInterceptor);

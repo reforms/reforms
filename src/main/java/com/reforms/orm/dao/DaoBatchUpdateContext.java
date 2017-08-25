@@ -1,40 +1,22 @@
 package com.reforms.orm.dao;
 
-import java.util.Iterator;
-
 import com.reforms.orm.dao.bobj.update.IUpdateValues;
+
+import java.util.Iterator;
 
 /**
  * Контекст данных для совершения определенной операции обновления в 'batch' режиме
  * @author evgenie
  */
-class DaoBatchUpdateContext {
-
-    /** Объект, который содержит доступ к БД */
-    private Object connectionHolder;
-
-    /** Запрос к БД */
-    private String query;
+class DaoBatchUpdateContext extends DaoContext {
 
     /** Размер пакета для отправки на сервер БД*/
     private int batchSize;
 
     private Iterator<IUpdateValues> upateValues;
 
-    Object getConnectionHolder() {
-        return connectionHolder;
-    }
-
-    void setConnectionHolder(Object connectionHolder) {
-        this.connectionHolder = connectionHolder;
-    }
-
-    String getQuery() {
-        return query;
-    }
-
-    void setQuery(String query) {
-        this.query = query;
+    DaoBatchUpdateContext(Object connectionHolder, String query) {
+        super(connectionHolder, query);
     }
 
     void setBatchSize(int batchSize) {

@@ -7,33 +7,15 @@ import com.reforms.orm.dao.filter.IFilterValues;
  * Контекст данных для совершения определенной операции обновления
  * @author evgenie
  */
-class DaoUpdateContext {
-
-    /** Объект, который содержит доступ к БД */
-    private Object connectionHolder;
-
-    /** Запрос к БД */
-    private String query;
+class DaoUpdateContext extends DaoContext {
 
     private IUpdateValues upateValues;
 
     /** Фильтр данных */
     private IFilterValues filterValues;
 
-    Object getConnectionHolder() {
-        return connectionHolder;
-    }
-
-    void setConnectionHolder(Object connectionHolder) {
-        this.connectionHolder = connectionHolder;
-    }
-
-    String getQuery() {
-        return query;
-    }
-
-    void setQuery(String query) {
-        this.query = query;
+    DaoUpdateContext(Object connectionHolder, String query) {
+        super(connectionHolder, query);
     }
 
     IUpdateValues getUpateValues() {
