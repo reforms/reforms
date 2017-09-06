@@ -1,9 +1,6 @@
 package com.reforms.orm.reflex;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Proxy;
+import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -18,9 +15,9 @@ class DefaultValueCreator implements InvocationHandler {
 
     private static ThreadLocalClassController CLASS_CREATE_CONTROLLER = new ThreadLocalClassController();
 
-    private DefaultValueArray firstValues = new DefaultValueArray();
+    private final DefaultValueArray firstValues = new DefaultValueArray();
 
-    private DefaultValueArray secondValues = new DefaultValueArray();
+    private final DefaultValueArray secondValues = new DefaultValueArray();
 
     private final Map<String, Object> typePrimitiveCache = new HashMap<>();
 
@@ -70,6 +67,9 @@ class DefaultValueCreator implements InvocationHandler {
             throw new IllegalStateException("Необходимо указать класс, null не допускается");
         }
         if (clazzType.isPrimitive()) {
+            return;
+        }
+        if (clazzType.isArray()) {
             return;
         }
         if (Modifier.isAbstract(clazzType.getModifiers()) && !clazzType.isInterface() && !clazzType.isAnnotation()) {
@@ -249,6 +249,9 @@ class DefaultValueCreator implements InvocationHandler {
         }
         if (Queue.class == clazzType) {
             return new ArrayDeque<>();
+        }
+        if (clazzType.isArray()) {
+            return Array.newInstance(clazzType.getComponentType(), 0);
         }
         if (clazzType.isEnum()) {
             Object[] enumValues = clazzType.getEnumConstants();

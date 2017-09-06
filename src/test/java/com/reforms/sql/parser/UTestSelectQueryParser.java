@@ -10,6 +10,8 @@ import static org.junit.Assert.assertEquals;
 /**
  * 1. assertWhereStatement("WHERE (1) MATCH (SELECT client_id FROM schemeName.test_clns)");
  *
+ * Пример с ! знаком
+ * SELECT * FROM (SELECT c1, c2, ROWNUM RN:! FROM (SELECT c1, c2 FROM schemaName.tableName WHERE c1 > 0 ORDER BY 1)) WHERE RN > ? AND RN <= ?
  *
  * @author evgenie
  */

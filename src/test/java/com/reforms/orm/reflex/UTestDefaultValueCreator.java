@@ -44,6 +44,10 @@ public class UTestDefaultValueCreator {
         assertNotNull(creator.createFirst(HashMap.class));
         assertNotNull(creator.createFirst(ArrayList.class));
         assertNotNull(creator.createFirst(BobjStrange.class));
+        assertNotNull(creator.createFirst(String[].class));
+        assertNotNull(creator.createFirst(String[][].class));
+        assertNotNull(creator.createFirst(byte[][].class));
+        assertNotNull(creator.createFirst(int[][][].class));
     }
 
     @Test

@@ -1,12 +1,12 @@
 package com.reforms.orm.reflex;
 
-import static com.reforms.orm.OrmConfigurator.getInstance;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.Map.Entry;
+
+import static com.reforms.orm.OrmConfigurator.getInstance;
 
 /**
  * Собирает информацию об объекте заданного типа и связывает создающий конструктор с полями объекта
@@ -16,9 +16,9 @@ class InstanceInformator {
 
     private final Class<?> clazz;
 
-    private Map<String, Field> fields = new HashMap<>();
+    private final Map<String, Field> fields = new HashMap<>();
 
-    private List<FieldsInfo> fieldsInfoList = new ArrayList<>();
+    private final List<FieldsInfo> fieldsInfoList = new ArrayList<>();
 
     InstanceInformator(Class<?> clazz, List<InstanceInfo> instancesInfo) {
         this.clazz = clazz;
@@ -88,19 +88,12 @@ class InstanceInformator {
     }
 
     private Object getValueFromField(Object instance, Field field) {
-        boolean fieldAccessible = field.isAccessible();
-        if (!fieldAccessible) {
-            field.setAccessible(true);
-        }
         try {
+            field.setAccessible(true);
             return field.get(instance);
         } catch (ReflectiveOperationException roe) {
             throw new IllegalStateException("Не удалось получить значение поля '" + field.getName() + "' в объекте класса '"
                     + clazz + "'", roe);
-        } finally {
-            if (!fieldAccessible) {
-                field.setAccessible(fieldAccessible);
-            }
         }
     }
 

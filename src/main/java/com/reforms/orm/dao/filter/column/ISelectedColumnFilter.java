@@ -1,5 +1,6 @@
 package com.reforms.orm.dao.filter.column;
 
+import com.reforms.ann.TargetApi;
 import com.reforms.orm.dao.column.SelectedColumn;
 
 /**
@@ -7,6 +8,7 @@ import com.reforms.orm.dao.column.SelectedColumn;
  * @author evgenie
  */
 @FunctionalInterface
+@TargetApi
 public interface ISelectedColumnFilter {
 
     /**

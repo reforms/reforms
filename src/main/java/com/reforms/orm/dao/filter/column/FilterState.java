@@ -1,9 +1,12 @@
 package com.reforms.orm.dao.filter.column;
 
+import com.reforms.ann.TargetApi;
+
 /**
  *
  * @author evgenie
  */
+@TargetApi
 public enum FilterState {
     /** участвует и в выборке и в sql-выражении */
     FS_ACCEPT(0),

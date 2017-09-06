@@ -1,7 +1,5 @@
 package com.reforms.orm.reflex;
 
-import static com.reforms.orm.OrmConfigurator.getInstance;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -10,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.reforms.orm.OrmConfigurator.getInstance;
+
 /**
  * Скан экземпляра, предоставление информации об объекте
  * TODO оптимизация - подумать над оптимизацией
@@ -17,10 +17,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Reflexor implements IReflexor {
 
-    private Map<String, Method> methods = new HashMap<>();
-    private Map<String, Field> fields = new HashMap<>();
-    private Map<String, Class<?>> types = new ConcurrentHashMap<>();
-    private Class<?> instanceClass;
+    private final Map<String, Method> methods = new HashMap<>();
+    private final Map<String, Field> fields = new HashMap<>();
+    private final Map<String, Class<?>> types = new ConcurrentHashMap<>();
+    private final Class<?> instanceClass;
 
     Reflexor(Class<?> instanceClass) {
         this.instanceClass = instanceClass;
@@ -182,70 +182,42 @@ public class Reflexor implements IReflexor {
     }
 
     private Object getValueFromField(Object instance, Field field) {
-        boolean fieldAccessible = field.isAccessible();
-        if (!fieldAccessible) {
-            field.setAccessible(true);
-        }
         try {
+            field.setAccessible(true);
             return field.get(instance);
         } catch (ReflectiveOperationException roe) {
             throw new IllegalStateException("Не удалось получить значение поля '" + field.getName() + "' в объекте класса '"
                     + instanceClass + "'", roe);
-        } finally {
-            if (!fieldAccessible) {
-                field.setAccessible(fieldAccessible);
-            }
         }
     }
 
     private void setValueToField(Object instance, Field field, Object value) {
-        boolean fieldAccessible = field.isAccessible();
-        if (!fieldAccessible) {
-            field.setAccessible(true);
-        }
         try {
+            field.setAccessible(true);
             field.set(instance, value);
         } catch (ReflectiveOperationException roe) {
             throw new IllegalStateException("Не удалось получить значение поля '" + field.getName() + "' в объекте класса '"
                     + instanceClass + "'", roe);
-        } finally {
-            if (!fieldAccessible) {
-                field.setAccessible(fieldAccessible);
-            }
         }
     }
 
     private Object invokeGetterMethod(Object instance, Method method) {
-        boolean methodAccessible = method.isAccessible();
-        if (!methodAccessible) {
-            method.setAccessible(true);
-        }
         try {
+            method.setAccessible(true);
             return method.invoke(instance);
         } catch (ReflectiveOperationException roe) {
             throw new IllegalStateException("Не удалось выполнить метод '" + method.getName() + "' в объекте класса '" + instanceClass
                     + "'", roe);
-        } finally {
-            if (!methodAccessible) {
-                method.setAccessible(false);
-            }
         }
     }
 
     private void invokeSetterMethod(Object instance, Method method, Object value) {
-        boolean methodAccessible = method.isAccessible();
-        if (!methodAccessible) {
-            method.setAccessible(true);
-        }
         try {
+            method.setAccessible(true);
             method.invoke(instance, value);
         } catch (ReflectiveOperationException roe) {
             throw new IllegalStateException("Не удалось выполнить метод '" + method.getName() + "' в объекте класса '" + instanceClass
                     + "'", roe);
-        } finally {
-            if (!methodAccessible) {
-                method.setAccessible(false);
-            }
         }
     }
 

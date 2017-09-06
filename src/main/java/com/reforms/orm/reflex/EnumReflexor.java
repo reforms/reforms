@@ -175,36 +175,22 @@ public class EnumReflexor implements IEnumReflexor {
     }
 
     private Object getValueFromField(Object instance, Field field) {
-        boolean fieldAccessible = field.isAccessible();
-        if (!fieldAccessible) {
-            field.setAccessible(true);
-        }
         try {
+            field.setAccessible(true);
             return field.get(instance);
         } catch (ReflectiveOperationException roe) {
             throw new IllegalStateException("Не удалось получить значение поля '" + field.getName() + "' в объекте класса '"
                     + enumClass + "'", roe);
-        } finally {
-            if (!fieldAccessible) {
-                field.setAccessible(fieldAccessible);
-            }
         }
     }
 
     private Object invokeMethod(Method method, Object instance, Object... args) {
-        boolean methodAccessible = method.isAccessible();
-        if (!methodAccessible) {
-            method.setAccessible(true);
-        }
         try {
+            method.setAccessible(true);
             return method.invoke(instance, args);
         } catch (ReflectiveOperationException roe) {
             throw new IllegalStateException("Не удалось выполнить метод '" + method.getName() + "' в объекте класса '" + enumClass
                     + "'", roe);
-        } finally {
-            if (!methodAccessible) {
-                method.setAccessible(false);
-            }
         }
     }
 
