@@ -374,6 +374,7 @@ public class OrmDaoAdapter implements IOrmDaoAdapter {
     private DaoInsertContext buildDaoInsertContext() {
         DaoInsertContext daoCtx = new DaoInsertContext(connectionHolder, query);
         daoCtx.setInsertValues(buildInsertValues());
+        daoCtx.setReturningColumnFilter(buildSelectedColumnFilter());
         daoCtx.setKeyClass(keyClass);
         return daoCtx;
     }

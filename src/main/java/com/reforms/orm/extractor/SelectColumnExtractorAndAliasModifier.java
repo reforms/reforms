@@ -36,9 +36,6 @@ public class SelectColumnExtractorAndAliasModifier {
     }
 
     public List<SelectedColumn> extractSelectedColumns(SelectQuery selectQuery, ISelectedColumnFilter selectedColumnFilter) {
-        if (selectedColumnFilter == null) {
-            selectedColumnFilter = getInstance(DefaultSelectedColumnFilter.class);
-        }
         SelectStatementExtractor selectStatementExtractor = getInstance(SelectStatementExtractor.class);
         SelectStatement selectStatement = selectStatementExtractor.extractFirstSelectStatement(selectQuery);
         if (selectStatement == null) {
@@ -48,8 +45,14 @@ public class SelectColumnExtractorAndAliasModifier {
     }
 
     public List<SelectedColumn> extractSelectedColumns(SelectStatement selectStatement, ISelectedColumnFilter selectedColumnFilter) {
+        return extractSelectedColumns(selectStatement.getSelectExps(), selectedColumnFilter);
+    }
+
+    public List<SelectedColumn> extractSelectedColumns(List<SelectableExpression> selectableExprs, ISelectedColumnFilter selectedColumnFilter) {
+        if (selectedColumnFilter == null) {
+            selectedColumnFilter = getInstance(DefaultSelectedColumnFilter.class);
+        }
         List<SelectedColumn> columns = new ArrayList<>();
-        List<SelectableExpression> selectableExprs = selectStatement.getSelectExps();
         int index = 1;
         Iterator<SelectableExpression> selectableExprIterator = selectableExprs.iterator();
         while (selectableExprIterator.hasNext()) {

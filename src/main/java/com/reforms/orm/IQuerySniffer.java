@@ -6,5 +6,5 @@ import com.reforms.ann.TargetApi;
 @TargetApi
 public interface IQuerySniffer {
 
-    void onQuery(String beforeModifingQuery, String afterModifingQuery);
+    String onQuery(String beforeModifingQuery, String afterModifingQuery);
 }

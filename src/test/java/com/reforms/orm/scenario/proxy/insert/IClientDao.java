@@ -14,6 +14,9 @@ public interface IClientDao {
     @TargetQuery("INSERT INTO clients (name) VALUES(:name)")
     long insertClientAndGetLongId(@TargetFilter ClientOrm client);
 
+    @TargetQuery("INSERT INTO clients (name) VALUES(:name) RETURNING id AS l#")
+    long insertClientAndGetLongIdWithReturningStatement(@TargetFilter ClientOrm client);
+
     @TargetQuery("INSERT INTO clients (name) VALUES(:name)")
     BigInteger insertClientAndGetBigIntegerId(@TargetFilter ClientOrm client);
 

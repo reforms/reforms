@@ -22,6 +22,7 @@ public class UTestInsertQueryParser {
         assertInsertQuery("INSERT INTO tableName (c1, c2) VALUES (1, 2)");
         assertInsertQuery("INSERT INTO tableName (c1, c2) VALUES (?, ?)");
         assertInsertQuery("INSERT INTO tableName VALUES (?, ?)");
+        assertInsertQuery("INSERT INTO tableName VALUES (?, ?) RETURNING id AS i#");
         assertInsertQuery("INSERT INTO tableName (c1, c2) SELECT 1, 2");
         assertInsertQuery("INSERT INTO tableName (c1, c2) (SELECT 1, 2)");
         assertInsertQuery("INSERT INTO tableName (c1, c2) SELECT * FROM table2");

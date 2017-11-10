@@ -1,10 +1,10 @@
 package com.reforms.orm.scenario.insert;
 
-import java.util.Date;
-
 import com.reforms.orm.H2DataSource;
 import com.reforms.orm.OrmDao;
 import com.reforms.orm.dao.bobj.update.UpdateObject;
+
+import java.util.Date;
 
 /**
  * Слой доступа к данным по
@@ -12,7 +12,7 @@ import com.reforms.orm.dao.bobj.update.UpdateObject;
  */
 class ClientDao {
 
-    private OrmDao ormDao;
+    private final OrmDao ormDao;
 
     public ClientDao(H2DataSource h2ds) {
         ormDao = new OrmDao(h2ds);

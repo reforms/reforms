@@ -101,11 +101,13 @@ public class SqlParser {
 
     public InsertQuery parseInsertQuery() {
         InsertStatement insertStatement = parseInsertStatement();
+        ReturningStatement returningStatement = parseReturningStatement();
         if (!stream.finished()) {
             throw stream.createException("Не удалось до конца разобрать INSERT INTO запрос");
         }
         InsertQuery insertQuery = new InsertQuery();
         insertQuery.setInsertStatement(insertStatement);
+        insertQuery.setReturningStatement(returningStatement);
         return insertQuery;
     }
 
@@ -464,6 +466,15 @@ public class SqlParser {
         insertStatement.setInsertColumnNamesExpr(insertColumnNamesExpr);
         insertStatement.setInsertValuesExpr(insertValuesExpr);
         return insertStatement;
+    }
+
+    private ReturningStatement parseReturningStatement() {
+        if (stream.checkIsSpecialWordValueSame(SW_RETURNING)) {
+            String returningKeyword = stream.parseSpecialWordValueAndCheck(SW_RETURNING);
+            List<SelectableExpression> returningExpr = parseSelectListExps();
+            return new ReturningStatement(returningKeyword, returningExpr);
+        }
+        return null;
     }
 
     private ValueListExpression parseInsertColumnNamesExpression() {

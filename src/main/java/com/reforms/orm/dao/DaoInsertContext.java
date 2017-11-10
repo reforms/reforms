@@ -1,6 +1,7 @@
 package com.reforms.orm.dao;
 
 import com.reforms.orm.dao.bobj.update.IInsertValues;
+import com.reforms.orm.dao.filter.column.ISelectedColumnFilter;
 
 /**
  * Контекст данных для совершения определенной операции обновления
@@ -10,6 +11,9 @@ class DaoInsertContext extends DaoContext {
 
     /** Данные для вставки */
     private IInsertValues insertValues;
+
+    /** Фильтр выбираемых колонок */
+    private ISelectedColumnFilter returningColumnFilter;
 
     /** Возращаемое значение в insert есть (поле автоинкремент) */
     private Class<?> keyClass;
@@ -32,6 +36,14 @@ class DaoInsertContext extends DaoContext {
 
     Class<?> getKeyClass() {
         return keyClass;
+    }
+
+    public void setReturningColumnFilter(ISelectedColumnFilter returningColumnFilter) {
+        this.returningColumnFilter = returningColumnFilter;
+    }
+
+    public ISelectedColumnFilter getReturningColumnFilter() {
+        return returningColumnFilter;
     }
 
 }

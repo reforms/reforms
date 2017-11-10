@@ -8,7 +8,9 @@ import com.reforms.ann.ThreadSafe;
  */
 @ThreadSafe
 class QuerySniffer implements IQuerySniffer {
+
     @Override
-    public void onQuery(String beforeModifingQuery, String afterModifingQuery) {
+    public String onQuery(String beforeModifingQuery, String afterModifingQuery) {
+        return afterModifingQuery;
     }
 }

@@ -1,10 +1,14 @@
 package com.reforms.orm.scenario.proxy.insert;
 
+import com.reforms.orm.IOrmContext;
+import com.reforms.orm.IQuerySniffer;
 import com.reforms.orm.OrmDao;
 import com.reforms.orm.scenario.TestScenarioDao;
 
 import org.junit.Test;
 
+import static com.reforms.orm.OrmConfigurator.getInstance;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -35,6 +39,20 @@ public class UTestInsertClientDao extends TestScenarioDao {
         assertTrue(clientDao.insertClientAndGetLongId(client) != 0);
         assertTrue(clientDao.insertClientAndGetLongId(client) != 0);
         assertTrue(clientDao.insertClientAndGetLongId(client) != 0);
+    }
+
+    @Test
+    public void testInsertClientAndGetLongId() throws Exception {
+        ClientOrm client = new ClientOrm();
+        client.setName("First Client");
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        IOrmContext context = getInstance(IOrmContext.class);
+        IQuerySniffer currentSniffer = context.changeQuerySniffer((current) -> (q1, q2) -> {
+            assertEquals("INSERT INTO clients (name) VALUES (?) RETURNING id", q2.trim());
+            return q2.substring(0, q2.indexOf("RET")).trim();
+        });
+        assertTrue(clientDao.insertClientAndGetLongIdWithReturningStatement(client) != 0);
+        context.setQuerySniffer(currentSniffer);
     }
 
     @Test

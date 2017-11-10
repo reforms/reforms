@@ -3,8 +3,6 @@ package com.reforms.orm.reflex;
 import com.reforms.ann.TargetField;
 import com.reforms.ann.TargetMethod;
 
-import sun.misc.SharedSecrets;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -262,7 +260,6 @@ public class EnumReflexor implements IEnumReflexor {
         return candidateField;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     private Params getParamsForField(Field candidateField) {
         Class<?> scanClass = null;
         Map<Object, Object> tmpEnum2Value = new HashMap<>();
@@ -272,7 +269,7 @@ public class EnumReflexor implements IEnumReflexor {
         if (!scanClass.isEnum()) {
             scanClass = scanClass.getSuperclass();
         }
-        Enum<?>[] enumValues = SharedSecrets.getJavaLangAccess().getEnumConstantsShared((Class<Enum>) scanClass);
+        Enum<?>[] enumValues = getEnumConstantsShared(scanClass);
         // для каждого значения ENUM берем значение его поля
         for (Enum<?> enumValue : enumValues) {
             Object assignValue = getValueFromField(enumValue, candidateField);
@@ -280,6 +277,15 @@ public class EnumReflexor implements IEnumReflexor {
             tmpValue2Enum.put(assignValue, enumValue);
         }
         return new Params(tmpEnum2Value, tmpValue2Enum, candidateField.getType());
+    }
+
+    private Enum<?>[] getEnumConstantsShared(Class<?> enumClass) {
+        try {
+            Method valuesMethod = enumClass.getDeclaredMethod("values");
+            return (Enum<?>[]) valuesMethod.invoke(null);
+        } catch(Exception ex) {
+            throw new IllegalStateException("Method values not found in " + enumClass, ex);
+        }
     }
 
     public static IEnumReflexor createEnumReflexor(Class<?> instanceClass) {
