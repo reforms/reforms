@@ -16,7 +16,9 @@ import com.reforms.orm.extractor.OrmSelectColumnExtractorAndAliasModifier;
 import com.reforms.orm.extractor.QueryPreparer;
 import com.reforms.orm.extractor.SelectColumnCallableExtractor;
 import com.reforms.sql.expr.query.*;
+import com.reforms.sql.expr.statement.InsertStatement;
 import com.reforms.sql.expr.statement.ReturningStatement;
+import com.reforms.sql.expr.term.*;
 import com.reforms.sql.parser.SqlParser;
 
 import java.sql.*;
@@ -24,6 +26,7 @@ import java.util.*;
 
 import static com.reforms.orm.OrmConfigurator.getInstance;
 import static com.reforms.orm.dao.column.SelectedColumnConst.SCC_SINGLE_COLUMN;
+import static com.reforms.sql.parser.SqlWords.SW_VALUES;
 
 /**
  *
@@ -468,6 +471,26 @@ class OrmDao implements IOrmDao {
     private InsertQuery parseInsertQuery(String sqlQuery) {
         SqlParser sqlParser = new SqlParser(sqlQuery);
         InsertQuery insertQuery = sqlParser.parseInsertQuery();
+        InsertStatement insertStatement = insertQuery.getInsertStatement();
+        ValueListExpression columnNamesExpr = insertStatement.getInsertColumnNamesExpr();
+        Expression insertValuesExpr = insertStatement.getInsertValuesExpr();
+        if (columnNamesExpr != null && insertValuesExpr == null) {
+            ValueListExpression insertValues = new ValueListExpression();
+            for (Expression columnNameValueExpr : columnNamesExpr.getValueExprs()) {
+                if (columnNameValueExpr instanceof ColumnNameInExpression) {
+                    ColumnNameInExpression columnNameInExpr = (ColumnNameInExpression) columnNameValueExpr;
+                    if (columnNameInExpr.hasAsValue()) {
+                        SelectableExpression asValueExpr = columnNameInExpr.getValueExpr();
+                        columnNameInExpr.setValueExpr(null);
+                        insertValues.addValueExpr(asValueExpr);
+                    }
+                }
+            }
+            ValuesExpression valuesExpr = new ValuesExpression();
+            valuesExpr.setValuesWord(SW_VALUES);
+            valuesExpr.setValueListExpr(insertValues);
+            insertStatement.setInsertValuesExpr(valuesExpr);
+        }
         return insertQuery;
     }
 

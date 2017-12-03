@@ -63,5 +63,6 @@ public enum ExpressionType {
     ET_VALUE_LIST_EXPRESSION,
     ET_VALUES_EXPRESSION,
     ET_ARG_EXPRESSION,
+    ET_COLUMN_NAME_IN_EXPRESSION,
     ;
 }

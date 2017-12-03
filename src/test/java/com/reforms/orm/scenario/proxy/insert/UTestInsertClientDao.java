@@ -66,6 +66,16 @@ public class UTestInsertClientDao extends TestScenarioDao {
     }
 
     @Test
+    public void testInsertClientName() throws Exception {
+        ClientOrm client = new ClientOrm();
+        client.setName("First Client");
+        IClientDao clientDao = OrmDao.createDao(h2ds, IClientDao.class);
+        assertTrue(clientDao.insertClientName(client) != null);
+        assertTrue(clientDao.insertClientName(client) != null);
+        assertTrue(clientDao.insertClientName(client) != null);
+    }
+
+    @Test
     public void testInsertClientAndGetBigDecimalId() throws Exception {
         ClientOrm client = new ClientOrm();
         client.setName("First Client");

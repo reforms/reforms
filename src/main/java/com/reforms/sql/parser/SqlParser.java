@@ -485,17 +485,64 @@ public class SqlParser {
                 return null;
             }
             stream.rollbackParserState();
-            return parseValueListExpression();
+            return parseInsertColumnValuesExpression();
         }
         stream.rollbackParserState();
         return null;
+    }
+
+    private ValueListExpression parseInsertColumnValuesExpression() {
+        ValueListExpression argListExpr = new ValueListExpression();
+        stream.checkIsOpenParent();
+        stream.moveCursor();
+        if (!stream.checkIsCloseParen(false)) {
+            ColumnNameInExpression prevColumnNameInExpr = null;
+            boolean hasNextValue = true;
+            while (hasNextValue) {
+                int from = stream.getCursor();
+                ColumnNameInExpression columnNameInExpr = parseColumnNameInExpression();
+                if (prevColumnNameInExpr != null &&
+                        (prevColumnNameInExpr.hasAsValue() ^ columnNameInExpr.hasAsValue())) {
+                    throw stream.createException("Разный стиль в выражении INSERT_STATEMENT для выбираемых колонок." +
+                            " Ожидается '__column_name__' AS '__expression__' в " + (prevColumnNameInExpr.hasAsValue() ?
+                                    columnNameInExpr : prevColumnNameInExpr), from);
+                }
+                argListExpr.addValueExpr(columnNameInExpr);
+                hasNextValue = stream.checkIsComma();
+                if (hasNextValue) {
+                    stream.moveCursor();
+                }
+                prevColumnNameInExpr = columnNameInExpr;
+            }
+        }
+        stream.checkIsCloseParen();
+        stream.moveCursor();
+        return argListExpr;
+    }
+
+    private ColumnNameInExpression parseColumnNameInExpression() {
+        SelectableExpression columnExpr = parseSimpleArgExpression();
+        String asWord = SW_AS;
+        SelectableExpression valueExpr = null;
+        if (stream.checkIsSpecialWordValueSame(SW_AS)) {
+            asWord = stream.parseSpecialWordValueAndCheck(SW_AS);
+            valueExpr = parseSingleSelectExpression();
+        }
+        ColumnNameInExpression columnNameInExpr = new ColumnNameInExpression();
+        columnNameInExpr.setColumnNameExpr(columnExpr);
+        columnNameInExpr.setAsWord(asWord);
+        columnNameInExpr.setValueExpr(valueExpr);
+        return columnNameInExpr;
     }
 
     private Expression parseInsertValuesExpression() {
         if (checkIsInsertSimpleValuesExpression()) {
             return parseInsertSimpleValuesExpression();
         }
-        return parseVariantOfSelectQuery();
+        if (checkIsSubSelectQuery() || stream.checkIsSpecialWordValueSame(SW_SELECT)) {
+            return parseVariantOfSelectQuery();
+        }
+        return null;
     }
 
     private boolean checkIsInsertSimpleValuesExpression() {

@@ -20,6 +20,9 @@ public interface IClientDao {
     @TargetQuery("INSERT INTO clients (name) VALUES(:name)")
     BigInteger insertClientAndGetBigIntegerId(@TargetFilter ClientOrm client);
 
+    @TargetQuery("INSERT INTO clients (name AS :name)")
+    BigInteger insertClientName(@TargetFilter ClientOrm client);
+
     @TargetQuery("INSERT INTO clients (name) VALUES(:name)")
     BigDecimal insertClientAndGetBigDecimalId(@TargetFilter ClientOrm client);
 

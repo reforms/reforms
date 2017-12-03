@@ -109,7 +109,7 @@
             на schema_name$package_name.tabla_name  и добавить Мерринг ключа
              schema_name$package_name на schema_name.package_name в SchemaManager
         [+] Добавить возможность проксировать запрос, который уходит на СУБД
-        [-] Сделать удобным механизм INSERT в при использовании SQ запрос:
+        [+] Сделать удобным механизм INSERT в при использовании SQ запрос:
              INSERT INTO table1 (columnName1 AS fieldName1, columnaName2 AS fieldName2)
              -> это позволит избежать нелепых ошибок при сопровождении проекта в проде
              -> меньше писать и вообще сразу понятно что где
